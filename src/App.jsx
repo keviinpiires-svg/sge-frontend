@@ -5,6 +5,7 @@ import Cadastro from './pages/Cadastro';
 import FaseGrupos from './pages/FaseGrupos';
 import MataMata from './pages/MataMata'; 
 import Sumulas from './pages/Sumulas';
+import CadastroAtleta from './pages/CadastroAtleta'; 
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/grupos" element={<FaseGrupos />} />
         <Route path="/matamata" element={<MataMata />} />
         <Route path="/sumulas" element={<Sumulas />} />
+        <Route path="/cadastro-atleta" element={<CadastroAtleta />} />
       </Routes>
     </BrowserRouter>
   );

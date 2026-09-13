@@ -27,6 +27,7 @@ function Navbar() {
       <Link style={linkStyle} to="/grupos">Fase de Grupos</Link>
       <Link style={linkStyle} to="/matamata">Mata-Mata</Link>
       <Link style={linkStyle} to="/sumulas">Súmulas</Link>
+      <Link style={linkStyle} to="/cadastro-atleta">Cadastrar Atleta</Link> {/* <-- Botão novo */}
     </nav>
   );
 }
