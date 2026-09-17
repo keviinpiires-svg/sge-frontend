@@ -21,63 +21,58 @@ function FaseGrupos() {
   const grupoA = classificacao.filter(time => time.grupo === 'A');
   const grupoB = classificacao.filter(time => time.grupo === 'B');
 
+  const renderGrupo = (titulo, times) => (
+    <div className="card">
+      <div className="card-body" style={{ paddingBottom: 0 }}>
+        <h3 className="card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>{titulo}</h3>
+      </div>
+      <div className="table-wrap">
+        <table className="table-sge compact">
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th className="text-left">Time</th>
+              <th>P</th>
+              <th>J</th>
+              <th>V</th>
+            </tr>
+          </thead>
+          <tbody>
+            {times.map((time, index) => (
+              <tr key={time.id}>
+                <td>
+                  <span className={`rank ${index < 3 ? `rank-${index + 1}` : ''}`}>{index + 1}</span>
+                </td>
+                <td className="text-left strong">{time.escola_nome}</td>
+                <td className="text-accent num-lg">{time.pontos}</td>
+                <td className="text-soft">{time.jogos}</td>
+                <td className="text-soft">{time.vitorias}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {times.length === 0 && (
+        <div className="state state-compact">
+          <p className="state-text">Nenhum time neste grupo ainda.</p>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Fase de Grupos ⚽</h2>
-      <p>Classificação e pontuação do campeonato.</p>
+    <div className="page">
+      <div className="container-lg">
+        <header className="page-header">
+          <p className="eyebrow">Campeonato</p>
+          <h1 className="page-title">Fase de Grupos ⚽</h1>
+          <p className="page-subtitle">Classificação e pontuação do campeonato.</p>
+        </header>
 
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '20px' }}>
-        
-        {/* Tabela do Grupo A */}
-        <div style={{ flex: '1', minWidth: '300px', border: '1px solid #ccc', padding: '15px', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-          <h3 style={{ borderBottom: '2px solid #2c3e50', paddingBottom: '5px' }}>Grupo A</h3>
-          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', marginTop: '10px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #ddd' }}>
-                <th style={{ padding: '8px' }}>Time</th>
-                <th style={{ padding: '8px' }}>P</th>
-                <th style={{ padding: '8px' }}>J</th>
-                <th style={{ padding: '8px' }}>V</th>
-              </tr>
-            </thead>
-            <tbody>
-              {grupoA.map((time, index) => (
-                <tr key={time.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{index + 1}. {time.escola_nome}</td>
-                  <td style={{ padding: '8px', fontWeight: 'bold' }}>{time.pontos}</td>
-                  <td style={{ padding: '8px' }}>{time.jogos}</td>
-                  <td style={{ padding: '8px' }}>{time.vitorias}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid-2">
+          {renderGrupo('Grupo A', grupoA)}
+          {renderGrupo('Grupo B', grupoB)}
         </div>
-
-        {/* Tabela do Grupo B */}
-        <div style={{ flex: '1', minWidth: '300px', border: '1px solid #ccc', padding: '15px', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-          <h3 style={{ borderBottom: '2px solid #2c3e50', paddingBottom: '5px' }}>Grupo B</h3>
-          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', marginTop: '10px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #ddd' }}>
-                <th style={{ padding: '8px' }}>Time</th>
-                <th style={{ padding: '8px' }}>P</th>
-                <th style={{ padding: '8px' }}>J</th>
-                <th style={{ padding: '8px' }}>V</th>
-              </tr>
-            </thead>
-            <tbody>
-              {grupoB.map((time, index) => (
-                <tr key={time.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{index + 1}. {time.escola_nome}</td>
-                  <td style={{ padding: '8px', fontWeight: 'bold' }}>{time.pontos}</td>
-                  <td style={{ padding: '8px' }}>{time.jogos}</td>
-                  <td style={{ padding: '8px' }}>{time.vitorias}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
       </div>
     </div>
   );

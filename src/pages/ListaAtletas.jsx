@@ -19,7 +19,7 @@ function ListaAtletas() {
       if (response.ok) {
         const data = await response.json();
         console.log("Resposta do Backend:", data);
-        
+
         // Se a resposta for um objeto (ex: { atletas: [...] }), extraímos o array
         const atletasRetornados = Array.isArray(data) ? data : (data.atletas || []);
         setAtletas(atletasRetornados);
@@ -67,7 +67,7 @@ function ListaAtletas() {
         },
         body: JSON.stringify(atletaEmEdicao)
       });
-      
+
       if (response.ok) {
         alert('Atleta atualizado com sucesso!');
         setAtletaEmEdicao(null);
@@ -87,7 +87,7 @@ function ListaAtletas() {
         const response = await fetch(`http://localhost:3000/api/atletas/${id}`, {
           method: 'DELETE',
         });
-        
+
         if (response.ok) {
           alert('Atleta excluído com sucesso!');
           setAtletas(atletas.filter((atleta) => atleta.id !== id));
@@ -102,147 +102,133 @@ function ListaAtletas() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>Buscar Atletas por Equipe 🔍</h2>
-      <p>Informe o ID da Escola para listar os atletas cadastrados.</p>
+    <div className="page">
+      <div className="container">
+        <header className="page-header">
+          <p className="eyebrow">Atletas</p>
+          <h1 className="page-title">Buscar Atletas por Equipe</h1>
+          <p className="page-subtitle">Informe o ID da Escola para listar os atletas cadastrados.</p>
+        </header>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', alignItems: 'center', marginTop: '20px' }}>
-        <input 
-          type="number" 
-          placeholder="ID da Escola"
-          value={escolaId}
-          onChange={(e) => setEscolaId(e.target.value)}
-          style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc', flex: '1', boxSizing: 'border-box' }}
-        />
-        <button 
-          onClick={buscarAtletas}
-          disabled={carregando}
-          style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#2c3e50', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px', 
-            fontSize: '16px', 
-            cursor: carregando ? 'not-allowed' : 'pointer', 
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          {carregando ? 'Buscando...' : 'Buscar Atletas'}
-        </button>
+        <div className="card" style={{ marginBottom: '24px' }}>
+          <div className="card-body" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <input
+              className="form-control"
+              type="number"
+              placeholder="ID da Escola"
+              value={escolaId}
+              onChange={(e) => setEscolaId(e.target.value)}
+              style={{ flex: '1 1 200px', width: 'auto' }}
+            />
+            <button className="btn btn-primary" onClick={buscarAtletas} disabled={carregando}>
+              {carregando ? 'Buscando...' : '🔍 Buscar Atletas'}
+            </button>
+          </div>
+        </div>
+
+        {buscou && !atletaEmEdicao && (
+          <div className="card">
+            {atletas.length > 0 ? (
+              <div className="table-wrap">
+                <table className="table-sge" style={{ minWidth: '600px' }}>
+                  <thead>
+                    <tr>
+                      <th className="text-left">Nome</th>
+                      <th className="text-left">RG / Matrícula</th>
+                      <th>Data de Nascimento</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {atletas.map((atleta, index) => (
+                      <tr key={index}>
+                        <td className="text-left strong">{atleta.nome}</td>
+                        <td className="text-left text-soft">{atleta.rg_ou_matricula}</td>
+                        <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>
+                        <td>
+                          <div className="btn-group">
+                            <button className="btn btn-outline btn-sm" onClick={() => handleEditar(atleta)}>Editar</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleExcluir(atleta.id)}>Excluir</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="state">
+                <div className="state-icon">🏃</div>
+                <p className="state-title">Nenhum atleta encontrado</p>
+                <p className="state-text">Não há atletas cadastrados para esta equipe.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {atletaEmEdicao && (
+          <div className="card card-highlight">
+            <form onSubmit={handleSalvarEdicao} className="card-body form">
+              <h3 className="card-title" style={{ margin: 0 }}>Editar Atleta</h3>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-nome">Nome</label>
+                <input
+                  id="edit-nome"
+                  className="form-control"
+                  type="text"
+                  value={atletaEmEdicao.nome || ''}
+                  onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, nome: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-rg">RG / Matrícula</label>
+                <input
+                  id="edit-rg"
+                  className="form-control"
+                  type="text"
+                  value={atletaEmEdicao.rg_ou_matricula || ''}
+                  onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, rg_ou_matricula: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="edit-nascimento">Data de Nascimento</label>
+                  <input
+                    id="edit-nascimento"
+                    className="form-control"
+                    type="date"
+                    value={atletaEmEdicao.data_nascimento || ''}
+                    onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, data_nascimento: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="edit-escola">Código da Escola</label>
+                  <input
+                    id="edit-escola"
+                    className="form-control"
+                    type="number"
+                    value={atletaEmEdicao.escola_id || ''}
+                    onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, escola_id: Number(e.target.value)})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="btn-row">
+                <button type="button" className="btn btn-secondary" onClick={() => setAtletaEmEdicao(null)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
-
-      {buscou && !atletaEmEdicao && (
-        <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #ddd', overflow: 'hidden' }}>
-          {atletas.length > 0 ? (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead style={{ backgroundColor: '#f9f9f9' }}>
-                <tr>
-                  <th style={{ padding: '12px 15px', borderBottom: '2px solid #ddd', color: '#333' }}>Nome</th>
-                  <th style={{ padding: '12px 15px', borderBottom: '2px solid #ddd', color: '#333' }}>RG / Matrícula</th>
-                  <th style={{ padding: '12px 15px', borderBottom: '2px solid #ddd', color: '#333' }}>Data de Nascimento</th>
-                  <th style={{ padding: '12px 15px', borderBottom: '2px solid #ddd', color: '#333', textAlign: 'center' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {atletas.map((atleta, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '12px 15px', color: '#555' }}>{atleta.nome}</td>
-                    <td style={{ padding: '12px 15px', color: '#555' }}>{atleta.rg_ou_matricula}</td>
-                    <td style={{ padding: '12px 15px', color: '#555' }}>{formatarData(atleta.data_nascimento)}</td>
-                    <td style={{ padding: '12px 15px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleEditar(atleta)}
-                        style={{ padding: '6px 12px', marginRight: '8px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        onClick={() => handleExcluir(atleta.id)}
-                        style={{ padding: '6px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#777', fontStyle: 'italic' }}>
-              Nenhum atleta encontrado para esta equipe
-            </div>
-          )}
-        </div>
-      )}
-
-      {atletaEmEdicao && (
-        <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #ccc', marginTop: '20px' }}>
-          <h3>Editar Atleta</h3>
-          <form onSubmit={handleSalvarEdicao}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Nome</label>
-              <input 
-                type="text" 
-                value={atletaEmEdicao.nome || ''} 
-                onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, nome: e.target.value})} 
-                required 
-                style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-              />
-            </div>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>RG / Matrícula</label>
-              <input 
-                type="text" 
-                value={atletaEmEdicao.rg_ou_matricula || ''} 
-                onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, rg_ou_matricula: e.target.value})} 
-                required 
-                style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-              />
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Data de Nascimento</label>
-              <input 
-                type="date" 
-                value={atletaEmEdicao.data_nascimento || ''} 
-                onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, data_nascimento: e.target.value})} 
-                required 
-                style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Código da Escola</label>
-              <input 
-                type="number" 
-                value={atletaEmEdicao.escola_id || ''} 
-                onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, escola_id: Number(e.target.value)})} 
-                required 
-                style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                type="button" 
-                onClick={() => setAtletaEmEdicao(null)}
-                style={{ padding: '10px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold', flex: '1' }}
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                style={{ padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold', flex: '1' }}
-              >
-                Salvar Alterações
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 }

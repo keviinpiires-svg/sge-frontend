@@ -41,60 +41,42 @@ function CadastroAtleta() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}> 
-      <h2>Cadastro de Atleta 🏃</h2>
-      <p>Preencha os dados abaixo para registrar um novo atleta.</p>
+    <div className="page">
+      <div className="container-sm">
+        <header className="page-header">
+          <p className="eyebrow">Atletas</p>
+          <h1 className="page-title">Cadastro de Atleta</h1>
+          <p className="page-subtitle">Preencha os dados abaixo para registrar um novo atleta.</p>
+        </header>
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: '600px', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #ccc', marginTop: '20px' }}>
-        
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Nome</label>
-          <input 
-            type="text" 
-            value={nome} 
-            onChange={(e) => setNome(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
+        <div className="card">
+          <form onSubmit={handleSubmit} className="card-body form">
+            <div className="form-group">
+              <label className="form-label" htmlFor="nome">Nome</label>
+              <input id="nome" className="form-control" type="text" value={nome} onChange={(e) => setNome(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="rg">RG / Matrícula</label>
+              <input id="rg" className="form-control" type="text" value={rgMatricula} onChange={(e) => setRgMatricula(e.target.value)} required />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="nascimento">Data de Nascimento</label>
+                <input id="nascimento" className="form-control" type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="escola">Código da Escola</label>
+                <input id="escola" className="form-control" type="number" value={codigoEscola} onChange={(e) => setCodigoEscola(e.target.value)} required />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-block">Cadastrar Atleta</button>
+          </form>
         </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>RG / Matrícula</label>
-          <input 
-            type="text" 
-            value={rgMatricula} 
-            onChange={(e) => setRgMatricula(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Data de Nascimento</label>
-          <input 
-            type="date" 
-            value={dataNascimento} 
-            onChange={(e) => setDataNascimento(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Código da Escola</label>
-          <input 
-            type="number" 
-            value={codigoEscola} 
-            onChange={(e) => setCodigoEscola(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' }}>
-          Cadastrar Atleta
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

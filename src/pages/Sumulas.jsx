@@ -33,11 +33,11 @@ function Sumulas() {
   timeB_id: Number(timeB), // Conversão para número adicionada
   golsB: Number(golsB)
 };
-      
+
       // Dispara o placar para a nossa nova rota unificada
       await api.post('/sumulas/placar', payload);
       setMensagem('Placar registrado! A classificação foi atualizada com sucesso.');
-      
+
       // Zera os gols para a próxima inserção
       setGolsA(0);
       setGolsB(0);
@@ -48,51 +48,56 @@ function Sumulas() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}> 
-      <h2>Registro de Súmulas 📝</h2>
-      <p>Informe o placar da partida para atualizar a classificação automaticamente.</p>
+    <div className="page">
+      <div className="container-sm">
+        <header className="page-header">
+          <p className="eyebrow">Resultados</p>
+          <h1 className="page-title">Registro de Súmulas</h1>
+          <p className="page-subtitle">Informe o placar da partida para atualizar a classificação automaticamente.</p>
+        </header>
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: '600px', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #ccc', marginTop: '20px' }}>
-        
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontWeight: 'bold' }}>Grupo da Partida: </label>
-          <select value={grupo} onChange={(e) => setGrupo(e.target.value)} style={{ padding: '5px', marginLeft: '10px' }}>
-            <option value="A">Grupo A</option>
-            <option value="B">Grupo B</option>
-          </select>
+        <div className="card">
+          <form onSubmit={handleSubmit} className="card-body form">
+            <div className="form-group">
+              <label className="form-label" htmlFor="grupo">Grupo da Partida</label>
+              <select id="grupo" className="form-control" value={grupo} onChange={(e) => setGrupo(e.target.value)}>
+                <option value="A">Grupo A</option>
+                <option value="B">Grupo B</option>
+              </select>
+            </div>
+
+            <div className="form-row" style={{ alignItems: 'end' }}>
+              {/* Time Mandante */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="timeA">Time Mandante</label>
+                <select id="timeA" className="form-control" value={timeA} onChange={(e) => setTimeA(e.target.value)} required>
+                  <option value="">Selecione o Time A...</option>
+                  {times.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                </select>
+                <input className="form-control input-score" type="number" min="0" value={golsA} onChange={(e) => setGolsA(e.target.value)} required aria-label="Gols do mandante" style={{ alignSelf: 'center' }} />
+              </div>
+
+              {/* Time Visitante */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="timeB">Time Visitante</label>
+                <select id="timeB" className="form-control" value={timeB} onChange={(e) => setTimeB(e.target.value)} required>
+                  <option value="">Selecione o Time B...</option>
+                  {times.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                </select>
+                <input className="form-control input-score" type="number" min="0" value={golsB} onChange={(e) => setGolsB(e.target.value)} required aria-label="Gols do visitante" style={{ alignSelf: 'center' }} />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-block">Registrar Placar</button>
+
+            {mensagem && (
+              <p className={`alert ${mensagem.includes('sucesso') ? 'alert-success' : 'alert-error'}`} style={{ margin: 0 }}>
+                {mensagem}
+              </p>
+            )}
+          </form>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          
-          {/* Time Mandante */}
-          <div style={{ flex: '1', textAlign: 'center' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Time Mandante</label>
-            <select value={timeA} onChange={(e) => setTimeA(e.target.value)} required style={{ width: '90%', padding: '8px', marginBottom: '10px' }}>
-              <option value="">Selecione o Time A...</option>
-              {times.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
-            </select>
-            <input type="number" min="0" value={golsA} onChange={(e) => setGolsA(e.target.value)} style={{ width: '60px', padding: '8px', fontSize: '18px', textAlign: 'center' }} required />
-          </div>
-
-          <h3 style={{ margin: '0 15px', color: '#7f8c8d' }}>X</h3>
-
-          {/* Time Visitante */}
-          <div style={{ flex: '1', textAlign: 'center' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Time Visitante</label>
-            <select value={timeB} onChange={(e) => setTimeB(e.target.value)} required style={{ width: '90%', padding: '8px', marginBottom: '10px' }}>
-              <option value="">Selecione o Time B...</option>
-              {times.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
-            </select>
-            <input type="number" min="0" value={golsB} onChange={(e) => setGolsB(e.target.value)} style={{ width: '60px', padding: '8px', fontSize: '18px', textAlign: 'center' }} required />
-          </div>
-        </div>
-
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' }}>
-          Registrar Placar
-        </button>
-        
-        {mensagem && <p style={{ marginTop: '15px', fontWeight: 'bold', color: mensagem.includes('sucesso') ? 'green' : 'red', textAlign: 'center' }}>{mensagem}</p>}
-      </form>
+      </div>
     </div>
   );
 }

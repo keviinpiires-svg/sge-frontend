@@ -6,33 +6,46 @@ function ListaJogos() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
-  
+
   // Estados para finalização de partida
   const [jogoEmFinalizacao, setJogoEmFinalizacao] = useState(null);
   const [placar1, setPlacar1] = useState('');
   const [placar2, setPlacar2] = useState('');
 
-  const fetchJogos = async () => {
-    setCarregando(true);
-    try {
-      const response = await fetch('http://localhost:3000/api/jogos');
-      if (!response.ok) {
-        throw new Error('Falha ao buscar as partidas.');
-      }
-      const data = await response.json();
-      
-      const arrayJogos = Array.isArray(data) ? data : (data.jogos || []);
-      setJogos(arrayJogos);
-    } catch (error) {
-      setErro(error.message || 'Ocorreu um erro de conexão.');
-    } finally {
-      setCarregando(false);
-    }
-  };
+  // Incrementar este valor dispara uma nova busca (ex: após finalizar uma partida)
+  const [recarga, setRecarga] = useState(0);
 
   useEffect(() => {
-    fetchJogos();
-  }, []);
+    let ativo = true;
+
+    fetch('http://localhost:3000/api/jogos')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Falha ao buscar as partidas.');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (!ativo) return;
+        const arrayJogos = Array.isArray(data) ? data : (data.jogos || []);
+        setJogos(arrayJogos);
+      })
+      .catch((error) => {
+        if (ativo) setErro(error.message || 'Ocorreu um erro de conexão.');
+      })
+      .finally(() => {
+        if (ativo) setCarregando(false);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, [recarga]);
+
+  const recarregarJogos = () => {
+    setCarregando(true);
+    setRecarga((r) => r + 1);
+  };
 
   const formatarDataHora = (dataStr) => {
     if (!dataStr) return '';
@@ -44,7 +57,7 @@ function ListaJogos() {
   const formatarPlacar = (placar1, placar2) => {
     const p1 = (placar1 !== null && placar1 !== undefined) ? placar1 : '-';
     const p2 = (placar2 !== null && placar2 !== undefined) ? placar2 : '-';
-    
+
     if (p1 === '-' && p2 === '-') return ' - ';
     return `${p1} - ${p2}`;
   };
@@ -72,7 +85,7 @@ function ListaJogos() {
       if (response.status === 200) {
         alert('Partida finalizada com sucesso!');
         setJogoEmFinalizacao(null);
-        fetchJogos(); // Recarrega a tabela
+        recarregarJogos(); // Recarrega a tabela
       } else {
         const data = await response.json().catch(() => ({}));
         alert(`Erro ao finalizar a partida: ${data.message || 'Erro desconhecido'}`);
@@ -83,158 +96,162 @@ function ListaJogos() {
     }
   };
 
+  const nomeEscola1 = (jogo) => jogo.escola_1 || `Escola ${jogo.escola_1_id}`;
+  const nomeEscola2 = (jogo) => jogo.escola_2 || `Escola ${jogo.escola_2_id}`;
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1100px', margin: '0 auto' }}>
-      <h2>Tabela de Jogos 🏆</h2>
-      <p>Acompanhe abaixo a lista completa de partidas e seus resultados.</p>
+    <div className="page">
+      <div className="container-lg">
+        <header className="page-header">
+          <p className="eyebrow">Calendário</p>
+          <h1 className="page-title">Tabela de Jogos</h1>
+          <p className="page-subtitle">Acompanhe a lista completa de partidas e seus resultados.</p>
+        </header>
 
-      {carregando && (
-        <p style={{ color: '#555', fontStyle: 'italic', marginTop: '20px' }}>Carregando jogos...</p>
-      )}
-      
-      {erro && (
-        <p style={{ color: '#dc3545', fontWeight: 'bold', marginTop: '20px' }}>Erro: {erro}</p>
-      )}
-
-      {!carregando && !erro && jogos.length === 0 && (
-        <div style={{ padding: '20px', textAlign: 'center', color: '#777', backgroundColor: '#f9f9f9', borderRadius: '8px', marginTop: '20px' }}>
-          Nenhuma partida encontrada
-        </div>
-      )}
-
-      {!carregando && !erro && jogos.length > 0 && !jogoEmFinalizacao && (
-        <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #ddd', overflowX: 'auto', marginTop: '20px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
-            <thead style={{ backgroundColor: '#f1f1f1' }}>
-              <tr>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333' }}>Nº</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333' }}>Fase/Grupo</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333' }}>Local</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333' }}>Data/Hora</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333', textAlign: 'center' }}>Confronto</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333', textAlign: 'center' }}>Placar</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333' }}>Status</th>
-                <th style={{ padding: '15px', borderBottom: '2px solid #ddd', color: '#333', textAlign: 'center' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jogos.map((jogo, index) => (
-                <tr key={jogo.id || index} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '15px', color: '#555', fontWeight: 'bold' }}>
-                    {jogo.numero_jogo}
-                  </td>
-                  <td style={{ padding: '15px', color: '#555' }}>
-                    {jogo.fase} {jogo.grupo_id ? `(G${jogo.grupo_id})` : ''}
-                  </td>
-                  <td style={{ padding: '15px', color: '#555' }}>
-                    {jogo.local_jogo || 'Não definido'}
-                  </td>
-                  <td style={{ padding: '15px', color: '#555' }}>
-                    {formatarDataHora(jogo.data_hora)}
-                  </td>
-                  <td style={{ padding: '15px', color: '#333', textAlign: 'center', fontWeight: 'bold', fontSize: '15px' }}>
-                    {jogo.escola_1 || jogo.escola_1_id} <span style={{ color: '#e74c3c', margin: '0 8px' }}>X</span> {jogo.escola_2 || jogo.escola_2_id}
-                  </td>
-                  <td style={{ padding: '15px', color: '#555', textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
-                    {formatarPlacar(jogo.placar_escola_1, jogo.placar_escola_2)}
-                  </td>
-                  <td style={{ padding: '15px', color: '#555' }}>
-                    <span style={{ 
-                      padding: '5px 10px', 
-                      borderRadius: '12px', 
-                      fontSize: '13px', 
-                      backgroundColor: jogo.status === 'AGENDADO' ? '#e2e3e5' : '#d4edda', 
-                      color: jogo.status === 'AGENDADO' ? '#383d41' : '#155724',
-                      fontWeight: 'bold'
-                    }}>
-                      {jogo.status || 'AGENDADO'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '15px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      <button 
-                        onClick={() => navigate(`/detalhes-sumula/${jogo.id_jogo || jogo.id}`)}
-                        style={{ padding: '6px 12px', backgroundColor: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                      >
-                        👁️ Ver Súmula
-                      </button>
-                      <button 
-                        onClick={() => navigate(`/preencher-sumula/${jogo.id_jogo || jogo.id}`)}
-                        style={{ padding: '6px 12px', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                      >
-                        📝 Súmula
-                      </button>
-                      {jogo.status !== 'FINALIZADO' && (
-                        <button 
-                          onClick={() => abrirFinalizacao(jogo)}
-                          style={{ padding: '6px 12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                        >
-                          ⚽ Finalizar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {jogoEmFinalizacao && (
-        <div style={{ backgroundColor: '#f9f9f9', padding: '25px', borderRadius: '8px', border: '1px solid #ccc', marginTop: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Finalizar Partida #{jogoEmFinalizacao.numero_jogo}</h3>
-          <p style={{ color: '#555' }}>
-            Informe o placar final do confronto entre <strong>{jogoEmFinalizacao.escola_1 || `Escola ${jogoEmFinalizacao.escola_1_id}`}</strong> e <strong>{jogoEmFinalizacao.escola_2 || `Escola ${jogoEmFinalizacao.escola_2_id}`}</strong>.
-          </p>
-          
-          <form onSubmit={handleFinalizar} style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', marginTop: '20px', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1', minWidth: '200px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
-                Gols: {jogoEmFinalizacao.escola_1 || `Escola ${jogoEmFinalizacao.escola_1_id}`}
-              </label>
-              <input 
-                type="number" 
-                min="0"
-                value={placar1} 
-                onChange={(e) => setPlacar1(e.target.value)} 
-                required 
-                style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc', fontSize: '16px' }} 
-              />
+        {carregando && (
+          <div className="card">
+            <div className="state">
+              <div className="spinner" />
+              <p className="state-text">Carregando jogos...</p>
             </div>
+          </div>
+        )}
 
-            <div style={{ flex: '1', minWidth: '200px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
-                Gols: {jogoEmFinalizacao.escola_2 || `Escola ${jogoEmFinalizacao.escola_2_id}`}
-              </label>
-              <input 
-                type="number" 
-                min="0"
-                value={placar2} 
-                onChange={(e) => setPlacar2(e.target.value)} 
-                required 
-                style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc', fontSize: '16px' }} 
-              />
+        {!carregando && erro && (
+          <div className="card">
+            <div className="state state-error">
+              <div className="state-icon">⚠️</div>
+              <p className="state-title">Não foi possível carregar os jogos</p>
+              <p className="state-text">{erro}</p>
             </div>
+          </div>
+        )}
 
-            <div style={{ display: 'flex', gap: '10px', flex: '1', minWidth: '300px' }}>
-              <button 
-                type="button" 
-                onClick={() => setJogoEmFinalizacao(null)}
-                style={{ flex: 1, padding: '12px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                style={{ flex: 2, padding: '12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
-              >
-                Confirmar Finalização
-              </button>
+        {!carregando && !erro && jogos.length === 0 && (
+          <div className="card">
+            <div className="state">
+              <div className="state-icon">📅</div>
+              <p className="state-title">Nenhuma partida encontrada</p>
+              <p className="state-text">Agende um jogo para que ele apareça aqui.</p>
             </div>
-          </form>
-        </div>
-      )}
+          </div>
+        )}
+
+        {!carregando && !erro && jogos.length > 0 && !jogoEmFinalizacao && (
+          <div className="card">
+            <div className="table-wrap">
+              <table className="table-sge" style={{ minWidth: '980px' }}>
+                <thead>
+                  <tr>
+                    <th>Nº</th>
+                    <th className="text-left">Fase/Grupo</th>
+                    <th className="text-left">Local</th>
+                    <th className="text-left">Data/Hora</th>
+                    <th>Confronto</th>
+                    <th>Placar</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jogos.map((jogo, index) => (
+                    <tr key={jogo.id || index}>
+                      <td className="text-strong">{jogo.numero_jogo}</td>
+                      <td className="text-left text-soft">
+                        {jogo.fase} {jogo.grupo_id ? `(G${jogo.grupo_id})` : ''}
+                      </td>
+                      <td className="text-left text-soft">{jogo.local_jogo || 'Não definido'}</td>
+                      <td className="text-left text-soft">{formatarDataHora(jogo.data_hora)}</td>
+                      <td className="strong">
+                        {jogo.escola_1 || jogo.escola_1_id}
+                        <span className="vs">X</span>
+                        {jogo.escola_2 || jogo.escola_2_id}
+                      </td>
+                      <td className="text-accent num-lg">
+                        {formatarPlacar(jogo.placar_escola_1, jogo.placar_escola_2)}
+                      </td>
+                      <td>
+                        <span className={`badge ${jogo.status === 'FINALIZADO' ? 'badge-success' : ''}`}>
+                          {jogo.status || 'AGENDADO'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="btn-group" style={{ flexWrap: 'nowrap' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => navigate(`/detalhes-sumula/${jogo.id_jogo || jogo.id}`)}
+                          >
+                            👁️ Ver Súmula
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={() => navigate(`/preencher-sumula/${jogo.id_jogo || jogo.id}`)}
+                          >
+                            📝 Súmula
+                          </button>
+                          {jogo.status !== 'FINALIZADO' && (
+                            <button className="btn btn-success btn-sm" onClick={() => abrirFinalizacao(jogo)}>
+                              ⚽ Finalizar
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {jogoEmFinalizacao && (
+          <div className="card card-highlight">
+            <div className="card-body">
+              <h2 className="card-title">Finalizar Partida #{jogoEmFinalizacao.numero_jogo}</h2>
+              <p className="text-soft" style={{ marginTop: 0 }}>
+                Informe o placar final do confronto entre <strong className="text-accent">{nomeEscola1(jogoEmFinalizacao)}</strong> e <strong className="text-accent">{nomeEscola2(jogoEmFinalizacao)}</strong>.
+              </p>
+
+              <form onSubmit={handleFinalizar} className="form" style={{ marginTop: '20px' }}>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Gols: {nomeEscola1(jogoEmFinalizacao)}</label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="0"
+                      value={placar1}
+                      onChange={(e) => setPlacar1(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Gols: {nomeEscola2(jogoEmFinalizacao)}</label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="0"
+                      value={placar2}
+                      onChange={(e) => setPlacar2(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="btn-row">
+                  <button type="button" className="btn btn-secondary" onClick={() => setJogoEmFinalizacao(null)}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>
+                    Confirmar Finalização
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

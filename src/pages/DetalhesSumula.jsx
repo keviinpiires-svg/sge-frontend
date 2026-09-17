@@ -1,14 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 
 function DetalhesSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [jogo, setJogo] = useState(null);
   const [eventos, setEventos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+
+  // Área impressa no PDF: placar + tabela de eventos
+  const sumulaRef = useRef(null);
+  const exportarPdf = useReactToPrint({
+    contentRef: sumulaRef,
+    documentTitle: () => `Sumula_Jogo_${jogo?.numero_jogo || id}`,
+    pageStyle: '@page { size: A4; margin: 12mm; } html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
+  });
 
   useEffect(() => {
     async function carregarRelatorio() {
@@ -17,9 +26,9 @@ function DetalhesSumula() {
         if (!response.ok) {
           throw new Error('Falha ao carregar detalhes da súmula.');
         }
-        
+
         const data = await response.json();
-        
+
         // Estratégia flexível de leitura, caso o backend retorne array (JOINs) ou objeto estruturado
         if (Array.isArray(data)) {
           if (data.length > 0) {
@@ -59,117 +68,143 @@ function DetalhesSumula() {
     }
   }, [id]);
 
+  const botaoVoltar = (
+    <div className="text-center mt-lg">
+      <button className="btn btn-secondary btn-pill btn-lg" onClick={() => navigate('/lista-jogos')}>
+        ← Voltar para a Tabela de Jogos
+      </button>
+    </div>
+  );
+
   if (carregando) {
     return (
-      <div style={{ padding: '50px', textAlign: 'center', fontFamily: 'sans-serif', fontSize: '18px', color: '#555' }}>
-        Buscando relatório da súmula...
+      <div className="page">
+        <div className="container card">
+          <div className="state">
+            <div className="spinner" />
+            <p className="state-text">Buscando relatório da súmula...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (erro) {
     return (
-      <div style={{ padding: '50px', textAlign: 'center', fontFamily: 'sans-serif', color: '#dc3545', fontSize: '18px' }}>
-        <strong>Erro:</strong> {erro}
+      <div className="page">
+        <div className="container">
+          <div className="card">
+            <div className="state state-error">
+              <div className="state-icon">⚠️</div>
+              <p className="state-title">Não foi possível carregar a súmula</p>
+              <p className="state-text">{erro}</p>
+            </div>
+          </div>
+          {botaoVoltar}
+        </div>
       </div>
     );
   }
 
+  const placar = (valor) => (valor !== null && valor !== undefined ? valor : '-');
+  const vazio = <span className="text-muted" style={{ fontWeight: 400 }}>-</span>;
+
   return (
-    <div style={{ padding: '30px 20px', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      
-      {/* Placar estilo Esportivo (Stadium View) */}
-      <div style={{ backgroundColor: '#1a252f', color: '#fff', padding: '40px 30px', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', textAlign: 'center', marginBottom: '40px' }}>
-        <h2 style={{ margin: '0 0 10px 0', color: '#f39c12', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '16px' }}>
-          Relatório Final Oficial
-        </h2>
-        <p style={{ margin: '0 0 35px 0', color: '#bdc3c7', fontSize: '14px', fontWeight: 'bold' }}>
-          JOGO {jogo?.numero_jogo ? `#${jogo.numero_jogo}` : id} {jogo?.fase && `— ${jogo.fase}`}
-        </p>
-        
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: '150px', textAlign: 'right' }}>
-            <h3 style={{ fontSize: '26px', margin: 0, fontWeight: '700' }}>{jogo?.escola_1 || 'Equipe Mandante'}</h3>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ backgroundColor: '#fff', color: '#1a252f', fontSize: '42px', fontWeight: '900', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              {jogo?.placar_escola_1 !== null && jogo?.placar_escola_1 !== undefined ? jogo.placar_escola_1 : '-'}
-            </div>
-            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#7f8c8d' }}>X</span>
-            <div style={{ backgroundColor: '#fff', color: '#1a252f', fontSize: '42px', fontWeight: '900', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              {jogo?.placar_escola_2 !== null && jogo?.placar_escola_2 !== undefined ? jogo.placar_escola_2 : '-'}
-            </div>
-          </div>
+    <div className="page">
+      <div className="container stack">
 
-          <div style={{ flex: 1, minWidth: '150px', textAlign: 'left' }}>
-            <h3 style={{ fontSize: '26px', margin: 0, fontWeight: '700' }}>{jogo?.escola_2 || 'Equipe Visitante'}</h3>
-          </div>
+        <div className="page-toolbar">
+          <button className="btn btn-secondary" onClick={() => navigate('/lista-jogos')}>← Voltar</button>
+          <button className="btn btn-outline" onClick={exportarPdf}>📄 Exportar PDF</button>
         </div>
-      </div>
 
-      {/* Listagem de Eventos da Súmula */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e1e8ed', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-        <h3 style={{ borderBottom: '2px solid #3498db', paddingBottom: '12px', color: '#2c3e50', marginTop: 0, fontSize: '20px' }}>
-          Atletas com Registro na Súmula
-        </h3>
+        <div ref={sumulaRef} className="stack print-area">
+        {/* Cabeçalho exibido apenas no documento impresso/PDF */}
+        <header className="print-only print-header">
+          <p className="eyebrow">Jogos Estudantis — Sistema de Gestão Esportiva</p>
+          <h1 className="page-title">Súmula Oficial da Partida</h1>
+          <p className="page-subtitle">Documento gerado em {new Date().toLocaleString('pt-BR')}</p>
+        </header>
 
-        {eventos.length === 0 ? (
-          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#7f8c8d', fontSize: '16px', backgroundColor: '#f9fbfd', borderRadius: '8px', border: '1px dashed #ccc' }}>
-            Nenhum evento (gols ou cartões) foi registrado nesta súmula.
+        {/* Placar estilo Esportivo (Stadium View) */}
+        <section className="scoreboard">
+          <p className="eyebrow">Relatório Final Oficial</p>
+          <p className="scoreboard-meta">
+            JOGO {jogo?.numero_jogo ? `#${jogo.numero_jogo}` : id} {jogo?.fase && `— ${jogo.fase}`}
+          </p>
+
+          <div className="scoreboard-row">
+            <h2 className="scoreboard-team home">{jogo?.escola_1 || 'Equipe Mandante'}</h2>
+            <div className="scoreboard-scores">
+              <div className="score-box">{placar(jogo?.placar_escola_1)}</div>
+              <span className="scoreboard-x">X</span>
+              <div className="score-box">{placar(jogo?.placar_escola_2)}</div>
+            </div>
+            <h2 className="scoreboard-team away">{jogo?.escola_2 || 'Equipe Visitante'}</h2>
           </div>
-        ) : (
-          <div style={{ overflowX: 'auto', marginTop: '20px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead style={{ backgroundColor: '#f1f5f8' }}>
-                <tr>
-                  <th style={{ padding: '15px', color: '#34495e', borderBottom: '2px solid #dce4ec' }}>Atleta</th>
-                  <th style={{ padding: '15px', color: '#34495e', borderBottom: '2px solid #dce4ec' }}>Escola</th>
-                  <th style={{ padding: '15px', color: '#34495e', borderBottom: '2px solid #dce4ec', textAlign: 'center' }}>⚽ Gols</th>
-                  <th style={{ padding: '15px', color: '#34495e', borderBottom: '2px solid #dce4ec', textAlign: 'center' }}>🟨 Amarelos</th>
-                  <th style={{ padding: '15px', color: '#34495e', borderBottom: '2px solid #dce4ec', textAlign: 'center' }}>🟥 Vermelhos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {eventos.map((evento, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #ecf0f1', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#fdfefe'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                    <td style={{ padding: '15px', color: '#2c3e50', fontWeight: 'bold' }}>
-                      {evento.nome_atleta || evento.atleta || evento.aluno || evento.nome || `Atleta #${evento.aluno_id || evento.atleta_id}`}
-                    </td>
-                    <td style={{ padding: '15px', color: '#7f8c8d', fontSize: '14px' }}>
-                      {evento.nome_escola || evento.escola || '-'}
-                    </td>
-                    <td style={{ padding: '15px', textAlign: 'center', color: '#27ae60', fontWeight: '900', fontSize: '18px' }}>
-                      {evento.gols > 0 ? evento.gols : <span style={{color: '#ccc', fontWeight: 'normal'}}>-</span>}
-                    </td>
-                    <td style={{ padding: '15px', textAlign: 'center', color: '#f39c12', fontWeight: '900', fontSize: '18px' }}>
-                      {evento.cartoes_amarelos > 0 ? evento.cartoes_amarelos : <span style={{color: '#ccc', fontWeight: 'normal'}}>-</span>}
-                    </td>
-                    <td style={{ padding: '15px', textAlign: 'center', color: '#c0392b', fontWeight: '900', fontSize: '18px' }}>
-                      {(evento.cartao_vermelho > 0 || evento.cartoes_vermelhos > 0) ? (evento.cartao_vermelho || evento.cartoes_vermelhos) : <span style={{color: '#ccc', fontWeight: 'normal'}}>-</span>}
-                    </td>
+        </section>
+
+        {/* Listagem de Eventos da Súmula */}
+        <section className="card">
+          <div className="card-body" style={{ paddingBottom: eventos.length ? 0 : undefined }}>
+            <h3 className="card-title" style={{ marginBottom: eventos.length ? 0 : undefined, borderBottom: eventos.length ? 'none' : undefined }}>
+              Atletas com Registro na Súmula
+            </h3>
+          </div>
+
+          {eventos.length === 0 ? (
+            <div className="state state-compact">
+              <div className="state-icon">📋</div>
+              <p className="state-text">Nenhum evento (gols ou cartões) foi registrado nesta súmula.</p>
+            </div>
+          ) : (
+            <div className="table-wrap">
+              <table className="table-sge" style={{ minWidth: '560px' }}>
+                <thead>
+                  <tr>
+                    <th className="text-left">Atleta</th>
+                    <th className="text-left">Escola</th>
+                    <th>⚽ Gols</th>
+                    <th>🟨 Amarelos</th>
+                    <th>🟥 Vermelhos</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {eventos.map((evento, index) => (
+                    <tr key={index}>
+                      <td className="text-left strong">
+                        {evento.nome_atleta || evento.atleta || evento.aluno || evento.nome || `Atleta #${evento.aluno_id || evento.atleta_id}`}
+                      </td>
+                      <td className="text-left text-soft">{evento.nome_escola || evento.escola || '-'}</td>
+                      <td className="text-success num-lg">
+                        {evento.gols > 0 ? evento.gols : vazio}
+                      </td>
+                      <td className="text-accent num-lg">
+                        {evento.cartoes_amarelos > 0 ? evento.cartoes_amarelos : vazio}
+                      </td>
+                      <td className="text-danger num-lg">
+                        {(evento.cartao_vermelho > 0 || evento.cartoes_vermelhos > 0) ? (evento.cartao_vermelho || evento.cartoes_vermelhos) : vazio}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
-      <div style={{ marginTop: '35px', textAlign: 'center' }}>
-        <button 
-          onClick={() => navigate('/lista-jogos')}
-          style={{ padding: '14px 30px', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'background-color 0.2s' }}
-          onMouseOver={e => e.currentTarget.style.backgroundColor = '#7f8c8d'}
-          onMouseOut={e => e.currentTarget.style.backgroundColor = '#95a5a6'}
-        >
-          ← Voltar para a Tabela de Jogos
-        </button>
-      </div>
+        {/* Campos de assinatura para o registro físico */}
+        <footer className="print-only print-signatures">
+          <div><span />Árbitro</div>
+          <div><span />Representante — {jogo?.escola_1 || 'Equipe Mandante'}</div>
+          <div><span />Representante — {jogo?.escola_2 || 'Equipe Visitante'}</div>
+        </footer>
+        </div>
 
+        {botaoVoltar}
+      </div>
     </div>
   );
 }
 
 export default DetalhesSumula;
-

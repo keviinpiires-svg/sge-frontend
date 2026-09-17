@@ -58,113 +58,73 @@ function AgendarJogo() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto' }}>
-      <h2>Agendar Partida 🗓️</h2>
-      <p>Preencha os dados abaixo para agendar um novo jogo no sistema.</p>
+    <div className="page">
+      <div className="container-sm">
+        <header className="page-header">
+          <p className="eyebrow">Calendário</p>
+          <h1 className="page-title">Agendar Partida</h1>
+          <p className="page-subtitle">Preencha os dados abaixo para agendar um novo jogo no sistema.</p>
+        </header>
 
-      <form onSubmit={handleSubmit} style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #ccc', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Número do Jogo</label>
-          <input 
-            type="number" 
-            value={numeroJogo} 
-            onChange={(e) => setNumeroJogo(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
+        <div className="card">
+          <form onSubmit={handleSubmit} className="card-body form">
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="numero">Número do Jogo</label>
+                <input id="numero" className="form-control" type="number" value={numeroJogo} onChange={(e) => setNumeroJogo(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="fase">Fase</label>
+                <input
+                  id="fase"
+                  className="form-control"
+                  type="text"
+                  value={fase}
+                  onChange={(e) => setFase(e.target.value)}
+                  required
+                  placeholder="Ex: Classificatória, Semifinal, Final"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="grupo">ID do Grupo <span className="form-hint">(opcional)</span></label>
+                <input id="grupo" className="form-control" type="number" value={grupoId} onChange={(e) => setGrupoId(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="local">ID do Local</label>
+                <input id="local" className="form-control" type="number" value={localId} onChange={(e) => setLocalId(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="dataHora">Data e Hora</label>
+              <input id="dataHora" className="form-control" type="datetime-local" value={dataHora} onChange={(e) => setDataHora(e.target.value)} required />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="escola1">ID da Escola 1</label>
+                <input id="escola1" className="form-control" type="number" value={escola1Id} onChange={(e) => setEscola1Id(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="escola2">ID da Escola 2</label>
+                <input id="escola2" className="form-control" type="number" value={escola2Id} onChange={(e) => setEscola2Id(e.target.value)} required />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-block" disabled={carregando}>
+              {carregando ? 'Agendando...' : 'Agendar Partida'}
+            </button>
+          </form>
         </div>
-
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Fase</label>
-          <input 
-            type="text" 
-            value={fase} 
-            onChange={(e) => setFase(e.target.value)} 
-            required 
-            placeholder="Ex: Classificatória, Semifinal, Final"
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>ID do Grupo (Opcional)</label>
-          <input 
-            type="number" 
-            value={grupoId} 
-            onChange={(e) => setGrupoId(e.target.value)} 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>ID do Local</label>
-          <input 
-            type="number" 
-            value={localId} 
-            onChange={(e) => setLocalId(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Data e Hora</label>
-          <input 
-            type="datetime-local" 
-            value={dataHora} 
-            onChange={(e) => setDataHora(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ flex: '1' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>ID da Escola 1</label>
-            <input 
-              type="number" 
-              value={escola1Id} 
-              onChange={(e) => setEscola1Id(e.target.value)} 
-              required 
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-            />
-          </div>
-          
-          <div style={{ flex: '1' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>ID da Escola 2</label>
-            <input 
-              type="number" 
-              value={escola2Id} 
-              onChange={(e) => setEscola2Id(e.target.value)} 
-              required 
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} 
-            />
-          </div>
-        </div>
-
-        <button 
-          type="submit" 
-          disabled={carregando}
-          style={{ 
-            width: '100%', 
-            padding: '12px', 
-            backgroundColor: '#28a745', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px', 
-            fontSize: '16px', 
-            cursor: carregando ? 'not-allowed' : 'pointer', 
-            fontWeight: 'bold',
-            marginTop: '10px'
-          }}
-        >
-          {carregando ? 'Agendando...' : 'Agendar Partida'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
 
 export default AgendarJogo;
-

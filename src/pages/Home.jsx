@@ -7,7 +7,7 @@ function Home() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        const resposta = await api.get('/escolas'); 
+        const resposta = await api.get('/escolas');
         setEscolas(resposta.data);
       } catch (erro) {
         console.error("Erro ao conectar com a API:", erro);
@@ -17,26 +17,32 @@ function Home() {
   }, []);
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>Painel do Campeonato 🏆</h1>
-      <p>Escolas cadastradas no banco de dados:</p>
+    <div className="page">
+      <div className="container-lg">
+        <header className="page-header">
+          <p className="eyebrow">Sistema de Gestão Esportiva</p>
+          <h1 className="page-title">Painel do Campeonato 🏆</h1>
+          <p className="page-subtitle">Escolas cadastradas no banco de dados.</p>
+        </header>
 
-      <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginTop: '20px' }}>
-        {escolas.map((escola) => (
-          <div key={escola.id} style={{
-            padding: '15px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            minWidth: '200px',
-            backgroundColor: '#f9f9f9'
-          }}>
-            <h3 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>{escola.nome}</h3>
-            <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>ID: {escola.id}</p>
+        {escolas.length > 0 ? (
+          <div className="grid-cards">
+            {escolas.map((escola) => (
+              <div key={escola.id} className="tile">
+                <h3 className="tile-title">{escola.nome}</h3>
+                <p className="tile-meta">ID: {escola.id}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <div className="card">
+            <div className="state">
+              <div className="state-icon">🏫</div>
+              <p className="state-text">Nenhuma escola encontrada ou aguardando conexão...</p>
+            </div>
+          </div>
+        )}
       </div>
-      
-      {escolas.length === 0 && <p>Nenhuma escola encontrada ou aguardando conexão...</p>}
     </div>
   );
 }
