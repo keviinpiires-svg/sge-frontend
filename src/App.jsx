@@ -11,6 +11,7 @@ import AgendarJogo from './pages/AgendarJogo';
 import ListaJogos from './pages/ListaJogos';  
 import PreencherSumula from './pages/PreencherSumula';
 import DetalhesSumula from './pages/DetalhesSumula';
+import Classificacao from './pages/Classificacao';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/lista-jogos" element={<ListaJogos />} />
         <Route path="/preencher-sumula/:id" element={<PreencherSumula />} />
         <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
+        <Route path="/classificacao" element={<Classificacao />} />
       </Routes>
     </BrowserRouter>
   );

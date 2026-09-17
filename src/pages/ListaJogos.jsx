@@ -153,7 +153,7 @@ function ListaJogos() {
                   <td style={{ padding: '15px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                       <button 
-                        onClick={() => navigate(`/sumula-detalhes/${jogo.id_jogo || jogo.id}`)}
+                        onClick={() => navigate(`/detalhes-sumula/${jogo.id_jogo || jogo.id}`)}
                         style={{ padding: '6px 12px', backgroundColor: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
                       >
                         👁️ Ver Súmula
@@ -164,7 +164,7 @@ function ListaJogos() {
                       >
                         📝 Súmula
                       </button>
-                      {jogo.status === 'AGENDADO' && (
+                      {jogo.status !== 'FINALIZADO' && (
                         <button 
                           onClick={() => abrirFinalizacao(jogo)}
                           style={{ padding: '6px 12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}

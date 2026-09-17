@@ -158,7 +158,7 @@ function DetalhesSumula() {
 
       <div style={{ marginTop: '35px', textAlign: 'center' }}>
         <button 
-          onClick={() => navigate('/jogos')}
+          onClick={() => navigate('/lista-jogos')}
           style={{ padding: '14px 30px', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'background-color 0.2s' }}
           onMouseOver={e => e.currentTarget.style.backgroundColor = '#7f8c8d'}
           onMouseOut={e => e.currentTarget.style.backgroundColor = '#95a5a6'}

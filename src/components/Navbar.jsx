@@ -25,13 +25,13 @@ function Navbar() {
       <Link style={linkStyle} to="/">Início</Link>
       <Link style={linkStyle} to="/cadastro">Cadastrar Time</Link> 
       <Link style={linkStyle} to="/grupos">Fase de Grupos</Link>
+      <Link style={linkStyle} to="/classificacao">Classificação</Link>
       <Link style={linkStyle} to="/matamata">Mata-Mata</Link>
       <Link style={linkStyle} to="/sumulas">Súmulas</Link>
       <Link style={linkStyle} to="/cadastro-atleta">Cadastrar Atleta</Link> 
       <Link style={linkStyle} to="/lista-atletas">Listar Atletas</Link> 
       <Link style={linkStyle} to="/agendar-jogo">Agendar Jogo</Link>
       <Link style={linkStyle} to="/lista-jogos">Listar Jogos</Link>
-      <Link style={linkStyle} to="/preencher-sumula">Preencher Súmula</Link>
     </nav>
   );
 }

@@ -66,7 +66,7 @@ function PreencherSumula() {
     // Mapeia e filtra apenas atletas com ações reais (gols ou cartões > 0)
     const payload = Object.keys(eventos).map(atletaId => ({
       jogo_id: Number(id),
-      aluno_id: Number(atletaId),
+      atleta_id: Number(atletaId),
       gols: eventos[atletaId].gols || 0,
       cartoes_amarelos: eventos[atletaId].cartoes_amarelos || 0,
       cartao_vermelho: eventos[atletaId].cartao_vermelho || 0
@@ -81,10 +81,10 @@ function PreencherSumula() {
 
       if (response.ok) {
         alert('Súmula da partida salva com sucesso!');
-        navigate('/jogos'); // Redireciona para a lista de jogos
+        navigate('/lista-jogos'); // Redireciona para a lista de jogos
       } else {
         const errData = await response.json().catch(() => ({}));
-        alert(`Falha ao salvar a súmula: ${errData.message || 'Verifique o console para detalhes.'}`);
+        alert(`Falha ao salvar a súmula: ${errData.erro || errData.message || 'Verifique o console para detalhes.'}`);
       }
     } catch (error) {
       console.error('Erro no POST sumula:', error);
