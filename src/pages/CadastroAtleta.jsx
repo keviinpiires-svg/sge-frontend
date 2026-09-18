@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { authHeaders, sessaoExpirada } from '../services/token';
-import { API_URL } from '../services/config';
 import { listarEscolas } from '../services/escolas';
+import { cadastrarAtleta } from '../services/atletas';
 
 function CadastroAtleta() {
   const [nome, setNome] = useState('');
@@ -41,32 +40,15 @@ function CadastroAtleta() {
     };
 
     try {
-      const response = await fetch(`${API_URL}/api/atletas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders()
-        },
-        body: JSON.stringify(atleta)
-      });
-
-      if (response.status === 401) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        return sessaoExpirada();
-      }
-
-      if (response.ok) {
-        alert('Cadastro realizado com sucesso!');
-        setNome('');
-        setRgMatricula('');
-        setDataNascimento('');
-        setCodigoEscola('');
-      } else {
-        alert('Falha ao realizar o cadastro. Tente novamente.');
-      }
+      await cadastrarAtleta(atleta);
+      alert('Cadastro realizado com sucesso!');
+      setNome('');
+      setRgMatricula('');
+      setDataNascimento('');
+      setCodigoEscola('');
     } catch (error) {
       console.error('Erro:', error);
-      alert('Falha ao realizar o cadastro. Erro de conexão.');
+      alert(error.mensagem);
     }
   };
 

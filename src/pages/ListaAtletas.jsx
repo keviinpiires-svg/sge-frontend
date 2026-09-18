@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
-import { authHeaders, sessaoExpirada } from '../services/token';
-import { API_URL } from '../services/config';
 import { listarEscolas } from '../services/escolas';
+import { listarAtletasPorEquipe, atualizarAtleta, excluirAtleta } from '../services/atletas';
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
@@ -41,17 +40,7 @@ function ListaAtletas() {
 
     setCarregando(true);
     try {
-      const response = await fetch(`${API_URL}/api/atletas/equipe/${escolaId}`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Resposta do Backend:", data);
-
-        // Se a resposta for um objeto (ex: { atletas: [...] }), extraímos o array
-        const atletasRetornados = Array.isArray(data) ? data : (data.atletas || []);
-        setAtletas(atletasRetornados);
-      } else {
-        setAtletas([]);
-      }
+      setAtletas(await listarAtletasPorEquipe(escolaId));
     } catch (error) {
       console.error('Erro ao buscar atletas:', error);
       setAtletas([]);
@@ -86,55 +75,25 @@ function ListaAtletas() {
   const handleSalvarEdicao = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/api/atletas/${atletaEmEdicao.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders()
-        },
-        body: JSON.stringify(atletaEmEdicao)
-      });
-
-      if (response.status === 401) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        return sessaoExpirada();
-      }
-
-      if (response.ok) {
-        alert('Atleta atualizado com sucesso!');
-        setAtletaEmEdicao(null);
-        buscarAtletas(); // Atualiza a tabela chamando a API de novo
-      } else {
-        alert('Falha ao atualizar o atleta. Tente novamente.');
-      }
+      await atualizarAtleta(atletaEmEdicao.id, atletaEmEdicao);
+      alert('Atleta atualizado com sucesso!');
+      setAtletaEmEdicao(null);
+      buscarAtletas(); // Atualiza a tabela chamando a API de novo
     } catch (error) {
       console.error('Erro ao salvar edicao:', error);
-      alert('Ocorreu um erro de conexão ao tentar salvar.');
+      alert(error.mensagem);
     }
   };
 
   const handleExcluir = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este atleta?')) {
       try {
-        const response = await fetch(`${API_URL}/api/atletas/${id}`, {
-          method: 'DELETE',
-          headers: authHeaders()
-        });
-
-        if (response.status === 401) {
-          alert('Sua sessão expirou. Faça login novamente.');
-          return sessaoExpirada();
-        }
-
-        if (response.ok) {
-          alert('Atleta excluído com sucesso!');
-          setAtletas(atletas.filter((atleta) => atleta.id !== id));
-        } else {
-          alert('Falha ao excluir o atleta.');
-        }
+        await excluirAtleta(id);
+        alert('Atleta excluído com sucesso!');
+        setAtletas(atletas.filter((atleta) => atleta.id !== id));
       } catch (error) {
         console.error('Erro ao excluir atleta:', error);
-        alert('Ocorreu um erro de conexão.');
+        alert(error.mensagem);
       }
     }
   };

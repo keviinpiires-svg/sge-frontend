@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { authHeaders, sessaoExpirada } from '../services/token';
-import { API_URL } from '../services/config';
+import { listarEscolas } from '../services/escolas';
+import { listarLocais } from '../services/locais';
+import { listarGrupos } from '../services/grupos';
+import { agendarJogo as agendar } from '../services/jogos';
 
 function AgendarJogo() {
   // Agendamento manual cobre apenas a fase de grupos: semifinais e final
@@ -21,20 +23,23 @@ function AgendarJogo() {
   useEffect(() => {
     let ativo = true;
 
-    const buscar = (rota) =>
-      fetch(`${API_URL}/api/${rota}`)
-        .then((response) => response.json())
-        .catch((error) => {
-          console.error(`Erro ao buscar ${rota}:`, error);
-          return [];
-        });
+    // Uma lista que falhe não impede as outras de carregarem
+    const semFalhar = (promessa, nome) =>
+      promessa.catch((error) => {
+        console.error(`Erro ao buscar ${nome}:`, error);
+        return [];
+      });
 
-    Promise.all([buscar('escolas'), buscar('locais'), buscar('grupos')])
+    Promise.all([
+      semFalhar(listarEscolas(), 'escolas'),
+      semFalhar(listarLocais(), 'locais'),
+      semFalhar(listarGrupos(), 'grupos')
+    ])
       .then(([dadosEscolas, dadosLocais, dadosGrupos]) => {
         if (!ativo) return;
-        setEscolas(Array.isArray(dadosEscolas) ? dadosEscolas : []);
-        setLocais(Array.isArray(dadosLocais) ? dadosLocais : []);
-        setGrupos(Array.isArray(dadosGrupos) ? dadosGrupos : []);
+        setEscolas(dadosEscolas);
+        setLocais(dadosLocais);
+        setGrupos(dadosGrupos);
       })
       .finally(() => {
         if (ativo) setCarregandoListas(false);
@@ -81,39 +86,18 @@ function AgendarJogo() {
     };
 
     try {
-      const response = await fetch(`${API_URL}/api/jogos/agendar`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders()
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.status === 401) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        return sessaoExpirada();
-      }
-
-      if (response.status === 201) {
-        const data = await response.json().catch(() => ({}));
-        alert(data.mensagem || 'Jogo agendado com sucesso!');
-        // Limpar os estados
-        setFase('Classificatoria');
-        setGrupoId('');
-        setLocalId('');
-        setDataHora('');
-        setEscola1Id('');
-        setEscola2Id('');
-      } else {
-        // Tenta capturar a mensagem de erro do backend, se houver
-        const data = await response.json().catch(() => ({}));
-        const mensagemErro = data.message || data.erro || data.error || 'Verifique os dados enviados.';
-        alert(`Falha ao agendar jogo: ${mensagemErro}`);
-      }
+      const data = await agendar(payload);
+      alert(data.mensagem || 'Jogo agendado com sucesso!');
+      // Limpar os estados
+      setFase('Classificatoria');
+      setGrupoId('');
+      setLocalId('');
+      setDataHora('');
+      setEscola1Id('');
+      setEscola2Id('');
     } catch (error) {
       console.error('Erro na requisição:', error);
-      alert('Ocorreu um erro de conexão ao tentar agendar o jogo.');
+      alert(`Falha ao agendar jogo: ${error.mensagem}`);
     } finally {
       setCarregando(false);
     }

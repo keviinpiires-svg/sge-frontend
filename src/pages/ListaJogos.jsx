@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { authHeaders, sessaoExpirada } from '../services/token';
-import { API_URL } from '../services/config';
+import { listarJogos, finalizarJogo, excluirJogo } from '../services/jogos';
 
 function ListaJogos() {
   const [jogos, setJogos] = useState([]);
@@ -22,20 +21,12 @@ function ListaJogos() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/jogos`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Falha ao buscar as partidas.');
-        }
-        return response.json();
-      })
+    listarJogos()
       .then((data) => {
-        if (!ativo) return;
-        const arrayJogos = Array.isArray(data) ? data : (data.jogos || []);
-        setJogos(arrayJogos);
+        if (ativo) setJogos(data);
       })
       .catch((error) => {
-        if (ativo) setErro(error.message || 'Ocorreu um erro de conexão.');
+        if (ativo) setErro(error.mensagem);
       })
       .finally(() => {
         if (ativo) setCarregando(false);
@@ -75,34 +66,17 @@ function ListaJogos() {
   const handleFinalizar = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/api/jogos/finalizar/${jogoEmFinalizacao.id_jogo || jogoEmFinalizacao.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders()
-        },
-        body: JSON.stringify({
-          placar_escola_1: Number(placar1),
-          placar_escola_2: Number(placar2)
-        })
+      await finalizarJogo(jogoEmFinalizacao.id_jogo || jogoEmFinalizacao.id, {
+        placar_escola_1: Number(placar1),
+        placar_escola_2: Number(placar2)
       });
 
-      if (response.status === 401) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        return sessaoExpirada();
-      }
-
-      if (response.status === 200) {
-        alert('Partida finalizada com sucesso!');
-        setJogoEmFinalizacao(null);
-        recarregarJogos(); // Recarrega a tabela
-      } else {
-        const data = await response.json().catch(() => ({}));
-        alert(`Erro ao finalizar a partida: ${data.message || 'Erro desconhecido'}`);
-      }
+      alert('Partida finalizada com sucesso!');
+      setJogoEmFinalizacao(null);
+      recarregarJogos(); // Recarrega a tabela
     } catch (error) {
       console.error('Erro ao finalizar partida:', error);
-      alert('Ocorreu um erro de conexão ao tentar finalizar.');
+      alert(`Erro ao finalizar a partida: ${error.mensagem}`);
     }
   };
 
@@ -113,26 +87,12 @@ function ListaJogos() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/jogos/${jogo.id_jogo || jogo.id}`, {
-        method: 'DELETE',
-        headers: authHeaders()
-      });
-
-      if (response.status === 401) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        return sessaoExpirada();
-      }
-
-      if (response.ok) {
-        alert('Jogo excluído com sucesso!');
-        recarregarJogos();
-      } else {
-        const data = await response.json().catch(() => ({}));
-        alert(`Erro ao excluir o jogo: ${data.message || data.erro || 'Erro desconhecido'}`);
-      }
+      await excluirJogo(jogo.id_jogo || jogo.id);
+      alert('Jogo excluído com sucesso!');
+      recarregarJogos();
     } catch (error) {
       console.error('Erro ao excluir jogo:', error);
-      alert('Ocorreu um erro de conexão ao tentar excluir.');
+      alert(`Erro ao excluir o jogo: ${error.mensagem}`);
     }
   };
 
