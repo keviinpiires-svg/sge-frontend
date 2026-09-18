@@ -1,10 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { authHeaders, sessaoExpirada } from '../services/token';
 
 function CadastroAtleta() {
   const [nome, setNome] = useState('');
   const [rgMatricula, setRgMatricula] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [codigoEscola, setCodigoEscola] = useState('');
+  const [escolas, setEscolas] = useState([]);
+  const [carregandoEscolas, setCarregandoEscolas] = useState(true);
+
+  useEffect(() => {
+    let ativo = true;
+
+    fetch('http://localhost:3000/api/escolas')
+      .then((response) => response.json())
+      .then((data) => {
+        if (ativo) setEscolas(data);
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar escolas:', error);
+      })
+      .finally(() => {
+        if (ativo) setCarregandoEscolas(false);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,10 +43,16 @@ function CadastroAtleta() {
       const response = await fetch('http://localhost:3000/api/atletas', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify(atleta)
       });
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        return sessaoExpirada();
+      }
 
       if (response.ok) {
         alert('Cadastro realizado com sucesso!');
@@ -68,8 +97,29 @@ function CadastroAtleta() {
               </div>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="escola">Código da Escola</label>
-                <input id="escola" className="form-control" type="number" value={codigoEscola} onChange={(e) => setCodigoEscola(e.target.value)} required />
+                <label className="form-label" htmlFor="escola">Escola</label>
+                <select
+                  id="escola"
+                  className="form-control"
+                  value={codigoEscola}
+                  onChange={(e) => setCodigoEscola(e.target.value)}
+                  disabled={carregandoEscolas || escolas.length === 0}
+                  required
+                >
+                  <option value="">
+                    {carregandoEscolas
+                      ? 'Carregando escolas...'
+                      : escolas.length === 0
+                        ? 'Nenhuma escola cadastrada'
+                        : 'Selecione a escola'}
+                  </option>
+                  {escolas.map((escola) => (
+                    <option key={escola.id} value={escola.id}>{escola.nome}</option>
+                  ))}
+                </select>
+                {!carregandoEscolas && escolas.length === 0 && (
+                  <span className="form-hint">Cadastre uma escola antes de registrar atletas.</span>
+                )}
               </div>
             </div>
 

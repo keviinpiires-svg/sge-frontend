@@ -28,33 +28,8 @@ function DetalhesSumula() {
         }
 
         const data = await response.json();
-
-        // Estratégia flexível de leitura, caso o backend retorne array (JOINs) ou objeto estruturado
-        if (Array.isArray(data)) {
-          if (data.length > 0) {
-            setJogo({
-              escola_1: data[0].escola_1 || data[0].escola_mandante,
-              escola_2: data[0].escola_2 || data[0].escola_visitante,
-              placar_escola_1: data[0].placar_escola_1,
-              placar_escola_2: data[0].placar_escola_2,
-              fase: data[0].fase,
-              numero_jogo: data[0].numero_jogo
-            });
-            setEventos(data);
-          } else {
-            // Sem eventos, tenta recuperar os dados básicos do jogo
-            const resJogo = await fetch(`http://localhost:3000/api/jogos/${id}`);
-            if (resJogo.ok) {
-              const infoJogo = await resJogo.json();
-              setJogo(Array.isArray(infoJogo) ? infoJogo[0] : infoJogo);
-            }
-            setEventos([]);
-          }
-        } else {
-          // Quando o backend já retorna num JSON estruturado { jogo: {}, eventos: [] }
-          setJogo(data.jogo || data);
-          setEventos(data.eventos || []);
-        }
+        setJogo(data.jogo);
+        setEventos(data.eventos);
       } catch (err) {
         console.error(err);
         setErro(err.message || 'Ocorreu um erro de conexão.');
@@ -106,8 +81,8 @@ function DetalhesSumula() {
     );
   }
 
-  const placar = (valor) => (valor !== null && valor !== undefined ? valor : '-');
   const vazio = <span className="text-muted" style={{ fontWeight: 400 }}>-</span>;
+  const finalizado = jogo.status === 'FINALIZADO';
 
   return (
     <div className="page">
@@ -130,18 +105,23 @@ function DetalhesSumula() {
         <section className="scoreboard">
           <p className="eyebrow">Relatório Final Oficial</p>
           <p className="scoreboard-meta">
-            JOGO {jogo?.numero_jogo ? `#${jogo.numero_jogo}` : id} {jogo?.fase && `— ${jogo.fase}`}
+            JOGO #{jogo.numero_jogo} — {jogo.fase}
+            {jogo.local_nome && ` — ${jogo.local_nome}`}
           </p>
 
           <div className="scoreboard-row">
-            <h2 className="scoreboard-team home">{jogo?.escola_1 || 'Equipe Mandante'}</h2>
+            <h2 className="scoreboard-team home">{jogo.escola_1_nome}</h2>
             <div className="scoreboard-scores">
-              <div className="score-box">{placar(jogo?.placar_escola_1)}</div>
+              <div className="score-box">{jogo.placar_escola_1}</div>
               <span className="scoreboard-x">X</span>
-              <div className="score-box">{placar(jogo?.placar_escola_2)}</div>
+              <div className="score-box">{jogo.placar_escola_2}</div>
             </div>
-            <h2 className="scoreboard-team away">{jogo?.escola_2 || 'Equipe Visitante'}</h2>
+            <h2 className="scoreboard-team away">{jogo.escola_2_nome}</h2>
           </div>
+
+          <p style={{ marginTop: '20px', marginBottom: 0 }}>
+            <span className={`badge ${finalizado ? 'badge-success' : 'badge-accent'}`}>{jogo.status}</span>
+          </p>
         </section>
 
         {/* Listagem de Eventos da Súmula */}
@@ -172,10 +152,8 @@ function DetalhesSumula() {
                 <tbody>
                   {eventos.map((evento, index) => (
                     <tr key={index}>
-                      <td className="text-left strong">
-                        {evento.nome_atleta || evento.atleta || evento.aluno || evento.nome || `Atleta #${evento.aluno_id || evento.atleta_id}`}
-                      </td>
-                      <td className="text-left text-soft">{evento.nome_escola || evento.escola || '-'}</td>
+                      <td className="text-left strong">{evento.atleta_nome}</td>
+                      <td className="text-left text-soft">{evento.escola_nome}</td>
                       <td className="text-success num-lg">
                         {evento.gols > 0 ? evento.gols : vazio}
                       </td>
@@ -183,7 +161,7 @@ function DetalhesSumula() {
                         {evento.cartoes_amarelos > 0 ? evento.cartoes_amarelos : vazio}
                       </td>
                       <td className="text-danger num-lg">
-                        {(evento.cartao_vermelho > 0 || evento.cartoes_vermelhos > 0) ? (evento.cartao_vermelho || evento.cartoes_vermelhos) : vazio}
+                        {evento.cartao_vermelho > 0 ? evento.cartao_vermelho : vazio}
                       </td>
                     </tr>
                   ))}
@@ -196,8 +174,8 @@ function DetalhesSumula() {
         {/* Campos de assinatura para o registro físico */}
         <footer className="print-only print-signatures">
           <div><span />Árbitro</div>
-          <div><span />Representante — {jogo?.escola_1 || 'Equipe Mandante'}</div>
-          <div><span />Representante — {jogo?.escola_2 || 'Equipe Visitante'}</div>
+          <div><span />Representante — {jogo.escola_1_nome}</div>
+          <div><span />Representante — {jogo.escola_2_nome}</div>
         </footer>
         </div>
 

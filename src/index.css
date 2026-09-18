@@ -306,6 +306,27 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .next-match-date { text-transform: capitalize; }
 .next-match-time { color: var(--sge-accent); font-weight: 800; }
 
+/* Destaque do campeão: substitui o "Próximo Jogo" quando a final termina */
+.champion-card {
+  border-color: rgba(241, 196, 15, 0.55);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(241, 196, 15, 0.14) 0%, transparent 65%),
+    var(--sge-surface);
+  box-shadow: 0 0 0 1px rgba(241, 196, 15, 0.22), 0 0 60px rgba(241, 196, 15, 0.1), var(--sge-shadow);
+}
+.champion-body { padding: 18px 0 6px; text-align: center; }
+.champion-trophy {
+  display: block; font-size: 60px; line-height: 1;
+  filter: drop-shadow(0 0 22px rgba(241, 196, 15, 0.5));
+}
+.champion-name {
+  margin: 14px 0 6px;
+  font-size: clamp(28px, 5vw, 42px); font-weight: 900; letter-spacing: -0.01em;
+  background: linear-gradient(135deg, #ffe680 0%, var(--sge-accent) 45%, #d4a106 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.champion-detail { margin: 0 0 18px; color: var(--sge-text-soft); font-size: 15px; }
+
 @media (max-width: 860px) {
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat-grid > .stat-card:nth-child(3) { grid-column: 1 / -1; }
@@ -420,11 +441,15 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .nav-link:hover { color: var(--sge-accent); background: rgba(241, 196, 15, 0.08); }
 .nav-link.active { color: var(--sge-accent); background: rgba(241, 196, 15, 0.12); }
+.navbar-session { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-shrink: 0; }
+.navbar-user { font-size: 13px; font-weight: 600; color: var(--sge-text-soft); white-space: nowrap; }
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 760px) {
   .navbar { flex-direction: column; align-items: stretch; gap: 4px; padding: 10px 16px 8px; }
   .navbar-brand { justify-content: center; }
+  .navbar-session { margin-left: 0; justify-content: center; padding-bottom: 4px; }
+  .navbar-user { overflow: hidden; text-overflow: ellipsis; }
 }
 
 @media (max-width: 600px) {

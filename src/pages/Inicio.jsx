@@ -83,6 +83,7 @@ function Inicio() {
     ];
 
     const proximo = dashboard.proximo_jogo;
+    const campeao = dashboard.campeao;
 
     return (
       <div className="stat-grid">
@@ -97,6 +98,25 @@ function Inicio() {
           </div>
         ))}
 
+        {campeao ? (
+          <div className="card stat-card stat-card-wide champion-card">
+            <div className="stat-head">
+              <span className="stat-label">Campeão do Campeonato</span>
+              <span className="badge badge-accent">FINAL ENCERRADA</span>
+            </div>
+
+            <div className="champion-body">
+              <span className="champion-trophy" aria-hidden="true">🏆</span>
+              <p className="champion-name">{campeao.escola_nome}</p>
+              <p className="champion-detail">
+                Venceu a Grande Final por {campeao.gols_campeao} x {campeao.gols_vice} contra {campeao.vice_nome}
+              </p>
+              <button className="btn btn-outline btn-sm" onClick={() => navigate('/matamata')}>
+                Ver chaveamento
+              </button>
+            </div>
+          </div>
+        ) : (
         <div className="card stat-card stat-card-wide">
           <div className="stat-head">
             <span className="stat-label">Próximo Jogo</span>
@@ -125,6 +145,7 @@ function Inicio() {
             </div>
           )}
         </div>
+        )}
       </div>
     );
   };

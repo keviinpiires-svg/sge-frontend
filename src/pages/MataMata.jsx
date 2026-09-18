@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import { useAuth } from '../context/useAuth';
 
 // Mesma ordem e mesmos valores de "fase" devolvidos por GET /api/matamata
 const FASES = [
@@ -13,9 +15,12 @@ const formatarDataHora = (dataStr) =>
 
 function MataMata() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [jogos, setJogos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  const [gerando, setGerando] = useState(false);
+  const [erroGeracao, setErroGeracao] = useState('');
 
   // Incrementar este valor dispara uma nova busca (botão "Tentar novamente")
   const [tentativa, setTentativa] = useState(0);
@@ -47,11 +52,35 @@ function MataMata() {
     };
   }, [tentativa]);
 
-  const tentarNovamente = () => {
+  const tentarNovamente = useCallback(() => {
     setCarregando(true);
     setErro('');
     setTentativa((t) => t + 1);
+  }, []);
+
+  const gerar = async (rota, mensagemDeFalha) => {
+    setGerando(true);
+    setErroGeracao('');
+
+    try {
+      await api.post(rota, {});
+      tentarNovamente();
+    } catch (error) {
+      console.error(error);
+      setErroGeracao(error.response?.data?.erro || mensagemDeFalha);
+    } finally {
+      setGerando(false);
+    }
   };
+
+  const gerarSemifinais = () => gerar('/matamata/gerar', 'Não foi possível gerar as semifinais.');
+  const gerarFinal = () => gerar('/matamata/final', 'Não foi possível gerar a Grande Final.');
+
+  const semifinais = jogos.filter((jogo) => jogo.fase === 'SEMIFINAL');
+  const temFinal = jogos.some((jogo) => jogo.fase === 'FINAL');
+  const semifinaisEncerradas =
+    semifinais.length >= 2 && semifinais.every((jogo) => jogo.status === 'FINALIZADO');
+  const podeGerarFinal = isAdmin && semifinaisEncerradas && !temFinal;
 
   const renderCardJogo = (jogo, isFinal) => {
     const finalizado = jogo.status === 'FINALIZADO';
@@ -132,28 +161,63 @@ function MataMata() {
           <div className="state">
             <div className="state-icon">🏆</div>
             <p className="state-title">Chaveamento ainda não definido.</p>
-            <p className="state-text">Os confrontos aparecerão aqui ao término da fase de grupos.</p>
+            {isAdmin ? (
+              <>
+                <p className="state-text">
+                  As semifinais serão montadas com os dois primeiros de cada grupo: 1ºA x 2ºB e 1ºB x 2ºA.
+                </p>
+                <button className="btn btn-primary btn-lg" onClick={gerarSemifinais} disabled={gerando}>
+                  {gerando ? 'Gerando...' : '🎯 Gerar Semifinais'}
+                </button>
+                {erroGeracao && (
+                  <p className="alert alert-error" style={{ marginTop: '18px' }}>{erroGeracao}</p>
+                )}
+              </>
+            ) : (
+              <p className="state-text">Os confrontos aparecerão aqui ao término da fase de grupos.</p>
+            )}
           </div>
         </div>
       );
     }
 
-    return FASES.map(({ fase, titulo }) => {
-      const jogosDaFase = jogos.filter((jogo) => jogo.fase === fase);
-      if (jogosDaFase.length === 0) return null;
+    return (
+      <>
+        {FASES.map(({ fase, titulo }) => {
+          const jogosDaFase = jogos.filter((jogo) => jogo.fase === fase);
+          if (jogosDaFase.length === 0) return null;
 
-      const isFinal = fase === 'FINAL';
-      return (
-        <section key={fase} className="bracket-stage">
-          <div className="bracket-stage-header">
-            <h2 className="bracket-stage-title">{titulo}</h2>
-          </div>
-          <div className={`bracket-grid ${jogosDaFase.length === 1 ? 'single' : ''}`}>
-            {jogosDaFase.map((jogo) => renderCardJogo(jogo, isFinal))}
-          </div>
-        </section>
-      );
-    });
+          const isFinal = fase === 'FINAL';
+          return (
+            <section key={fase} className="bracket-stage">
+              <div className="bracket-stage-header">
+                <h2 className="bracket-stage-title">{titulo}</h2>
+              </div>
+              <div className={`bracket-grid ${jogosDaFase.length === 1 ? 'single' : ''}`}>
+                {jogosDaFase.map((jogo) => renderCardJogo(jogo, isFinal))}
+              </div>
+            </section>
+          );
+        })}
+
+        {podeGerarFinal && (
+          <section className="card card-highlight">
+            <div className="card-body text-center">
+              <p className="state-title">As semifinais terminaram!</p>
+              <p className="state-text" style={{ marginBottom: '18px' }}>
+                A Grande Final será montada com os dois vencedores.
+              </p>
+              <button className="btn btn-primary btn-lg btn-pill" onClick={gerarFinal} disabled={gerando}>
+                {gerando ? 'Gerando...' : '🏆 Gerar Grande Final'}
+              </button>
+              {erroGeracao && (
+                <p className="alert alert-error" style={{ marginTop: '18px' }}>{erroGeracao}</p>
+              )}
+            </div>
+          </section>
+        )}
+      </>
+    );
   };
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { authHeaders, sessaoExpirada } from '../services/token';
 
 function PreencherSumula() {
   const { id } = useParams();
@@ -64,23 +65,31 @@ function PreencherSumula() {
     setSalvando(true);
 
     // Mapeia e filtra apenas atletas com ações reais (gols ou cartões > 0)
-    const payload = Object.keys(eventos).map(atletaId => ({
+    const payload = {
       jogo_id: Number(id),
-      atleta_id: Number(atletaId),
-      gols: eventos[atletaId].gols || 0,
-      cartoes_amarelos: eventos[atletaId].cartoes_amarelos || 0,
-      cartao_vermelho: eventos[atletaId].cartao_vermelho || 0
-    })).filter(e => e.gols > 0 || e.cartoes_amarelos > 0 || e.cartao_vermelho > 0);
+      eventos: Object.keys(eventos).map(atletaId => ({
+        atleta_id: Number(atletaId),
+        gols: eventos[atletaId].gols || 0,
+        cartoes_amarelos: eventos[atletaId].cartoes_amarelos || 0,
+        cartao_vermelho: eventos[atletaId].cartao_vermelho || 0
+      })).filter(e => e.gols > 0 || e.cartoes_amarelos > 0 || e.cartao_vermelho > 0)
+    };
 
     try {
       const response = await fetch('http://localhost:3000/api/sumulas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(payload)
       });
 
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        return sessaoExpirada();
+      }
+
       if (response.ok) {
-        alert('Súmula da partida salva com sucesso!');
+        const data = await response.json().catch(() => ({}));
+        alert(`Súmula salva! Placar final: ${data.placar_escola_1} x ${data.placar_escola_2}. A classificação já foi atualizada.`);
         navigate('/lista-jogos'); // Redireciona para a lista de jogos
       } else {
         const errData = await response.json().catch(() => ({}));
@@ -113,10 +122,13 @@ function PreencherSumula() {
     { campo: 'cartao_vermelho', icone: '🟥', titulo: 'Cartão vermelho' },
   ];
 
-  const renderColunaTime = (atletas, nomeEscola) => (
+  const renderColunaTime = (atletas, nomeEscola, mando) => (
     <div className="card">
       <div className="card-body">
-        <h3 className="card-title center">{nomeEscola || 'Equipe'}</h3>
+        <h3 className="card-title center">
+          {nomeEscola}
+          <span className="form-hint" style={{ display: 'block', marginTop: '4px' }}>{mando}</span>
+        </h3>
 
         {atletas.length === 0 ? (
           <div className="state state-compact">
@@ -161,12 +173,14 @@ function PreencherSumula() {
           <h1 className="page-title">Preenchimento de Súmula</h1>
           <p className="page-subtitle">
             Lançamento de Gols e Cartões — Jogo <strong className="text-accent">#{jogo.numero_jogo}</strong> ({jogo.fase})
+            <br />
+            <span className="form-hint">O placar da partida é calculado automaticamente pela soma dos gols lançados aqui.</span>
           </p>
         </header>
 
         <div className="grid-2">
-          {renderColunaTime(atletasA, jogo.escola_1 || `Equipe Mandante (ID: ${jogo.escola_1_id})`)}
-          {renderColunaTime(atletasB, jogo.escola_2 || `Equipe Visitante (ID: ${jogo.escola_2_id})`)}
+          {renderColunaTime(atletasA, jogo.escola_1_nome, 'mandante')}
+          {renderColunaTime(atletasB, jogo.escola_2_nome, 'visitante')}
         </div>
 
         <div className="text-center mt-lg">

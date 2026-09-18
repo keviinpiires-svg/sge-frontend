@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
+import { authHeaders, sessaoExpirada } from '../services/token';
 
 function ListaJogos() {
   const [jogos, setJogos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   // Estados para finalização de partida
   const [jogoEmFinalizacao, setJogoEmFinalizacao] = useState(null);
@@ -74,13 +77,19 @@ function ListaJogos() {
       const response = await fetch(`http://localhost:3000/api/jogos/finalizar/${jogoEmFinalizacao.id_jogo || jogoEmFinalizacao.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify({
           placar_escola_1: Number(placar1),
           placar_escola_2: Number(placar2)
         })
       });
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        return sessaoExpirada();
+      }
 
       if (response.status === 200) {
         alert('Partida finalizada com sucesso!');
@@ -93,6 +102,36 @@ function ListaJogos() {
     } catch (error) {
       console.error('Erro ao finalizar partida:', error);
       alert('Ocorreu um erro de conexão ao tentar finalizar.');
+    }
+  };
+
+  const handleExcluir = async (jogo) => {
+    const identificacao = jogo.numero_jogo ? `o Jogo #${jogo.numero_jogo}` : 'esta partida';
+    if (!window.confirm(`Tem certeza que deseja excluir ${identificacao}? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/jogos/${jogo.id_jogo || jogo.id}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+      });
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        return sessaoExpirada();
+      }
+
+      if (response.ok) {
+        alert('Jogo excluído com sucesso!');
+        recarregarJogos();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        alert(`Erro ao excluir o jogo: ${data.message || data.erro || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir jogo:', error);
+      alert('Ocorreu um erro de conexão ao tentar excluir.');
     }
   };
 
@@ -183,13 +222,20 @@ function ListaJogos() {
                           >
                             👁️ Ver Súmula
                           </button>
-                          <button
-                            className="btn btn-outline btn-sm"
-                            onClick={() => navigate(`/preencher-sumula/${jogo.id_jogo || jogo.id}`)}
-                          >
-                            📝 Súmula
-                          </button>
-                          {jogo.status !== 'FINALIZADO' && (
+                          {isAdmin && (
+                            <button
+                              className="btn btn-outline btn-sm"
+                              onClick={() => navigate(`/preencher-sumula/${jogo.id_jogo || jogo.id}`)}
+                            >
+                              📝 Súmula
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button className="btn btn-danger btn-sm" onClick={() => handleExcluir(jogo)}>
+                              🗑️ Excluir
+                            </button>
+                          )}
+                          {isAdmin && jogo.status !== 'FINALIZADO' && (
                             <button className="btn btn-success btn-sm" onClick={() => abrirFinalizacao(jogo)}>
                               ⚽ Finalizar
                             </button>

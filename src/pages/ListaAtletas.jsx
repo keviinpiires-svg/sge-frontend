@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/useAuth';
+import { authHeaders, sessaoExpirada } from '../services/token';
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
@@ -6,10 +8,33 @@ function ListaAtletas() {
   const [buscou, setBuscou] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [atletaEmEdicao, setAtletaEmEdicao] = useState(null);
+  const { isAdmin } = useAuth();
+  const [escolas, setEscolas] = useState([]);
+  const [carregandoEscolas, setCarregandoEscolas] = useState(true);
+
+  useEffect(() => {
+    let ativo = true;
+
+    fetch('http://localhost:3000/api/escolas')
+      .then((response) => response.json())
+      .then((data) => {
+        if (ativo) setEscolas(data);
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar escolas:', error);
+      })
+      .finally(() => {
+        if (ativo) setCarregandoEscolas(false);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const buscarAtletas = async () => {
     if (!escolaId) {
-      alert('Por favor, informe o ID da Escola.');
+      alert('Por favor, selecione a escola.');
       return;
     }
 
@@ -63,10 +88,16 @@ function ListaAtletas() {
       const response = await fetch(`http://localhost:3000/api/atletas/${atletaEmEdicao.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify(atletaEmEdicao)
       });
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        return sessaoExpirada();
+      }
 
       if (response.ok) {
         alert('Atleta atualizado com sucesso!');
@@ -86,7 +117,13 @@ function ListaAtletas() {
       try {
         const response = await fetch(`http://localhost:3000/api/atletas/${id}`, {
           method: 'DELETE',
+          headers: authHeaders()
         });
+
+        if (response.status === 401) {
+          alert('Sua sessão expirou. Faça login novamente.');
+          return sessaoExpirada();
+        }
 
         if (response.ok) {
           alert('Atleta excluído com sucesso!');
@@ -107,20 +144,31 @@ function ListaAtletas() {
         <header className="page-header">
           <p className="eyebrow">Atletas</p>
           <h1 className="page-title">Buscar Atletas por Equipe</h1>
-          <p className="page-subtitle">Informe o ID da Escola para listar os atletas cadastrados.</p>
+          <p className="page-subtitle">Selecione a escola para listar os atletas cadastrados.</p>
         </header>
 
         <div className="card" style={{ marginBottom: '24px' }}>
           <div className="card-body" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <input
+            <select
               className="form-control"
-              type="number"
-              placeholder="ID da Escola"
               value={escolaId}
               onChange={(e) => setEscolaId(e.target.value)}
+              disabled={carregandoEscolas || escolas.length === 0}
+              aria-label="Escola"
               style={{ flex: '1 1 200px', width: 'auto' }}
-            />
-            <button className="btn btn-primary" onClick={buscarAtletas} disabled={carregando}>
+            >
+              <option value="">
+                {carregandoEscolas
+                  ? 'Carregando escolas...'
+                  : escolas.length === 0
+                    ? 'Nenhuma escola cadastrada'
+                    : 'Selecione a escola'}
+              </option>
+              {escolas.map((escola) => (
+                <option key={escola.id} value={escola.id}>{escola.nome}</option>
+              ))}
+            </select>
+            <button className="btn btn-primary" onClick={buscarAtletas} disabled={carregando || !escolaId}>
               {carregando ? 'Buscando...' : '🔍 Buscar Atletas'}
             </button>
           </div>
@@ -146,10 +194,14 @@ function ListaAtletas() {
                         <td className="text-left text-soft">{atleta.rg_ou_matricula}</td>
                         <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>
                         <td>
-                          <div className="btn-group">
-                            <button className="btn btn-outline btn-sm" onClick={() => handleEditar(atleta)}>Editar</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleExcluir(atleta.id)}>Excluir</button>
-                          </div>
+                          {isAdmin ? (
+                            <div className="btn-group">
+                              <button className="btn btn-outline btn-sm" onClick={() => handleEditar(atleta)}>Editar</button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleExcluir(atleta.id)}>Excluir</button>
+                            </div>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -209,15 +261,20 @@ function ListaAtletas() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="edit-escola">Código da Escola</label>
-                  <input
+                  <label className="form-label" htmlFor="edit-escola">Escola</label>
+                  <select
                     id="edit-escola"
                     className="form-control"
-                    type="number"
                     value={atletaEmEdicao.escola_id || ''}
                     onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, escola_id: Number(e.target.value)})}
+                    disabled={carregandoEscolas || escolas.length === 0}
                     required
-                  />
+                  >
+                    <option value="">Selecione a escola</option>
+                    {escolas.map((escola) => (
+                      <option key={escola.id} value={escola.id}>{escola.nome}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
