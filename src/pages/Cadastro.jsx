@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import api from '../services/api';
+import { cadastrarEscola } from '../services/escolas';
 
 function Cadastro() {
   const [nome, setNome] = useState('');
@@ -10,7 +10,7 @@ function Cadastro() {
     e.preventDefault();
 
     try {
-      await api.post('/escolas', {
+      await cadastrarEscola({
         nome: nome,
         cnpj: cnpj,
         etapa_ensino_id: etapaId
@@ -22,7 +22,8 @@ function Cadastro() {
       setEtapaId('');
     } catch (erro) {
       console.error(erro);
-      alert('Erro ao cadastrar. Verifique o console.');
+      // Mensagem real do backend (ex: CNPJ duplicado), já traduzida pelo interceptor
+      alert(erro.mensagem);
     }
   };
 

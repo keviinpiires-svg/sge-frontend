@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authHeaders, sessaoExpirada } from '../services/token';
 import { API_URL } from '../services/config';
+import { listarEscolas } from '../services/escolas';
 
 function CadastroAtleta() {
   const [nome, setNome] = useState('');
@@ -13,8 +14,7 @@ function CadastroAtleta() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/escolas`)
-      .then((response) => response.json())
+    listarEscolas()
       .then((data) => {
         if (ativo) setEscolas(data);
       })

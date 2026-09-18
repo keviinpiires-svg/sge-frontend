@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { authHeaders, sessaoExpirada } from '../services/token';
 import { API_URL } from '../services/config';
+import { listarEscolas } from '../services/escolas';
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
@@ -16,8 +17,7 @@ function ListaAtletas() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/escolas`)
-      .then((response) => response.json())
+    listarEscolas()
       .then((data) => {
         if (ativo) setEscolas(data);
       })
