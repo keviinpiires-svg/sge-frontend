@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../services/config';
 
 function Artilharia() {
   const [artilheiros, setArtilheiros] = useState([]);
@@ -11,7 +12,7 @@ function Artilharia() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/artilharia')
+    fetch(`${API_URL}/api/artilharia`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Falha ao buscar a artilharia.');

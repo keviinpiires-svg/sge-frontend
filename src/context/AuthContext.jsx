@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { AuthContext } from './auth-context';
 import { getToken, getUsuario, salvarSessao, limparSessao, authHeaders } from '../services/token';
+import { API_URL } from '../services/config';
 
 export function AuthProvider({ children }) {
   // O estado inicial vem do localStorage: a sessão sobrevive ao F5
@@ -8,7 +9,7 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(() => getUsuario());
 
   const login = useCallback(async (email, senha) => {
-    const response = await fetch('http://localhost:3000/api/login', {
+    const response = await fetch(`${API_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, senha }),

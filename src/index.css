@@ -327,6 +327,10 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .champion-detail { margin: 0 0 18px; color: var(--sge-text-soft); font-size: 15px; }
 
+/* Zona de perigo: ações destrutivas e irreversíveis */
+.danger-zone { border-color: rgba(231, 76, 60, 0.4); }
+.danger-zone .card-title { border-bottom-color: var(--sge-danger); color: var(--sge-danger-text); }
+
 @media (max-width: 860px) {
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat-grid > .stat-card:nth-child(3) { grid-column: 1 / -1; }

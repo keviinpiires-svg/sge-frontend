@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../services/config';
 
 function Classificacao() {
   const [classificacao, setClassificacao] = useState([]);
@@ -11,7 +12,7 @@ function Classificacao() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/classificacao')
+    fetch(`${API_URL}/api/classificacao`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Falha ao buscar a classificação.');

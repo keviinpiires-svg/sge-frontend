@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/useAuth';
+import { API_URL } from '../services/config';
 
 // Mesma ordem e mesmos valores de "fase" devolvidos por GET /api/matamata
 const FASES = [
@@ -28,7 +29,7 @@ function MataMata() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/matamata')
+    fetch(`${API_URL}/api/matamata`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Falha ao buscar o chaveamento.');

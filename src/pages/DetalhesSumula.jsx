@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
+import { API_URL } from '../services/config';
 
 function DetalhesSumula() {
   const { id } = useParams();
@@ -22,7 +23,7 @@ function DetalhesSumula() {
   useEffect(() => {
     async function carregarRelatorio() {
       try {
-        const response = await fetch(`http://localhost:3000/api/sumulas/${id}`);
+        const response = await fetch(`${API_URL}/api/sumulas/${id}`);
         if (!response.ok) {
           throw new Error('Falha ao carregar detalhes da súmula.');
         }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { authHeaders, sessaoExpirada } from '../services/token';
+import { API_URL } from '../services/config';
 
 function ListaJogos() {
   const [jogos, setJogos] = useState([]);
@@ -21,7 +22,7 @@ function ListaJogos() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/jogos')
+    fetch(`${API_URL}/api/jogos`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Falha ao buscar as partidas.');
@@ -74,7 +75,7 @@ function ListaJogos() {
   const handleFinalizar = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:3000/api/jogos/finalizar/${jogoEmFinalizacao.id_jogo || jogoEmFinalizacao.id}`, {
+      const response = await fetch(`${API_URL}/api/jogos/finalizar/${jogoEmFinalizacao.id_jogo || jogoEmFinalizacao.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +113,7 @@ function ListaJogos() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/jogos/${jogo.id_jogo || jogo.id}`, {
+      const response = await fetch(`${API_URL}/api/jogos/${jogo.id_jogo || jogo.id}`, {
         method: 'DELETE',
         headers: authHeaders()
       });

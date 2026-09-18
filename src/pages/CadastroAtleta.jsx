@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authHeaders, sessaoExpirada } from '../services/token';
+import { API_URL } from '../services/config';
 
 function CadastroAtleta() {
   const [nome, setNome] = useState('');
@@ -12,7 +13,7 @@ function CadastroAtleta() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/escolas')
+    fetch(`${API_URL}/api/escolas`)
       .then((response) => response.json())
       .then((data) => {
         if (ativo) setEscolas(data);
@@ -40,7 +41,7 @@ function CadastroAtleta() {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/atletas', {
+      const response = await fetch(`${API_URL}/api/atletas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

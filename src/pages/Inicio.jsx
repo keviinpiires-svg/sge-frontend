@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import { useAuth } from '../context/useAuth';
+import { API_URL } from '../services/config';
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
@@ -11,6 +14,8 @@ const formatarHora = (dataStr) =>
 
 function Inicio() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+  const [reiniciando, setReiniciando] = useState(false);
   const [dashboard, setDashboard] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -21,7 +26,7 @@ function Inicio() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/dashboard')
+    fetch(`${API_URL}/api/dashboard`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Falha ao buscar os dados do painel.');
@@ -49,6 +54,33 @@ function Inicio() {
     setCarregando(true);
     setErro('');
     setTentativa((t) => t + 1);
+  };
+
+  // Ação irreversível: pede confirmação e depois exige a palavra digitada
+  const reiniciarCampeonato = async () => {
+    const aviso =
+      'ATENÇÃO: isso apaga TODAS as escolas, atletas, jogos, súmulas e grupos deste campeonato.\n\n' +
+      'Seu login de administrador e os cadastros base (locais, modalidades, categorias) são preservados.\n\n' +
+      'Esta ação NÃO pode ser desfeita. Deseja continuar?';
+
+    if (!window.confirm(aviso)) return;
+
+    if (window.prompt('Para confirmar, digite REINICIAR (em maiúsculas):') !== 'REINICIAR') {
+      window.alert('Ação cancelada. Nada foi apagado.');
+      return;
+    }
+
+    setReiniciando(true);
+    try {
+      const resposta = await api.delete('/campeonato/reset', { data: { confirmacao: 'REINICIAR' } });
+      window.alert(resposta.data.mensagem);
+      tentarNovamente();
+    } catch (error) {
+      console.error(error);
+      window.alert(error.response?.data?.erro || 'Não foi possível reiniciar o campeonato.');
+    } finally {
+      setReiniciando(false);
+    }
   };
 
   const renderConteudo = () => {
@@ -160,6 +192,22 @@ function Inicio() {
         </header>
 
         {renderConteudo()}
+
+        {isAdmin && !carregando && !erro && (
+          <section className="card danger-zone mt-lg">
+            <div className="card-body">
+              <h3 className="card-title">⚠️ Zona de Perigo</h3>
+              <p className="state-text" style={{ textAlign: 'left', marginBottom: '18px' }}>
+                Reiniciar o campeonato apaga todas as escolas, atletas, jogos, súmulas e grupos.
+                Seu login e os cadastros base (locais, modalidades, categorias) são preservados.
+                Use isto apenas para começar um novo torneio do zero.
+              </p>
+              <button className="btn btn-danger" onClick={reiniciarCampeonato} disabled={reiniciando}>
+                {reiniciando ? 'Reiniciando...' : '🗑️ Reiniciar Campeonato / Limpar Tudo'}
+              </button>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { authHeaders, sessaoExpirada } from './token';
+import { API_URL } from './config';
 
 const api = axios.create({
   // Devolvemos o /api para o final do endereço base
-  baseURL: 'http://localhost:3000/api', 
+  baseURL: `${API_URL}/api`, 
 });
 
 // Anexa o Authorization: Bearer <token> em toda requisição autenticada

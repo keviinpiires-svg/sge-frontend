@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { authHeaders, sessaoExpirada } from '../services/token';
+import { API_URL } from '../services/config';
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
@@ -15,7 +16,7 @@ function ListaAtletas() {
   useEffect(() => {
     let ativo = true;
 
-    fetch('http://localhost:3000/api/escolas')
+    fetch(`${API_URL}/api/escolas`)
       .then((response) => response.json())
       .then((data) => {
         if (ativo) setEscolas(data);
@@ -40,7 +41,7 @@ function ListaAtletas() {
 
     setCarregando(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/atletas/equipe/${escolaId}`);
+      const response = await fetch(`${API_URL}/api/atletas/equipe/${escolaId}`);
       if (response.ok) {
         const data = await response.json();
         console.log("Resposta do Backend:", data);
@@ -85,7 +86,7 @@ function ListaAtletas() {
   const handleSalvarEdicao = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:3000/api/atletas/${atletaEmEdicao.id}`, {
+      const response = await fetch(`${API_URL}/api/atletas/${atletaEmEdicao.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ function ListaAtletas() {
   const handleExcluir = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este atleta?')) {
       try {
-        const response = await fetch(`http://localhost:3000/api/atletas/${id}`, {
+        const response = await fetch(`${API_URL}/api/atletas/${id}`, {
           method: 'DELETE',
           headers: authHeaders()
         });

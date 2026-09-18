@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authHeaders, sessaoExpirada } from '../services/token';
+import { API_URL } from '../services/config';
 
 function PreencherSumula() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ function PreencherSumula() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        const resJogo = await fetch(`http://localhost:3000/api/jogos/${id}`);
+        const resJogo = await fetch(`${API_URL}/api/jogos/${id}`);
         if (!resJogo.ok) throw new Error('Falha ao buscar jogo');
         const dataJogo = await resJogo.json();
 
@@ -23,13 +24,13 @@ function PreencherSumula() {
         setJogo(infoJogo);
 
         if (infoJogo && infoJogo.escola_1_id && infoJogo.escola_2_id) {
-          const resA = await fetch(`http://localhost:3000/api/atletas/equipe/${infoJogo.escola_1_id}`);
+          const resA = await fetch(`${API_URL}/api/atletas/equipe/${infoJogo.escola_1_id}`);
           if (resA.ok) {
             const dataA = await resA.json();
             setAtletasA(Array.isArray(dataA) ? dataA : (dataA.atletas || []));
           }
 
-          const resB = await fetch(`http://localhost:3000/api/atletas/equipe/${infoJogo.escola_2_id}`);
+          const resB = await fetch(`${API_URL}/api/atletas/equipe/${infoJogo.escola_2_id}`);
           if (resB.ok) {
             const dataB = await resB.json();
             setAtletasB(Array.isArray(dataB) ? dataB : (dataB.atletas || []));
@@ -76,7 +77,7 @@ function PreencherSumula() {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/sumulas', {
+      const response = await fetch(`${API_URL}/api/sumulas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(payload)
