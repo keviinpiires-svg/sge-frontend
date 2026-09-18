@@ -12,10 +12,12 @@ dist
 dist-ssr
 *.local
 
-# Variáveis de ambiente (o .env.example fica versionado como modelo)
+# Variáveis de ambiente.
+# .env.development e .env.production ficam versionados: contêm apenas a URL
+# pública da API. Só os arquivos .local, de uso pessoal, são ignorados.
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
 
 # Editor directories and files
 .vscode/*
