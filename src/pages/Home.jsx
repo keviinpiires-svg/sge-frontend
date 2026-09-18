@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { listarEscolas } from '../services/escolas';
 
 function Home() {
   const [escolas, setEscolas] = useState([]);
@@ -7,8 +7,7 @@ function Home() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        const resposta = await api.get('/escolas');
-        setEscolas(resposta.data);
+        setEscolas(await listarEscolas());
       } catch (erro) {
         console.error("Erro ao conectar com a API:", erro);
       }

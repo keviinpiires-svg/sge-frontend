@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { AuthContext } from './auth-context';
-import { getToken, getUsuario, salvarSessao, limparSessao, authHeaders } from '../services/token';
+import { getToken, getUsuario, salvarSessao, limparSessao } from '../services/token';
 import { login as autenticar } from '../services/auth';
 
 export function AuthProvider({ children }) {
@@ -44,7 +44,6 @@ export function AuthProvider({ children }) {
       isAdmin: Boolean(token) && (perfil === '' || perfil.includes('ADMIN')),
       login,
       logout,
-      authHeaders,
     };
   }, [token, usuario, login, logout]);
 

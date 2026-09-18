@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../services/config';
+import { listarClassificacao } from '../services/classificacao';
 
 function Classificacao() {
   const [classificacao, setClassificacao] = useState([]);
@@ -12,20 +12,14 @@ function Classificacao() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/classificacao`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Falha ao buscar a classificação.');
-        }
-        return response.json();
-      })
+    listarClassificacao()
       .then((data) => {
         if (!ativo) return;
         setClassificacao(data);
         setErro('');
       })
       .catch((error) => {
-        if (ativo) setErro(error.message || 'Ocorreu um erro de conexão.');
+        if (ativo) setErro(error.mensagem);
       })
       .finally(() => {
         if (ativo) setCarregando(false);

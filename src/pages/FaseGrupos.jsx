@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
 import { useAuth } from '../context/useAuth';
+import { listarClassificacao } from '../services/classificacao';
+import { listarEscolas } from '../services/escolas';
+import { listarGrupos, salvarDistribuicao } from '../services/grupos';
 
 function FaseGrupos() {
   const { isAdmin } = useAuth();
@@ -12,21 +14,21 @@ function FaseGrupos() {
   const [mensagem, setMensagem] = useState('');
 
   const buscarDados = useCallback(async () => {
-    const [respClassificacao, respEscolas, respGrupos] = await Promise.all([
-      api.get('/classificacao'),
-      api.get('/escolas'),
-      api.get('/grupos')
+    const [classificacao, escolas, grupos] = await Promise.all([
+      listarClassificacao(),
+      listarEscolas(),
+      listarGrupos()
     ]);
 
     // Monta { escolaId: 'A' } a partir dos vínculos já salvos
     const atuais = {};
-    for (const grupo of respGrupos.data) {
+    for (const grupo of grupos) {
       for (const escola of grupo.escolas) {
         atuais[escola.id] = grupo.nome;
       }
     }
 
-    return { classificacao: respClassificacao.data, escolas: respEscolas.data, atribuicoes: atuais };
+    return { classificacao, escolas, atribuicoes: atuais };
   }, []);
 
   const aplicarDados = useCallback((dados) => {
@@ -81,12 +83,12 @@ function FaseGrupos() {
     }
 
     try {
-      await api.put('/grupos/distribuicao', { distribuicao });
+      await salvarDistribuicao(distribuicao);
       aplicarDados(await buscarDados());
       setMensagem('Distribuição salva com sucesso!');
     } catch (erro) {
       console.error(erro);
-      setMensagem(erro.response?.data?.erro || 'Erro ao salvar a distribuição.');
+      setMensagem(erro.mensagem);
     } finally {
       setSalvando(false);
     }

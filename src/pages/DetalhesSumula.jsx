@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
-import { API_URL } from '../services/config';
+import { buscarSumulaPorJogo } from '../services/sumulas';
 
 function DetalhesSumula() {
   const { id } = useParams();
@@ -23,17 +23,12 @@ function DetalhesSumula() {
   useEffect(() => {
     async function carregarRelatorio() {
       try {
-        const response = await fetch(`${API_URL}/api/sumulas/${id}`);
-        if (!response.ok) {
-          throw new Error('Falha ao carregar detalhes da súmula.');
-        }
-
-        const data = await response.json();
+        const data = await buscarSumulaPorJogo(id);
         setJogo(data.jogo);
         setEventos(data.eventos);
       } catch (err) {
         console.error(err);
-        setErro(err.message || 'Ocorreu um erro de conexão.');
+        setErro(err.mensagem);
       } finally {
         setCarregando(false);
       }

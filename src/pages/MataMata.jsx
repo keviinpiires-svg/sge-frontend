@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { useAuth } from '../context/useAuth';
-import { API_URL } from '../services/config';
+import { listarMataMata, gerarSemifinais as gerarSemis, gerarFinal as gerarDecisao } from '../services/matamata';
 
 // Mesma ordem e mesmos valores de "fase" devolvidos por GET /api/matamata
 const FASES = [
@@ -29,20 +28,14 @@ function MataMata() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/matamata`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Falha ao buscar o chaveamento.');
-        }
-        return response.json();
-      })
+    listarMataMata()
       .then((data) => {
         if (!ativo) return;
         setJogos(data);
         setErro('');
       })
       .catch((error) => {
-        if (ativo) setErro(error.message || 'Ocorreu um erro de conexão.');
+        if (ativo) setErro(error.mensagem);
       })
       .finally(() => {
         if (ativo) setCarregando(false);
@@ -59,23 +52,23 @@ function MataMata() {
     setTentativa((t) => t + 1);
   }, []);
 
-  const gerar = async (rota, mensagemDeFalha) => {
+  const gerar = async (acao) => {
     setGerando(true);
     setErroGeracao('');
 
     try {
-      await api.post(rota, {});
+      await acao();
       tentarNovamente();
     } catch (error) {
       console.error(error);
-      setErroGeracao(error.response?.data?.erro || mensagemDeFalha);
+      setErroGeracao(error.mensagem);
     } finally {
       setGerando(false);
     }
   };
 
-  const gerarSemifinais = () => gerar('/matamata/gerar', 'Não foi possível gerar as semifinais.');
-  const gerarFinal = () => gerar('/matamata/final', 'Não foi possível gerar a Grande Final.');
+  const gerarSemifinais = () => gerar(gerarSemis);
+  const gerarFinal = () => gerar(gerarDecisao);
 
   const semifinais = jogos.filter((jogo) => jogo.fase === 'SEMIFINAL');
   const temFinal = jogos.some((jogo) => jogo.fase === 'FINAL');

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { useAuth } from '../context/useAuth';
-import { API_URL } from '../services/config';
+import { obterEstatisticas } from '../services/dashboard';
+import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
@@ -26,20 +26,14 @@ function Inicio() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/dashboard`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Falha ao buscar os dados do painel.');
-        }
-        return response.json();
-      })
+    obterEstatisticas()
       .then((data) => {
         if (!ativo) return;
         setDashboard(data);
         setErro('');
       })
       .catch((error) => {
-        if (ativo) setErro(error.message || 'Ocorreu um erro de conexão.');
+        if (ativo) setErro(error.mensagem);
       })
       .finally(() => {
         if (ativo) setCarregando(false);
@@ -65,19 +59,22 @@ function Inicio() {
 
     if (!window.confirm(aviso)) return;
 
-    if (window.prompt('Para confirmar, digite REINICIAR (em maiúsculas):') !== 'REINICIAR') {
+    // O texto digitado é o que vai para o backend: se não for a palavra exata,
+    // o próprio servidor recusa, mesmo que algo passasse daqui.
+    const digitado = window.prompt(`Para confirmar, digite ${CONFIRMACAO_RESET} (em maiúsculas):`);
+    if (digitado !== CONFIRMACAO_RESET) {
       window.alert('Ação cancelada. Nada foi apagado.');
       return;
     }
 
     setReiniciando(true);
     try {
-      const resposta = await api.delete('/campeonato/reset', { data: { confirmacao: 'REINICIAR' } });
-      window.alert(resposta.data.mensagem);
+      const resposta = await resetarCampeonato(digitado);
+      window.alert(resposta.mensagem);
       tentarNovamente();
     } catch (error) {
       console.error(error);
-      window.alert(error.response?.data?.erro || 'Não foi possível reiniciar o campeonato.');
+      window.alert(error.mensagem);
     } finally {
       setReiniciando(false);
     }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authHeaders, sessaoExpirada } from '../services/token';
-import { API_URL } from '../services/config';
+import { buscarJogoPorId } from '../services/jogos';
+import { listarAtletasPorEquipe } from '../services/atletas';
+import { registrarSumula } from '../services/sumulas';
 
 function PreencherSumula() {
   const { id } = useParams();
@@ -16,29 +17,19 @@ function PreencherSumula() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        const resJogo = await fetch(`${API_URL}/api/jogos/${id}`);
-        if (!resJogo.ok) throw new Error('Falha ao buscar jogo');
-        const dataJogo = await resJogo.json();
-
-        const infoJogo = Array.isArray(dataJogo) ? dataJogo[0] : dataJogo;
+        const infoJogo = await buscarJogoPorId(id);
         setJogo(infoJogo);
 
-        if (infoJogo && infoJogo.escola_1_id && infoJogo.escola_2_id) {
-          const resA = await fetch(`${API_URL}/api/atletas/equipe/${infoJogo.escola_1_id}`);
-          if (resA.ok) {
-            const dataA = await resA.json();
-            setAtletasA(Array.isArray(dataA) ? dataA : (dataA.atletas || []));
-          }
-
-          const resB = await fetch(`${API_URL}/api/atletas/equipe/${infoJogo.escola_2_id}`);
-          if (resB.ok) {
-            const dataB = await resB.json();
-            setAtletasB(Array.isArray(dataB) ? dataB : (dataB.atletas || []));
-          }
-        }
+        // Os dois elencos são independentes: busca em paralelo
+        const [elencoA, elencoB] = await Promise.all([
+          listarAtletasPorEquipe(infoJogo.escola_1_id),
+          listarAtletasPorEquipe(infoJogo.escola_2_id)
+        ]);
+        setAtletasA(elencoA);
+        setAtletasB(elencoB);
       } catch (error) {
         console.error('Erro ao carregar dados para a súmula:', error);
-        alert('Não foi possível carregar os dados da partida.');
+        alert(error.mensagem);
       }
     }
 
@@ -77,28 +68,12 @@ function PreencherSumula() {
     };
 
     try {
-      const response = await fetch(`${API_URL}/api/sumulas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.status === 401) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        return sessaoExpirada();
-      }
-
-      if (response.ok) {
-        const data = await response.json().catch(() => ({}));
-        alert(`Súmula salva! Placar final: ${data.placar_escola_1} x ${data.placar_escola_2}. A classificação já foi atualizada.`);
-        navigate('/lista-jogos'); // Redireciona para a lista de jogos
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        alert(`Falha ao salvar a súmula: ${errData.erro || errData.message || 'Verifique o console para detalhes.'}`);
-      }
+      const data = await registrarSumula(payload);
+      alert(`Súmula salva! Placar final: ${data.placar_escola_1} x ${data.placar_escola_2}. A classificação já foi atualizada.`);
+      navigate('/lista-jogos'); // Redireciona para a lista de jogos
     } catch (error) {
       console.error('Erro no POST sumula:', error);
-      alert('Ocorreu um erro de conexão ao tentar salvar a súmula.');
+      alert(`Falha ao salvar a súmula: ${error.mensagem}`);
     } finally {
       setSalvando(false);
     }

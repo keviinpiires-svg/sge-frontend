@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../services/config';
+import { listarArtilharia } from '../services/artilharia';
 
 function Artilharia() {
   const [artilheiros, setArtilheiros] = useState([]);
@@ -12,20 +12,14 @@ function Artilharia() {
   useEffect(() => {
     let ativo = true;
 
-    fetch(`${API_URL}/api/artilharia`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Falha ao buscar a artilharia.');
-        }
-        return response.json();
-      })
+    listarArtilharia()
       .then((data) => {
         if (!ativo) return;
         setArtilheiros(data);
         setErro('');
       })
       .catch((error) => {
-        if (ativo) setErro(error.message || 'Ocorreu um erro de conexão.');
+        if (ativo) setErro(error.mensagem);
       })
       .finally(() => {
         if (ativo) setCarregando(false);
