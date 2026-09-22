@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { obterEstatisticas } from '../services/dashboard';
 import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
+import { listarEscolas } from '../services/escolas';
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
@@ -19,6 +20,12 @@ function Inicio() {
   const [dashboard, setDashboard] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+
+  // Lista de escolas: só é buscada quando o card é aberto pela primeira vez
+  const [escolas, setEscolas] = useState(null);
+  const [escolasAbertas, setEscolasAbertas] = useState(false);
+  const [carregandoEscolas, setCarregandoEscolas] = useState(false);
+  const [erroEscolas, setErroEscolas] = useState('');
 
   // Incrementar este valor dispara uma nova busca (botão "Tentar novamente")
   const [tentativa, setTentativa] = useState(0);
@@ -80,6 +87,29 @@ function Inicio() {
     }
   };
 
+  const alternarEscolas = async () => {
+    if (escolasAbertas) {
+      setEscolasAbertas(false);
+      return;
+    }
+
+    setEscolasAbertas(true);
+
+    // Já carregadas antes: não busca de novo
+    if (escolas) return;
+
+    setCarregandoEscolas(true);
+    setErroEscolas('');
+    try {
+      setEscolas(await listarEscolas());
+    } catch (error) {
+      console.error(error);
+      setErroEscolas(error.mensagem);
+    } finally {
+      setCarregandoEscolas(false);
+    }
+  };
+
   const renderConteudo = () => {
     if (carregando) {
       return (
@@ -106,7 +136,13 @@ function Inicio() {
     }
 
     const estatisticas = [
-      { icone: '🏫', titulo: 'Escolas Inscritas', valor: dashboard.total_escolas },
+      {
+        icone: '🏫',
+        titulo: 'Escolas Inscritas',
+        valor: dashboard.total_escolas,
+        detalhe: escolasAbertas ? 'Clique para fechar' : 'Clique para ver a lista',
+        aoClicar: alternarEscolas
+      },
       { icone: '🏃', titulo: 'Atletas Cadastrados', valor: dashboard.total_atletas },
       { icone: '⚽', titulo: 'Balançaram a Rede', detalhe: 'Total de gols', valor: dashboard.total_gols },
     ];
@@ -116,16 +152,87 @@ function Inicio() {
 
     return (
       <div className="stat-grid">
-        {estatisticas.map(({ icone, titulo, detalhe, valor }) => (
-          <div key={titulo} className="card stat-card">
-            <div className="stat-head">
-              <span className="stat-label">{titulo}</span>
-              <span className="stat-icon" aria-hidden="true">{icone}</span>
+        {estatisticas.map(({ icone, titulo, detalhe, valor, aoClicar }) => {
+          const conteudo = (
+            <>
+              <div className="stat-head">
+                <span className="stat-label">{titulo}</span>
+                <span className="stat-icon" aria-hidden="true">{icone}</span>
+              </div>
+              <p className="stat-value">{formatarNumero(valor)}</p>
+              {detalhe && <p className="stat-detail">{detalhe}</p>}
+            </>
+          );
+
+          // Só o card com ação vira botão, para não anunciar os outros
+          // como clicáveis a quem navega por teclado ou leitor de tela
+          return aoClicar ? (
+            <button
+              key={titulo}
+              type="button"
+              className="card stat-card stat-card-clicavel"
+              onClick={aoClicar}
+              aria-expanded={escolasAbertas}
+            >
+              {conteudo}
+            </button>
+          ) : (
+            <div key={titulo} className="card stat-card">{conteudo}</div>
+          );
+        })}
+
+        {escolasAbertas && (
+          <section className="card stat-card-wide">
+            <div className="card-body">
+              <h3 className="card-title">🏫 Escolas Cadastradas</h3>
+
+              {carregandoEscolas && (
+                <div className="state state-compact">
+                  <div className="spinner" />
+                  <p className="state-text">Carregando escolas...</p>
+                </div>
+              )}
+
+              {!carregandoEscolas && erroEscolas && (
+                <p className="alert alert-error" style={{ margin: 0 }}>{erroEscolas}</p>
+              )}
+
+              {!carregandoEscolas && !erroEscolas && escolas && (
+                escolas.length === 0 ? (
+                  <div className="state state-compact">
+                    <p className="state-text">Nenhuma escola cadastrada ainda.</p>
+                    {isAdmin && (
+                      <button className="btn btn-outline btn-sm" onClick={() => navigate('/cadastro')}>
+                        🏫 Cadastrar Escola
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid-cards">
+                    {escolas.map((escola) => (
+                      <div key={escola.id ?? escola.nome} className="tile">
+                        <p className="tile-title">{escola.nome}</p>
+                        <p className="tile-meta">{escola.cnpj ? `CNPJ ${escola.cnpj}` : 'Sem CNPJ'}</p>
+
+                        {/* Sem id nao ha como montar a URL de edicao, entao o
+                            botao some em vez de levar a uma tela quebrada */}
+                        {isAdmin && escola.id != null && (
+                          <button
+                            className="btn btn-outline btn-sm"
+                            style={{ marginTop: '12px' }}
+                            onClick={() => navigate(`/editar-escola/${escola.id}`)}
+                          >
+                            ✏️ Editar
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
             </div>
-            <p className="stat-value">{formatarNumero(valor)}</p>
-            {detalhe && <p className="stat-detail">{detalhe}</p>}
-          </div>
-        ))}
+          </section>
+        )}
 
         {campeao ? (
           <div className="card stat-card stat-card-wide champion-card">

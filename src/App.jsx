@@ -24,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/cadastro" element={<RotaPrivada><Cadastro /></RotaPrivada>} />
+          <Route path="/editar-escola/:id" element={<RotaPrivada><Cadastro /></RotaPrivada>} />
           <Route path="/grupos" element={<FaseGrupos />} />
           <Route path="/matamata" element={<MataMata />} />
           <Route path="/cadastro-atleta" element={<RotaPrivada><CadastroAtleta /></RotaPrivada>} />

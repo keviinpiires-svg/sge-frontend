@@ -276,6 +276,14 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .stat-card:hover { border-color: rgba(241, 196, 15, 0.5); transform: translateY(-3px); box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45); }
 .stat-card-wide { grid-column: 1 / -1; }
+
+/* Card de estatística que abre um detalhe ao ser clicado */
+.stat-card-clicavel {
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  width: 100%; appearance: none;
+}
+.stat-card-clicavel:hover .stat-detail { color: var(--sge-accent); }
+.stat-card-clicavel:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
 .stat-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .stat-label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sge-text); }
 .stat-icon {
