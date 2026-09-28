@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PainelModalidades from '../components/PainelModalidades';
+import TabelaJogos from '../components/TabelaJogos';
 import { buscarCompeticao } from '../services/competicoes';
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
@@ -113,6 +114,8 @@ function CompeticaoDetalhe() {
           </div>
         </div>
       </div>
+
+      <TabelaJogos competicao={competicao} />
 
       {competicao.grupos.map((grupo) => (
         <section key={grupo.id ?? 'sem-grupo'} className="card mb-lg">

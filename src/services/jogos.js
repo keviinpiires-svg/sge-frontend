@@ -1,21 +1,31 @@
 import api from './api';
 
-// GET /api/jogos
-export const listarJogos = () =>
-  api.get('/jogos').then((r) => r.data);
+// GET /api/jogos — filtros aceitos: competicao_id, fase, status
+export const listarJogos = (filtros) =>
+  api.get('/jogos', { params: filtros }).then((r) => r.data);
 
 // GET /api/jogos/:id
 export const buscarJogoPorId = (id) =>
-  api.get(`/jogos/${id}`).then((r) => r.data);
+  api.get(`/jogos/${encodeURIComponent(id)}`).then((r) => r.data);
 
-// POST /api/jogos/agendar (protegida)
+// POST /api/jogos (ADMIN)
 export const agendarJogo = (jogo) =>
-  api.post('/jogos/agendar', jogo).then((r) => r.data);
+  api.post('/jogos', jogo).then((r) => r.data);
 
-// PUT /api/jogos/finalizar/:id (protegida)
-export const finalizarJogo = (id, placares) =>
-  api.put(`/jogos/finalizar/${id}`, placares).then((r) => r.data);
+// PUT /api/jogos/:id (ADMIN) — só dados de agenda
+export const atualizarJogo = (id, dados) =>
+  api.put(`/jogos/${encodeURIComponent(id)}`, dados).then((r) => r.data);
 
-// DELETE /api/jogos/:id (protegida)
+// PUT /api/jogos/:id/iniciar (ADMIN ou PLACAR)
+export const iniciarJogo = (id) =>
+  api.put(`/jogos/${encodeURIComponent(id)}/iniciar`).then((r) => r.data);
+
+// DELETE /api/jogos/:id (ADMIN) — renumera os jogos seguintes da competição
 export const excluirJogo = (id) =>
-  api.delete(`/jogos/${id}`).then((r) => r.data);
+  api.delete(`/jogos/${encodeURIComponent(id)}`).then((r) => r.data);
+
+// OBSOLETA: PUT /api/jogos/finalizar/:id não existe mais no backend. O placar
+// passa a sair da súmula (fatia 5c). Continua exportada só porque a tela antiga
+// ListaJogos.jsx ainda a importa; sai junto com a migração daquela tela.
+export const finalizarJogo = (id, placares) =>
+  api.put(`/jogos/finalizar/${encodeURIComponent(id)}`, placares).then((r) => r.data);

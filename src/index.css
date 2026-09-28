@@ -591,6 +591,13 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .menu-lateral-contador { display: none; }
 }
 
+/* ---------- Tabela de jogos ---------- */
+.versus { color: var(--sge-text-muted); font-size: 12px; padding: 0 4px; }
+.acoes { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+.form-linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.form-jogo { border-top: 1px solid var(--sge-border); margin-top: 8px; }
+
 /* ---------- Impressão / Exportação PDF ---------- */
 .page-toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .print-only { display: none; }
