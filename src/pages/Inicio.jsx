@@ -60,8 +60,9 @@ function Inicio() {
   // Ação irreversível: pede confirmação e depois exige a palavra digitada
   const reiniciarCampeonato = async () => {
     const aviso =
-      'ATENÇÃO: isso apaga TODAS as escolas, atletas, jogos, súmulas e grupos deste campeonato.\n\n' +
-      'Seu login de administrador e os cadastros base (locais, modalidades, categorias) são preservados.\n\n' +
+      'ATENÇÃO: isso apaga TODOS os jogos e súmulas deste campeonato, junto com suspensões,\n' +
+      'colocações e pontuação da tabela geral.\n\n' +
+      'Escolas, competições, grupos, equipes, atletas e inscrições são preservados.\n\n' +
       'Esta ação NÃO pode ser desfeita. Deseja continuar?';
 
     if (!window.confirm(aviso)) return;
@@ -302,8 +303,8 @@ function Inicio() {
             <div className="card-body">
               <h3 className="card-title">⚠️ Zona de Perigo</h3>
               <p className="state-text" style={{ textAlign: 'left', marginBottom: '18px' }}>
-                Reiniciar o campeonato apaga todas as escolas, atletas, jogos, súmulas e grupos.
-                Seu login e os cadastros base (locais, modalidades, categorias) são preservados.
+                Reiniciar o campeonato apaga todos os jogos e súmulas, com as suspensões e a pontuação geral.
+                Escolas, competições, grupos, equipes, atletas e inscrições são preservados.
                 Use isto apenas para começar um novo torneio do zero.
               </p>
               <button className="btn btn-danger" onClick={reiniciarCampeonato} disabled={reiniciando}>
