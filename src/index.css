@@ -475,6 +475,122 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .player-stats { justify-content: flex-end; }
 }
 
+/* ---------- Competições: menu lateral + conteúdo ---------- */
+.mb-lg { margin-bottom: 32px; }
+
+.layout-competicoes {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.menu-lateral {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--sge-surface);
+  border: 1px solid var(--sge-border);
+  border-radius: var(--sge-radius-lg);
+}
+
+.menu-lateral-titulo {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sge-text-muted);
+}
+
+.menu-lateral-aviso { margin: 0; font-size: 14px; color: var(--sge-text-muted); }
+.menu-lateral-aviso.erro { color: var(--sge-danger-text); }
+
+.menu-lateral-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--sge-radius-sm);
+  color: var(--sge-text);
+  text-decoration: none;
+  font-size: 15px;
+  transition: background var(--sge-transition), color var(--sge-transition);
+}
+
+.menu-lateral-item:hover { background: var(--sge-surface-2); }
+
+.menu-lateral-item.ativo {
+  background: var(--sge-accent-soft);
+  color: var(--sge-accent);
+  font-weight: 700;
+}
+
+/* Modalidade sem competição importada: continua visível, mas não é link */
+.menu-lateral-item.vazio { color: var(--sge-text-muted); cursor: default; }
+.menu-lateral-item.vazio:hover { background: none; }
+
+.menu-lateral-nome { flex: 1; }
+
+.menu-lateral-contador {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--sge-text-muted);
+}
+
+.secao-titulo {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sge-text-soft);
+}
+
+.tile-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+
+.tile-clicavel {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--sge-transition), transform var(--sge-transition);
+}
+
+.tile-clicavel:hover { border-color: var(--sge-accent); transform: translateY(-2px); }
+.tile-clicavel:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+
+.ficha { display: flex; flex-wrap: wrap; gap: 24px 36px; }
+.ficha-rotulo {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sge-text-muted);
+  margin-bottom: 4px;
+}
+.ficha-valor { font-size: 17px; font-weight: 700; color: var(--sge-text-strong); }
+
+/* Telas estreitas: o menu vira uma faixa rolável acima do conteúdo */
+@media (max-width: 860px) {
+  .layout-competicoes { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+
+  .menu-lateral {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+  }
+
+  .menu-lateral-titulo { display: none; }
+  .menu-lateral-item { white-space: nowrap; }
+  .menu-lateral-contador { display: none; }
+}
+
 /* ---------- Impressão / Exportação PDF ---------- */
 .page-toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .print-only { display: none; }

@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth';
 // admin: true → link só aparece para quem está logado como administrador
 const links = [
   { to: '/', label: 'Início', end: true },
+  { to: '/modalidades/futsal', label: 'Modalidades' },
   { to: '/cadastro', label: 'Cadastrar Time', admin: true },
   { to: '/grupos', label: 'Fase de Grupos' },
   { to: '/classificacao', label: 'Classificação' },

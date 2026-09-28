@@ -27,3 +27,4 @@ Fontes originais em texto: `docs/referencias/` (regulamento, tabela de grupos, i
 - Não leia nem exiba `.env*` reais. Nunca comite segredos.
 - Não faça commit/push sem o usuário pedir. Trabalhe na branch de desenvolvimento.
 - Itens **[PENDENTE]** do contexto exigem perguntar ao usuário antes de implementar. Não invente regra.
+- **Fatias:** a numeração válida é a da tabela da seção 9 do contexto. Cite número e nome ("fatia 5 — futsal completo") e atualize o estado ao concluir.

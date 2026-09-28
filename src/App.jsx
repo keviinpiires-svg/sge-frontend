@@ -15,6 +15,8 @@ import DetalhesSumula from './pages/DetalhesSumula';
 import Classificacao from './pages/Classificacao';
 import Artilharia from './pages/Artilharia';
 import Login from './pages/Login';
+import Competicoes from './pages/Competicoes';
+import CompeticaoDetalhe from './pages/CompeticaoDetalhe';
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
           <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
           <Route path="/classificacao" element={<Classificacao />} />
           <Route path="/artilharia" element={<Artilharia />} />
+          <Route path="/modalidades/:slug" element={<Competicoes />} />
+          <Route path="/competicoes/:id" element={<CompeticaoDetalhe />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
