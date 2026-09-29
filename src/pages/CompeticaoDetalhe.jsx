@@ -4,6 +4,7 @@ import PainelModalidades from '../components/PainelModalidades';
 import TabelaJogos from '../components/TabelaJogos';
 import ClassificacaoGrupos from '../components/ClassificacaoGrupos';
 import Suspensoes from '../components/Suspensoes';
+import Elencos from '../components/Elencos';
 import { buscarCompeticao } from '../services/competicoes';
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
@@ -116,6 +117,8 @@ function CompeticaoDetalhe() {
           </div>
         </div>
       </div>
+
+      <Elencos competicao={competicao} />
 
       <TabelaJogos competicao={competicao} />
 
