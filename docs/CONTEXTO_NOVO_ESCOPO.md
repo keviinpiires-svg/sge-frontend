@@ -65,7 +65,7 @@ Fonte: PDF "Ajustes para o sistema" + respostas do usuário.
 8. **Súmulas:** ajustar para impressão e preenchimento conforme a ocasião. O modelo de **futsal** (imagem em
    `docs/referencias/sumula_futsal_modelo.png`) serve para **Futsal e Futebol Society**. Para as outras modalidades, criar
    layouts no mesmo estilo.
-9. **Atleta em no máximo 2 modalidades coletivas**; **RG obrigatório** no cadastro do atleta.
+9. **Atleta em no máximo 2 competições coletivas**; **RG obrigatório** no cadastro do atleta.
 10. **Renumerar os jogos** quando um for excluído (sem buracos na numeração).
 11. **Cadastro:** escolas e grupos **já existem em documento** (tabela de grupos). O que falta é **cadastrar os
     atletas nas suas escolas, dentro das modalidades em que a escola joga**. O sorteio de grupos **deixa de existir**.
@@ -81,7 +81,7 @@ campeonato" como configuração.
 
 **Elenco/inscrição:** RG obrigatório (cópia da identidade). Mínimo 8 e máximo 14 em Futsal, Vôlei, Basquete e Society;
 mínimo 10 e máximo 14 em Handebol e Baleado (**decisão do usuário: limite 14, mínimo só aviso**). Até 10 dirigentes por
-escola. Professor/monitor não pode ser atleta. Cada atleta: no máximo **2 modalidades coletivas**.
+escola. Professor/monitor não pode ser atleta. Cada atleta: no máximo **2 competições coletivas** por atleta (competições de modalidade `COLETIVO`: Futsal Sub 13 e Futsal Sub 15 contam como duas; atletismo não conta).
 
 **Tempos de jogo:** Futsal/Handebol — Sub 7 a Sub 13: 2×12 min (intervalo 5); Sub 15, Sub 17 e Aberto: 2×15 min;
 **final** de Sub 15/17/Aberto: 2×20 min. Society Sub 13 e 17: 2×20 min. Baleado: 4 áreas, 15 min, vence quem
@@ -137,6 +137,10 @@ semifinal, vale a classificação da fase classificatória. (Como saem 4º e 5º
 
 ## 7. Súmula (modelo de futsal — vale para Futsal e Society)
 
+> **Todas as modalidades:** `docs/referencias/sumulas_modelos.md` descreve as quatro folhas oficiais (futsal/society, handebol,
+> basquete e vôlei), com os PDFs ao lado e as lacunas do schema para atendê-las (falta de faltas individuais no basquete,
+> contadores até 7, 12 linhas no papel contra 14 do regulamento). O Baleado não tem modelo em papel.
+
 Imagem: `docs/referencias/sumula_futsal_modelo.png`. Folha A4 retrato, duas equipes empilhadas. Campos:
 - **Cabeçalho:** Campeonato, Chave, Rodada, Ginásio, Cidade, Estado, Categoria, Data, Horário; Árbitro 1, Árbitro 2, Anotador;
   caixas de placar entre EQUIPE A e EQUIPE B.
@@ -184,7 +188,7 @@ tabelas órfãs (`alunos`, `classificacao`, `diretores`, `sumulas_jogadores`, `e
 - `provas_atletismo` e `resultados_atletismo` (rascunho — forma de lançar ainda **[PENDENTE]**).
 
 **Validações que ficam no código** (em transação): máx. 14 por equipe; idade pela categoria; sexo × gênero (MISTO aceita os
-dois); máx. 2 modalidades coletivas; equipe da súmula é uma das duas do jogo; suspensões por cartão.
+dois); máx. 2 competições coletivas; equipe da súmula é uma das duas do jogo; suspensões por cartão.
 
 **Pressupostos até o usuário confirmar:** numeração de jogos **por competição**; fase de grupos **3/1/0** (guardado por competição,
 fácil de mudar).
@@ -199,10 +203,15 @@ fácil de mudar).
 |---|---|---|---|
 | 1 | Preparar | ✅ feito | Tag do estado anterior e branch `feat/novo-escopo` nos dois repositórios. |
 | 2 | Limpeza | ✅ feito (28/09/2026) | Código morto removido, rotas soltas do `server.js` viraram rota + controller, reset adaptado. Ver seção 10. |
-| 3 | Modelo de dados novo | ✅ feito, falta conferir | Schema em `db/`, aplicado no `jogos_estudantis_dev` com carga base e importação dos grupos. Falta a **conferência das 50 competições** (`docs/CONFERENCIA_COMPETICOES.md`) e a migração da produção. |
-| 4 | Atleta e inscrição | ⬜ próxima | Sexo, RG obrigatório, ano de nascimento × categoria, máximo de 14, limite de 2 modalidades coletivas, número da camisa. |
-| 5 | Futsal completo | ⬜ a fazer | Ponta a ponta: menu lateral e rotas por modalidade/categoria, tabela de jogos, súmula igual ao modelo (em branco e preenchida), classificação com o desempate certo, suspensão por cartões, perfil PLACAR, `finalizar` só para W.O. |
-| 6 | Demais modalidades coletivas | ⬜ a fazer | Handebol, Society e Basquete (reaproveitam o futsal); depois Vôlei (sets) e Baleado (eliminados). |
+| 3 | Modelo de dados novo | ✅ feito | Schema em `db/`, aplicado no `jogos_estudantis_dev` com carga base e importação dos grupos; as 50 competições foram conferidas (`docs/CONFERENCIA_COMPETICOES.md`). **2 pontos de regra seguem abertos** (seção 6): "melhor de dois jogos" com 3 equipes e o critério do "segundo mais bem colocado". Falta a migração da produção. |
+| 4 | Atleta e inscrição | ✅ feito (28/09/2026) | Sexo, RG obrigatório e único, ano de nascimento × categoria, máximo de 14, limite de 2 competições coletivas, número da camisa. Cadastro de atleta e inscrição são só de ADMIN. |
+| 5 | Futsal completo | 🟡 em andamento | Ponta a ponta, em cinco sub-fatias (abaixo). **Modelo de súmula: `sumula_futsal_modelo.pdf`** — 14 linhas por equipe, cartões (A, A, V), nº, atleta, grade de gols, capitão; rodapé com faltas 1º/2º T (1 a 5), tempo técnico e técnico. A mesma folha vale para o **Futebol Society** (só muda o título). |
+| 5a | ↳ Menu e competições | ✅ feito | Menu lateral por modalidade, lista de competições e o detalhe da competição. `GET /api/modalidades` e `/api/competicoes`. |
+| 5b | ↳ Jogos por competição | ✅ feito | Controller de jogos no schema novo, `numero_jogo` por competição, renumeração ao excluir, tabela de jogos na tela. |
+| 5c | ↳ Súmula e W.O. | ✅ feito | Súmula como única fonte do placar (em branco e preenchida, mesma rota), impressão da folha e `PUT /api/jogos/:id/wo` só de ADMIN. |
+| 5d | ↳ Classificação e perfil PLACAR | ⬜ pendente | Classificação da competição com o desempate do regulamento (seção 5) e o perfil PLACAR no frontend — hoje o `AuthContext` ainda trata todo logado como admin. |
+| 5e | ↳ Suspensão por cartões | ⬜ pendente | 2 amarelos = 1 jogo, amarelos zerados na 2ª fase, expulsão = 1 jogo. O `GET /sumulas/atleta/:id/status` antigo foi removido na 5c e volta aqui, refeito. |
+| 6 | Demais modalidades coletivas | ⬜ a fazer | Handebol, Society e Basquete (reaproveitam o futsal); depois Vôlei (sets) e Baleado (eliminados). **Modelos de súmula** (`docs/referencias/sumulas_modelos.md`): Society e Handebol usam a **folha do futsal** (`sumula_handebol_modelo.pdf` é a mesma, só muda o título); Basquete tem folha própria (`sumula_basquete_modelo.pdf`: 12 linhas, faltas individuais 1–5, grade de pontos, faltas acumulativas 1–7); Vôlei tem folha própria (`sumula_volei_modelo.pdf`: 12 linhas por equipe, controle de sets, sem gols nem cartões). **Baleado não tem modelo em papel — [PENDENTE]**. |
 | 7 | Mata-mata configurável | ⬜ a fazer | Formato por competição, 3º lugar calculado, pênaltis e prorrogação. |
 | 8 | Tabela geral e o que sobra | ⬜ a fazer | Pontuação 10/8/6/4/2 e ajuste de pontos, Atletismo, renumeração de jogos, técnicos e dirigentes (se entrarem). |
 
@@ -216,7 +225,7 @@ painel de sorteio de `FaseGrupos.jsx` (e `salvarDistribuicao` em `services/grupo
 ~~**Reorganizar**~~ (feito): `/api/locais`, `/api/etapas-ensino` e `/api/inscricoes` saíram do `server.js` para rota + controller
 (`localRoutes`/`localController`, `etapaEnsinoRoutes`/`etapaEnsinoController`, `inscricaoRoutes`/`inscricaoController`).
 O `server.js` não fala mais direto com o banco. A inscrição foi adaptada ao schema novo (equipe + atleta + camisa, escola vinda
-do atleta); **as regras de elenco (14, idade, sexo, 2 modalidades) entram na fatia 4 — atleta e inscrição**.
+do atleta); as regras de elenco (14, idade, sexo, 2 competições coletivas) entraram na **fatia 4 — atleta e inscrição**.
 
 **Decidido com o usuário (28/09/2026):**
 - **Reiniciar campeonato:** mantido e **adaptado ao schema novo**. Apaga só o que o evento produz — `sumula_atletas`,
@@ -245,7 +254,7 @@ mata-mata fixo (1ºA×2ºB) cobre só um dos formatos.
 ## 12. Pendências (perguntas em aberto para o usuário)
 
 1. **Tabela geral em 3 blocos:** por etapa da escola ou por categoria? Se por categoria, quais subs entram em cada bloco?
-2. **Limite de 2 modalidades coletivas:** Futsal Sub 13 + Futsal Sub 15 conta como 1 ou 2? Pode jogar em duas categorias da mesma modalidade?
+2. ~~**Limite de 2 modalidades coletivas**~~ — **resolvido (28/09/2026):** o limite conta **competições**, não modalidades. Futsal Sub 13 + Futsal Sub 15 são **duas**. Contam as inscrições em competições de modalidade `COLETIVO`; o atletismo (`INDIVIDUAL`) não entra.
 3. **Atletismo:** como o resultado é lançado (tempo/distância, 2 tentativas)? Xadrez, Dama e Dominó entram?
 4. **Fase de grupos:** pontos por vitória e empate? (o regulamento cita uma "tabela" de sistema de disputa que não veio.)
 5. **4º e 5º lugar:** como saem?
@@ -255,6 +264,7 @@ mata-mata fixo (1ºA×2ºB) cobre só um dos formatos.
 9. **Numeração dos jogos:** por competição (assumido no schema) ou global?
 10. ~~Schema do banco~~ — **resolvido** (ver seção 8).
 11. ~~Limpeza: destino do reset de campeonato, do `finalizar` manual e da suspensão~~ — **resolvido** (ver seção 10).
+12. **Súmula do Baleado:** não há folha oficial entre os modelos recebidos. Criar uma no estilo das outras, e definir o que a linha do atleta registra (eliminados?).
 
 ## 13. Como trabalhar neste projeto
 

@@ -5,7 +5,7 @@ React 19 + Vite 8 + react-router-dom 7 + axios + react-to-print. Deploy na Verce
 **Antes de qualquer tarefa de funcionalidade, leia o contexto do novo escopo:**
 @docs/CONTEXTO_NOVO_ESCOPO.md
 
-Fontes originais em texto: `docs/referencias/` (regulamento, tabela de grupos, imagem da súmula de futsal — o layout da súmula impressa deve seguir essa imagem).
+Fontes originais em texto: `docs/referencias/` (regulamento, tabela de grupos e `sumulas_modelos.md`, com as folhas oficiais de futsal/society, handebol, basquete e vôlei — a súmula impressa deve seguir o modelo da modalidade).
 
 ## Comandos
 - `npm run dev` — desenvolvimento. `npm run build` — build. `npm run lint` — ESLint.
