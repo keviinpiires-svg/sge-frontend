@@ -276,7 +276,7 @@ function Inicio() {
           ) : (
             <div className="state state-compact">
               <p className="state-text">Nenhum jogo agendado no momento.</p>
-              <button className="btn btn-outline btn-sm" onClick={() => navigate('/agendar-jogo')}>
+              <button className="btn btn-outline btn-sm" onClick={() => navigate('/modalidades/futsal')}>
                 🗓️ Agendar Jogo
               </button>
             </div>

@@ -23,9 +23,3 @@ export const iniciarJogo = (id) =>
 // DELETE /api/jogos/:id (ADMIN) — renumera os jogos seguintes da competição
 export const excluirJogo = (id) =>
   api.delete(`/jogos/${encodeURIComponent(id)}`).then((r) => r.data);
-
-// OBSOLETA: PUT /api/jogos/finalizar/:id não existe mais no backend. O placar
-// passa a sair da súmula (fatia 5c). Continua exportada só porque a tela antiga
-// ListaJogos.jsx ainda a importa; sai junto com a migração daquela tela.
-export const finalizarJogo = (id, placares) =>
-  api.put(`/jogos/finalizar/${encodeURIComponent(id)}`, placares).then((r) => r.data);

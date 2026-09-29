@@ -12,8 +12,6 @@ const links = [
   { to: '/matamata', label: 'Mata-Mata' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
-  { to: '/agendar-jogo', label: 'Agendar Jogo', admin: true },
-  { to: '/lista-jogos', label: 'Listar Jogos' },
 ];
 
 function Navbar() {

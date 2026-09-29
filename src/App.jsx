@@ -8,8 +8,6 @@ import FaseGrupos from './pages/FaseGrupos';
 import MataMata from './pages/MataMata';
 import CadastroAtleta from './pages/CadastroAtleta';
 import ListaAtletas from './pages/ListaAtletas';
-import AgendarJogo from './pages/AgendarJogo';
-import ListaJogos from './pages/ListaJogos';  
 import PreencherSumula from './pages/PreencherSumula';
 import DetalhesSumula from './pages/DetalhesSumula';
 import Classificacao from './pages/Classificacao';
@@ -31,8 +29,6 @@ function App() {
           <Route path="/matamata" element={<MataMata />} />
           <Route path="/cadastro-atleta" element={<RotaPrivada><CadastroAtleta /></RotaPrivada>} />
           <Route path="/lista-atletas" element={<ListaAtletas />} />
-          <Route path="/agendar-jogo" element={<RotaPrivada><AgendarJogo /></RotaPrivada>} />
-          <Route path="/lista-jogos" element={<ListaJogos />} />
           <Route path="/preencher-sumula/:id" element={<RotaPrivada><PreencherSumula /></RotaPrivada>} />
           <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
           <Route path="/classificacao" element={<Classificacao />} />
