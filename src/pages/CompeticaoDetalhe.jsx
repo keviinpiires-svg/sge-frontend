@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PainelModalidades from '../components/PainelModalidades';
 import TabelaJogos from '../components/TabelaJogos';
 import ClassificacaoGrupos from '../components/ClassificacaoGrupos';
+import Suspensoes from '../components/Suspensoes';
 import { buscarCompeticao } from '../services/competicoes';
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
@@ -119,6 +120,8 @@ function CompeticaoDetalhe() {
       <TabelaJogos competicao={competicao} />
 
       <ClassificacaoGrupos competicao={competicao} />
+
+      <Suspensoes competicao={competicao} />
 
       <button
         type="button"

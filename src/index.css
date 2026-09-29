@@ -277,6 +277,14 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   background: rgba(255, 255, 255, 0.08); color: var(--sge-text-muted);
 }
 .tag-sorteio { background: rgba(241, 196, 15, 0.18); color: var(--sge-accent); }
+.tag-suspenso {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  background: rgba(231, 76, 60, 0.18); color: var(--sge-danger-text);
+}
+.badge-suspenso { background: rgba(231, 76, 60, 0.18); color: var(--sge-danger-text); }
+.table-sge tbody tr.row-suspenso { background: rgba(231, 76, 60, 0.07); }
+.table-sge tbody tr.row-suspenso td:first-child { box-shadow: inset 3px 0 0 var(--sge-danger); }
 .legenda-desempate { margin: 0 0 24px; font-size: 13px; color: var(--sge-text-muted); line-height: 1.6; }
 .legenda-desempate b { color: var(--sge-text-soft); }
 

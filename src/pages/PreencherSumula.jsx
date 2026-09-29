@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Contador from '../components/Contador';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
+import { suspensosNoJogo } from '../services/suspensoes';
 
 const MAX_AMARELOS = 2;
 
@@ -16,6 +17,7 @@ function PreencherSumula() {
   const [penaltis, setPenaltis] = useState({ penaltis_1: 0, penaltis_2: 0 });
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
+  const [suspensao, setSuspensao] = useState(null);
 
   const pronto = carga?.id === id;
   const erro = pronto ? carga.erro : '';
@@ -36,6 +38,24 @@ function PreencherSumula() {
       })
       .catch((falha) => {
         if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    let ativo = true;
+
+    suspensosNoJogo(id)
+      .then((dados) => {
+        if (ativo) setSuspensao({ id, dados });
+      })
+      .catch(() => {
+        // A súmula não depende disto para ser preenchida: sem a lista, a
+        // tela segue sem os avisos em vez de travar.
+        if (ativo) setSuspensao({ id, dados: null });
       });
 
     return () => {
@@ -134,6 +154,10 @@ function PreencherSumula() {
   }
 
   const { jogo } = sumula;
+  const listaSuspensos = suspensao?.id === id && suspensao.dados ? suspensao.dados.suspensos : [];
+  const avisosSuspensao = suspensao?.id === id && suspensao.dados ? suspensao.dados.avisos : [];
+  const suspensoPorAtleta = new Map(listaSuspensos.map((s) => [s.atleta_id, s]));
+
   const placar1 = golsDe(equipes[0]);
   const placar2 = golsDe(equipes[1]);
   const precisaPenaltis = jogo.fase !== 'GRUPOS' && placar1 === placar2;
@@ -152,6 +176,25 @@ function PreencherSumula() {
         </header>
 
         {aviso && <p className={`alert alert-${aviso.tipo}`}>{aviso.texto}</p>}
+
+        {avisosSuspensao.map((item) => (
+          <div key={item.titulo} className="alert alert-aviso mb-lg">
+            <p className="alert-titulo">⚠️ {item.titulo}</p>
+            <p className="alert-texto">{item.texto}</p>
+          </div>
+        ))}
+
+        {listaSuspensos.length > 0 && (
+          <div className="alert alert-error mb-lg">
+            <p className="alert-titulo">🚫 Atleta suspenso nesta partida</p>
+            <p className="alert-texto">
+              {listaSuspensos
+                .map((s) => `${s.nome} (${s.escola_nome}) — ${s.motivo}`)
+                .join(' · ')}
+              . O regulamento não permite escalar quem está cumprindo suspensão.
+            </p>
+          </div>
+        )}
 
         <div className="card mb-lg">
           <div className="card-body placar-ao-vivo">
@@ -187,9 +230,22 @@ function PreencherSumula() {
                   </thead>
                   <tbody>
                     {equipe.atletas.map((atleta) => (
-                      <tr key={atleta.atleta_id}>
+                      <tr
+                        key={atleta.atleta_id}
+                        className={suspensoPorAtleta.has(atleta.atleta_id) ? 'row-suspenso' : ''}
+                      >
                         <td className="strong">{atleta.numero_camisa ?? '—'}</td>
-                        <td className="text-left">{atleta.nome}</td>
+                        <td className="text-left">
+                          {atleta.nome}
+                          {suspensoPorAtleta.has(atleta.atleta_id) && (
+                            <span
+                              className="tag-suspenso"
+                              title={suspensoPorAtleta.get(atleta.atleta_id).motivo}
+                            >
+                              suspenso
+                            </span>
+                          )}
+                        </td>
                         <td>
                           <Contador
                             valor={Number(atleta.gols)}
