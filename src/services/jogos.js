@@ -23,3 +23,7 @@ export const iniciarJogo = (id) =>
 // DELETE /api/jogos/:id (ADMIN) — renumera os jogos seguintes da competição
 export const excluirJogo = (id) =>
   api.delete(`/jogos/${encodeURIComponent(id)}`).then((r) => r.data);
+
+// PUT /api/jogos/:id/wo (ADMIN) — { vencedor_equipe_id, placar_1, placar_2, motivo }
+export const declararWO = (id, dados) =>
+  api.put(`/jogos/${encodeURIComponent(id)}/wo`, dados).then((r) => r.data);

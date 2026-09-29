@@ -691,3 +691,112 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   }
   .print-signatures span { display: block; margin-bottom: 6px; border-top: 1px solid var(--sge-print-text); }
 }
+
+/* ---------- Súmula: preenchimento ---------- */
+.contador { display: inline-flex; align-items: center; gap: 4px; }
+
+.contador-btn {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--sge-border-strong);
+  border-radius: var(--sge-radius-sm);
+  background: var(--sge-surface-2);
+  color: var(--sge-text);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  transition: background var(--sge-transition), border-color var(--sge-transition);
+}
+.contador-btn:hover:not(:disabled) { background: var(--sge-accent-soft); border-color: var(--sge-accent); }
+.contador-btn:disabled { opacity: 0.35; cursor: default; }
+
+.contador-valor {
+  width: 46px; padding: 4px; text-align: center;
+  font-weight: 700; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--sge-border); border-radius: var(--sge-radius-sm);
+  background: transparent; color: var(--sge-text-strong);
+}
+/* As setas nativas do number competem com os botões − e + */
+.contador-valor::-webkit-outer-spin-button,
+.contador-valor::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.contador-valor { -moz-appearance: textfield; appearance: textfield; }
+
+.placar-ao-vivo { display: flex; align-items: center; justify-content: center; gap: 28px; text-align: center; }
+.placar-equipe { margin: 0 0 4px; color: var(--sge-text-muted); font-size: 14px; }
+.placar-numero { margin: 0; font-size: 46px; font-weight: 800; color: var(--sge-accent); font-variant-numeric: tabular-nums; }
+.placar-x { font-size: 22px; color: var(--sge-text-muted); }
+
+.rodape-equipe {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--sge-border);
+}
+.linha-checks { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+
+/* ---------- Súmula: folha para impressão ---------- */
+.no-print { }
+
+.folha-sumula {
+  background: #ffffff;
+  color: #000000;
+  padding: 18px 20px;
+  border-radius: var(--sge-radius);
+  font-size: 12px;
+}
+
+.folha-cabecalho { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 12px; }
+.folha-titulo { margin: 0; font-size: 18px; text-align: center; text-transform: uppercase; }
+.folha-subtitulo { margin: 2px 0 10px; text-align: center; font-size: 12px; }
+
+.folha-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 12px; }
+.folha-campos span { border-bottom: 1px dotted #999; padding: 2px 0; }
+
+.folha-placar { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 12px; }
+.folha-placar > div { display: flex; align-items: center; gap: 10px; }
+.folha-placar-equipe { font-weight: 700; text-transform: uppercase; }
+.folha-placar-caixa {
+  display: inline-block; min-width: 42px; height: 34px; line-height: 32px;
+  border: 1.5px solid #000; text-align: center; font-size: 20px; font-weight: 700;
+}
+.folha-placar-x { font-size: 16px; }
+.folha-penaltis { margin: 8px 0 0; text-align: center; font-weight: 700; }
+
+.folha-equipe { margin-bottom: 14px; break-inside: avoid; }
+.folha-equipe-topo { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.folha-rotulo { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.folha-equipe-nome { font-size: 14px; text-transform: uppercase; }
+
+.folha-tabela { width: 100%; border-collapse: collapse; }
+.folha-tabela th, .folha-tabela td { border: 1px solid #000; padding: 3px 5px; height: 21px; }
+.folha-tabela th { background: #eeeeee; font-size: 10px; text-transform: uppercase; }
+.folha-tabela .col-cartao { width: 22px; text-align: center; }
+.folha-tabela .col-numero { width: 34px; text-align: center; }
+.folha-tabela .col-gols { width: 44px; text-align: center; }
+.folha-tabela .col-capitao { width: 34px; text-align: center; }
+.folha-tabela .col-atleta { text-align: left; }
+
+.folha-rodape { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 4px; font-size: 11px; }
+.folha-tecnico { flex: 1; min-width: 180px; }
+
+.folha-assinaturas { display: flex; gap: 24px; margin-top: 26px; font-size: 11px; text-align: center; }
+.folha-assinaturas > div { flex: 1; }
+.folha-assinaturas span { display: block; border-top: 1px solid #000; margin-bottom: 4px; }
+
+@media print {
+  .no-print { display: none !important; }
+
+  .folha-sumula {
+    padding: 0;
+    border-radius: 0;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .folha-tabela th { background: #eeeeee !important; }
+  .folha-equipe { break-inside: avoid; page-break-inside: avoid; }
+}
+
+.painel-wo {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--sge-accent);
+  border-radius: var(--sge-radius);
+  background: var(--sge-accent-soft);
+}

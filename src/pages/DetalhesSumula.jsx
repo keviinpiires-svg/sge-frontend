@@ -3,179 +3,197 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { buscarSumulaPorJogo } from '../services/sumulas';
 
+const formatarData = (valor) =>
+  valor ? new Date(valor).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
+
+const formatarHora = (valor) =>
+  valor ? new Date(valor).toLocaleTimeString('pt-BR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' }) : '';
+
+// A folha tem um número fixo de linhas, esteja o elenco cheio ou não: é o que
+// permite levá-la impressa para a quadra e escrever à mão o que faltar.
+const completarLinhas = (atletas, total) => {
+  const linhas = [...atletas];
+  while (linhas.length < total) linhas.push(null);
+  return linhas;
+};
+
 function DetalhesSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [jogo, setJogo] = useState(null);
-  const [eventos, setEventos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState('');
+  const [carga, setCarga] = useState(null);
+  // Em branco: mesma folha, sem os lançamentos — para levar à quadra
+  const [emBranco, setEmBranco] = useState(false);
 
-  // Área impressa no PDF: placar + tabela de eventos
-  const sumulaRef = useRef(null);
-  const exportarPdf = useReactToPrint({
-    contentRef: sumulaRef,
-    documentTitle: () => `Sumula_Jogo_${jogo?.numero_jogo || id}`,
-    pageStyle: '@page { size: A4; margin: 12mm; } html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
+  const pronto = carga?.id === id;
+  const sumula = pronto ? carga.dados : null;
+  const erro = pronto ? carga.erro : '';
+
+  const folhaRef = useRef(null);
+  const imprimir = useReactToPrint({
+    contentRef: folhaRef,
+    documentTitle: `Sumula_Jogo_${sumula?.jogo?.numero_jogo || id}${emBranco ? '_em_branco' : ''}`,
+    pageStyle: '@page { size: A4 portrait; margin: 10mm; } html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }'
   });
 
   useEffect(() => {
-    async function carregarRelatorio() {
-      try {
-        const data = await buscarSumulaPorJogo(id);
-        setJogo(data.jogo);
-        setEventos(data.eventos);
-      } catch (err) {
-        console.error(err);
-        setErro(err.mensagem);
-      } finally {
-        setCarregando(false);
-      }
-    }
+    let ativo = true;
 
-    if (id) {
-      carregarRelatorio();
-    }
+    buscarSumulaPorJogo(id)
+      .then((dados) => {
+        if (ativo) setCarga({ id, dados, erro: '' });
+      })
+      .catch((falha) => {
+        if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
+      });
+
+    return () => {
+      ativo = false;
+    };
   }, [id]);
 
-  const botaoVoltar = (
-    <div className="text-center mt-lg">
-      <button className="btn btn-secondary btn-pill btn-lg" onClick={() => navigate('/lista-jogos')}>
-        ← Voltar para a Tabela de Jogos
-      </button>
-    </div>
-  );
-
-  if (carregando) {
+  if (!pronto) {
     return (
-      <div className="page">
-        <div className="container card">
-          <div className="state">
-            <div className="spinner" />
-            <p className="state-text">Buscando relatório da súmula...</p>
-          </div>
-        </div>
-      </div>
+      <div className="page"><div className="container-lg">
+        <div className="card"><div className="state">
+          <div className="spinner" />
+          <p className="state-text">Carregando súmula...</p>
+        </div></div>
+      </div></div>
     );
   }
 
   if (erro) {
     return (
-      <div className="page">
-        <div className="container">
-          <div className="card">
-            <div className="state state-error">
-              <div className="state-icon">⚠️</div>
-              <p className="state-title">Não foi possível carregar a súmula</p>
-              <p className="state-text">{erro}</p>
-            </div>
-          </div>
-          {botaoVoltar}
-        </div>
-      </div>
+      <div className="page"><div className="container-lg">
+        <div className="card"><div className="state state-error">
+          <div className="state-icon">⚠️</div>
+          <p className="state-title">Não foi possível carregar a súmula</p>
+          <p className="state-text">{erro}</p>
+        </div></div>
+      </div></div>
     );
   }
 
-  const vazio = <span className="text-muted" style={{ fontWeight: 400 }}>-</span>;
-  const finalizado = jogo.status === 'FINALIZADO';
+  const { evento, jogo, equipes, linhas_sumula } = sumula;
+  const mostrar = (valor) => (emBranco ? '' : valor);
+
+  const renderEquipe = (equipe, indice) => (
+    <section key={equipe.equipe_id} className="folha-equipe">
+      <div className="folha-equipe-topo">
+        <span className="folha-rotulo">Equipe {indice === 0 ? 'A' : 'B'}</span>
+        <strong className="folha-equipe-nome">{equipe.escola_nome}</strong>
+      </div>
+
+      <table className="folha-tabela">
+        <thead>
+          <tr>
+            <th className="col-cartao">A</th>
+            <th className="col-cartao">A</th>
+            <th className="col-cartao">V</th>
+            <th className="col-numero">Nº</th>
+            <th className="col-atleta">Atleta</th>
+            <th className="col-gols">Gols</th>
+            <th className="col-capitao">Cap.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {completarLinhas(equipe.atletas, linhas_sumula).map((atleta, linha) => (
+            <tr key={atleta ? atleta.atleta_id : `vazia-${linha}`}>
+              <td className="col-cartao">{atleta && !emBranco && atleta.amarelos >= 1 ? '✕' : ''}</td>
+              <td className="col-cartao">{atleta && !emBranco && atleta.amarelos >= 2 ? '✕' : ''}</td>
+              <td className="col-cartao">{atleta && !emBranco && atleta.vermelho ? '✕' : ''}</td>
+              <td className="col-numero">{atleta ? atleta.numero_camisa ?? '' : ''}</td>
+              <td className="col-atleta">{atleta ? atleta.nome : ''}</td>
+              <td className="col-gols">{atleta && !emBranco && atleta.gols > 0 ? atleta.gols : ''}</td>
+              <td className="col-capitao">{atleta && !emBranco && atleta.capitao ? '✕' : ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="folha-rodape">
+        <span><strong>Faltas 1º T:</strong> {mostrar(equipe.faltas_1t)}</span>
+        <span><strong>Faltas 2º T:</strong> {mostrar(equipe.faltas_2t)}</span>
+        <span><strong>Tempo técnico:</strong> {emBranco ? '' : [
+          equipe.tempo_tecnico_1t ? '1º T' : null,
+          equipe.tempo_tecnico_2t ? '2º T' : null
+        ].filter(Boolean).join(' e ') || '—'}</span>
+        <span className="folha-tecnico"><strong>Técnico:</strong> {mostrar(equipe.tecnico_nome)}</span>
+      </div>
+    </section>
+  );
 
   return (
     <div className="page">
-      <div className="container stack">
+      <div className="container-lg">
+        <div className="page-toolbar no-print">
+          <button className="btn btn-outline" onClick={() => navigate(-1)}>← Voltar</button>
 
-        <div className="page-toolbar">
-          <button className="btn btn-secondary" onClick={() => navigate('/lista-jogos')}>← Voltar</button>
-          <button className="btn btn-outline" onClick={exportarPdf}>📄 Exportar PDF</button>
+          <div className="acoes">
+            <button
+              type="button"
+              className={`btn btn-sm ${emBranco ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setEmBranco((v) => !v)}
+            >
+              {emBranco ? 'Vendo: em branco' : 'Vendo: preenchida'}
+            </button>
+            <button type="button" className="btn btn-primary btn-sm" onClick={imprimir}>
+              🖨️ Imprimir {emBranco ? 'em branco' : 'preenchida'}
+            </button>
+          </div>
         </div>
 
-        <div ref={sumulaRef} className="stack print-area">
-        {/* Cabeçalho exibido apenas no documento impresso/PDF */}
-        <header className="print-only print-header">
-          <p className="eyebrow">Jogos Estudantis — Sistema de Gestão Esportiva</p>
-          <h1 className="page-title">Súmula Oficial da Partida</h1>
-          <p className="page-subtitle">Documento gerado em {new Date().toLocaleString('pt-BR')}</p>
-        </header>
+        <div ref={folhaRef} className="folha-sumula print-area">
+          <header className="folha-cabecalho">
+            <h1 className="folha-titulo">{evento.nome_evento}</h1>
+            <p className="folha-subtitulo">Súmula — {jogo.modalidade_nome}</p>
 
-        {/* Placar estilo Esportivo (Stadium View) */}
-        <section className="scoreboard">
-          <p className="eyebrow">Relatório Final Oficial</p>
-          <p className="scoreboard-meta">
-            JOGO #{jogo.numero_jogo} — {jogo.fase}
-            {jogo.local_nome && ` — ${jogo.local_nome}`}
-          </p>
-
-          <div className="scoreboard-row">
-            <h2 className="scoreboard-team home">{jogo.escola_1_nome}</h2>
-            <div className="scoreboard-scores">
-              <div className="score-box">{jogo.placar_escola_1}</div>
-              <span className="scoreboard-x">X</span>
-              <div className="score-box">{jogo.placar_escola_2}</div>
+            <div className="folha-campos">
+              <span><strong>Jogo nº</strong> {jogo.numero_jogo}</span>
+              <span><strong>Chave</strong> {jogo.grupo_nome || jogo.fase}</span>
+              <span><strong>Rodada</strong> {jogo.rodada ?? ''}</span>
+              <span><strong>Categoria</strong> {jogo.categoria_nome} {jogo.genero}</span>
+              <span><strong>Ginásio</strong> {jogo.local_nome || ''}</span>
+              <span><strong>Cidade</strong> {evento.cidade} — {evento.estado}</span>
+              <span><strong>Data</strong> {formatarData(jogo.data_hora)}</span>
+              <span><strong>Horário</strong> {formatarHora(jogo.data_hora)}</span>
+              <span><strong>Árbitro 1</strong> {jogo.arbitro_1 || ''}</span>
+              <span><strong>Árbitro 2</strong> {jogo.arbitro_2 || ''}</span>
+              <span><strong>Anotador</strong> {jogo.anotador || ''}</span>
             </div>
-            <h2 className="scoreboard-team away">{jogo.escola_2_nome}</h2>
-          </div>
 
-          <p style={{ marginTop: '20px', marginBottom: 0 }}>
-            <span className={`badge ${finalizado ? 'badge-success' : 'badge-accent'}`}>{jogo.status}</span>
-          </p>
-        </section>
-
-        {/* Listagem de Eventos da Súmula */}
-        <section className="card">
-          <div className="card-body" style={{ paddingBottom: eventos.length ? 0 : undefined }}>
-            <h3 className="card-title" style={{ marginBottom: eventos.length ? 0 : undefined, borderBottom: eventos.length ? 'none' : undefined }}>
-              Atletas com Registro na Súmula
-            </h3>
-          </div>
-
-          {eventos.length === 0 ? (
-            <div className="state state-compact">
-              <div className="state-icon">📋</div>
-              <p className="state-text">Nenhum evento (gols ou cartões) foi registrado nesta súmula.</p>
+            <div className="folha-placar">
+              <div>
+                <span className="folha-placar-equipe">{equipes[0].escola_nome}</span>
+                <span className="folha-placar-caixa">{emBranco ? '' : equipes[0].gols}</span>
+              </div>
+              <span className="folha-placar-x">×</span>
+              <div>
+                <span className="folha-placar-caixa">{emBranco ? '' : equipes[1].gols}</span>
+                <span className="folha-placar-equipe">{equipes[1].escola_nome}</span>
+              </div>
             </div>
-          ) : (
-            <div className="table-wrap">
-              <table className="table-sge" style={{ minWidth: '560px' }}>
-                <thead>
-                  <tr>
-                    <th className="text-left">Atleta</th>
-                    <th className="text-left">Escola</th>
-                    <th>⚽ Gols</th>
-                    <th>🟨 Amarelos</th>
-                    <th>🟥 Vermelhos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {eventos.map((evento, index) => (
-                    <tr key={index}>
-                      <td className="text-left strong">{evento.atleta_nome}</td>
-                      <td className="text-left text-soft">{evento.escola_nome}</td>
-                      <td className="text-success num-lg">
-                        {evento.gols > 0 ? evento.gols : vazio}
-                      </td>
-                      <td className="text-accent num-lg">
-                        {evento.cartoes_amarelos > 0 ? evento.cartoes_amarelos : vazio}
-                      </td>
-                      <td className="text-danger num-lg">
-                        {evento.cartao_vermelho > 0 ? evento.cartao_vermelho : vazio}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
 
-        {/* Campos de assinatura para o registro físico */}
-        <footer className="print-only print-signatures">
-          <div><span />Árbitro</div>
-          <div><span />Representante — {jogo.escola_1_nome}</div>
-          <div><span />Representante — {jogo.escola_2_nome}</div>
-        </footer>
+            {!emBranco && jogo.penaltis_1 !== null && jogo.penaltis_2 !== null && (
+              <p className="folha-penaltis">
+                Pênaltis: {jogo.penaltis_1} × {jogo.penaltis_2}
+              </p>
+            )}
+
+            {!emBranco && jogo.status === 'WO' && (
+              <p className="folha-penaltis">W.O. — {jogo.observacoes}</p>
+            )}
+          </header>
+
+          {equipes.map(renderEquipe)}
+
+          <footer className="folha-assinaturas">
+            <div><span />Árbitro</div>
+            <div><span />Técnico {equipes[0].escola_nome}</div>
+            <div><span />Técnico {equipes[1].escola_nome}</div>
+          </footer>
         </div>
-
-        {botaoVoltar}
       </div>
     </div>
   );

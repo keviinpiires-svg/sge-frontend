@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { listarJogos, agendarJogo, excluirJogo, iniciarJogo } from '../services/jogos';
+import { listarJogos, agendarJogo, excluirJogo, iniciarJogo, declararWO } from '../services/jogos';
 import { listarLocais } from '../services/locais';
 
 const ROTULO_STATUS = {
@@ -40,6 +41,8 @@ function TabelaJogos({ competicao }) {
   const [form, setForm] = useState(FORM_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
+  // Painel de W.O.: abre sob a tabela, com 1x0 já sugerido
+  const [wo, setWo] = useState(null);
 
   const chave = `${competicao.id}:${recarga}`;
   const pronto = resultado?.chave === chave;
@@ -133,6 +136,30 @@ function TabelaJogos({ competicao }) {
     }
   };
 
+  const abrirWO = (jogo) => setWo({
+    jogo,
+    vencedor_equipe_id: String(jogo.equipe_1_id),
+    placar_1: 1,
+    placar_2: 0,
+    motivo: ''
+  });
+
+  const confirmarWO = async () => {
+    try {
+      await declararWO(wo.jogo.id, {
+        vencedor_equipe_id: Number(wo.vencedor_equipe_id),
+        placar_1: Number(wo.placar_1),
+        placar_2: Number(wo.placar_2),
+        motivo: wo.motivo
+      });
+      setAviso({ tipo: 'success', texto: `W.O. registrado no jogo nº ${wo.jogo.numero_jogo}.` });
+      setWo(null);
+      setRecarga((n) => n + 1);
+    } catch (falha) {
+      setAviso({ tipo: 'error', texto: falha.mensagem });
+    }
+  };
+
   const iniciar = async (jogo) => {
     try {
       await iniciarJogo(jogo.id);
@@ -177,6 +204,7 @@ function TabelaJogos({ competicao }) {
                   <th className="text-left">Confronto</th>
                   <th>Grupo</th>
                   <th className="text-left">Local</th>
+                  <th>Placar</th>
                   <th>Situação</th>
                   {autenticado && <th aria-label="Ações" />}
                 </tr>
@@ -191,6 +219,9 @@ function TabelaJogos({ competicao }) {
                     </td>
                     <td>{jogo.grupo_nome || '—'}</td>
                     <td className="text-left">{jogo.local_nome || '—'}</td>
+                    <td className="strong">
+                      {jogo.placar_1 === null ? '—' : `${jogo.placar_1} x ${jogo.placar_2}`}
+                    </td>
                     <td>
                       <span className="badge">{ROTULO_STATUS[jogo.status] || jogo.status}</span>
                     </td>
@@ -199,6 +230,19 @@ function TabelaJogos({ competicao }) {
                         {jogo.status === 'AGENDADO' && (
                           <button type="button" className="btn btn-outline btn-sm" onClick={() => iniciar(jogo)}>
                             Iniciar
+                          </button>
+                        )}
+                        {jogo.status !== 'WO' && (
+                          <Link className="btn btn-outline btn-sm" to={`/preencher-sumula/${jogo.id}`}>
+                            Súmula
+                          </Link>
+                        )}
+                        <Link className="btn btn-outline btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
+                          🖨️
+                        </Link>
+                        {isAdmin && ['AGENDADO', 'EM_ANDAMENTO'].includes(jogo.status) && (
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirWO(jogo)}>
+                            W.O.
                           </button>
                         )}
                         {jogo.status === 'AGENDADO' && isAdmin && (
@@ -212,6 +256,70 @@ function TabelaJogos({ competicao }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {wo && (
+          <div className="painel-wo">
+            <h3 className="secao-titulo">
+              W.O. no jogo nº {wo.jogo.numero_jogo}: {wo.jogo.equipe_1_nome} x {wo.jogo.equipe_2_nome}
+            </h3>
+
+            <div className="form-linha">
+              <div className="form-group">
+                <label className="form-label" htmlFor="wo-vencedor">Vencedor</label>
+                <select
+                  id="wo-vencedor"
+                  className="form-control"
+                  value={wo.vencedor_equipe_id}
+                  onChange={(e) => {
+                    // O placar acompanha o vencedor: 1x0 para o lado certo
+                    const venceuPrimeira = Number(e.target.value) === wo.jogo.equipe_1_id;
+                    setWo((atual) => ({
+                      ...atual,
+                      vencedor_equipe_id: e.target.value,
+                      placar_1: venceuPrimeira ? 1 : 0,
+                      placar_2: venceuPrimeira ? 0 : 1
+                    }));
+                  }}
+                >
+                  <option value={wo.jogo.equipe_1_id}>{wo.jogo.equipe_1_nome}</option>
+                  <option value={wo.jogo.equipe_2_id}>{wo.jogo.equipe_2_nome}</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="wo-p1">Placar {wo.jogo.equipe_1_nome}</label>
+                <input id="wo-p1" className="form-control" type="number" min="0" value={wo.placar_1}
+                  onChange={(e) => setWo((a) => ({ ...a, placar_1: e.target.value }))} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="wo-p2">Placar {wo.jogo.equipe_2_nome}</label>
+                <input id="wo-p2" className="form-control" type="number" min="0" value={wo.placar_2}
+                  onChange={(e) => setWo((a) => ({ ...a, placar_2: e.target.value }))} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="wo-motivo">Motivo</label>
+              <input id="wo-motivo" className="form-control" type="text" value={wo.motivo}
+                placeholder="Ex.: equipe não compareceu dentro da tolerância de 15 minutos"
+                onChange={(e) => setWo((a) => ({ ...a, motivo: e.target.value }))} />
+            </div>
+
+            <div className="acoes" style={{ justifyContent: 'flex-start' }}>
+              <button type="button" className="btn btn-primary btn-sm" onClick={confirmarWO} disabled={!wo.motivo.trim()}>
+                Registrar W.O.
+              </button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => setWo(null)}>
+                Cancelar
+              </button>
+            </div>
+
+            <p className="form-hint">
+              Os gols de um W.O. não entram na artilharia, porque não há súmula. Eles contam na classificação.
+            </p>
           </div>
         )}
 

@@ -1,168 +1,342 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { buscarJogoPorId } from '../services/jogos';
-import { listarAtletasPorEquipe } from '../services/atletas';
-import { registrarSumula } from '../services/sumulas';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import Contador from '../components/Contador';
+import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 
+const MAX_AMARELOS = 2;
+
+// A súmula é regravada inteira a cada envio, então o estado local é a folha
+// toda: as duas equipes, cada uma com o seu rodapé e as suas linhas.
 function PreencherSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [jogo, setJogo] = useState(null);
-  const [atletasA, setAtletasA] = useState([]);
-  const [atletasB, setAtletasB] = useState([]);
-  const [eventos, setEventos] = useState({});
+  const [carga, setCarga] = useState(null);      // { id, dados, erro }
+  const [equipes, setEquipes] = useState(null);  // cópia editável da folha
+  const [penaltis, setPenaltis] = useState({ penaltis_1: 0, penaltis_2: 0 });
   const [salvando, setSalvando] = useState(false);
+  const [aviso, setAviso] = useState(null);
+
+  const pronto = carga?.id === id;
+  const erro = pronto ? carga.erro : '';
+  const sumula = pronto ? carga.dados : null;
 
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        const infoJogo = await buscarJogoPorId(id);
-        setJogo(infoJogo);
+    let ativo = true;
 
-        // Os dois elencos são independentes: busca em paralelo
-        const [elencoA, elencoB] = await Promise.all([
-          listarAtletasPorEquipe(infoJogo.escola_1_id),
-          listarAtletasPorEquipe(infoJogo.escola_2_id)
-        ]);
-        setAtletasA(elencoA);
-        setAtletasB(elencoB);
-      } catch (error) {
-        console.error('Erro ao carregar dados para a súmula:', error);
-        alert(error.mensagem);
-      }
-    }
+    buscarSumulaPorJogo(id)
+      .then((dados) => {
+        if (!ativo) return;
+        setCarga({ id, dados, erro: '' });
+        setEquipes(dados.equipes);
+        setPenaltis({
+          penaltis_1: dados.jogo.penaltis_1 ?? 0,
+          penaltis_2: dados.jogo.penaltis_2 ?? 0
+        });
+      })
+      .catch((falha) => {
+        if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
+      });
 
-    if (id) {
-      carregarDados();
-    }
+    return () => {
+      ativo = false;
+    };
   }, [id]);
 
-  const handleEventoChange = (atletaId, campo, valor) => {
-    const num = Math.max(0, parseInt(valor) || 0);
-    setEventos(prev => ({
-      ...prev,
-      [atletaId]: {
-        ...(prev[atletaId] || { gols: 0, cartoes_amarelos: 0, cartao_vermelho: 0 }),
-        [campo]: num
+  const mudarAtleta = (indiceEquipe, atletaId, campo, valor) => {
+    setEquipes((atual) => atual.map((equipe, i) => (
+      i !== indiceEquipe ? equipe : {
+        ...equipe,
+        atletas: equipe.atletas.map((atleta) => (
+          atleta.atleta_id === atletaId ? { ...atleta, [campo]: valor } : atleta
+        ))
       }
-    }));
+    )));
   };
 
-  const getValor = (atletaId, campo) => {
-    return eventos[atletaId] ? eventos[atletaId][campo] : 0;
+  // O backend recusa duas capitanias na mesma equipe, então marcar um
+  // desmarca o anterior em vez de deixar o erro acontecer no envio.
+  const marcarCapitao = (indiceEquipe, atletaId) => {
+    setEquipes((atual) => atual.map((equipe, i) => (
+      i !== indiceEquipe ? equipe : {
+        ...equipe,
+        atletas: equipe.atletas.map((atleta) => ({
+          ...atleta,
+          capitao: atleta.atleta_id === atletaId ? !atleta.capitao : false
+        }))
+      }
+    )));
   };
 
-  const handleSalvar = async () => {
+  const mudarEquipe = (indiceEquipe, campo, valor) => {
+    setEquipes((atual) => atual.map((equipe, i) => (
+      i === indiceEquipe ? { ...equipe, [campo]: valor } : equipe
+    )));
+  };
+
+  const golsDe = (equipe) => equipe.atletas.reduce((total, a) => total + Number(a.gols || 0), 0);
+
+  const enviar = async (finalizar) => {
+    setAviso(null);
     setSalvando(true);
 
-    // Mapeia e filtra apenas atletas com ações reais (gols ou cartões > 0)
-    const payload = {
-      jogo_id: Number(id),
-      eventos: Object.keys(eventos).map(atletaId => ({
-        atleta_id: Number(atletaId),
-        gols: eventos[atletaId].gols || 0,
-        cartoes_amarelos: eventos[atletaId].cartoes_amarelos || 0,
-        cartao_vermelho: eventos[atletaId].cartao_vermelho || 0
-      })).filter(e => e.gols > 0 || e.cartoes_amarelos > 0 || e.cartao_vermelho > 0)
-    };
-
     try {
-      const data = await registrarSumula(payload);
-      alert(`Súmula salva! Placar final: ${data.placar_escola_1} x ${data.placar_escola_2}. A classificação já foi atualizada.`);
-      navigate('/lista-jogos'); // Redireciona para a lista de jogos
-    } catch (error) {
-      console.error('Erro no POST sumula:', error);
-      alert(`Falha ao salvar a súmula: ${error.mensagem}`);
+      const resposta = await registrarSumula({
+        jogo_id: Number(id),
+        finalizar,
+        penaltis_1: penaltis.penaltis_1,
+        penaltis_2: penaltis.penaltis_2,
+        equipes: equipes.map((equipe) => ({
+          equipe_id: equipe.equipe_id,
+          tecnico_nome: equipe.tecnico_nome,
+          faltas_1t: equipe.faltas_1t,
+          faltas_2t: equipe.faltas_2t,
+          tempo_tecnico_1t: equipe.tempo_tecnico_1t,
+          tempo_tecnico_2t: equipe.tempo_tecnico_2t,
+          atletas: equipe.atletas
+        }))
+      });
+
+      setAviso({
+        tipo: 'success',
+        texto: `${resposta.mensagem} Placar ${resposta.placar_1} x ${resposta.placar_2}.`
+      });
+
+      if (finalizar) navigate(`/detalhes-sumula/${id}`);
+    } catch (falha) {
+      setAviso({ tipo: 'error', texto: falha.mensagem });
     } finally {
       setSalvando(false);
     }
   };
 
-  if (!jogo) {
+  if (!pronto || (!erro && !equipes)) {
     return (
-      <div className="page">
-        <div className="container card">
-          <div className="state">
-            <div className="spinner" />
-            <p className="state-text">Buscando dados da partida...</p>
-          </div>
-        </div>
-      </div>
+      <div className="page"><div className="container-lg">
+        <div className="card"><div className="state">
+          <div className="spinner" />
+          <p className="state-text">Carregando súmula...</p>
+        </div></div>
+      </div></div>
     );
   }
 
-  const campos = [
-    { campo: 'gols', icone: '⚽', titulo: 'Gols' },
-    { campo: 'cartoes_amarelos', icone: '🟨', titulo: 'Cartões amarelos' },
-    { campo: 'cartao_vermelho', icone: '🟥', titulo: 'Cartão vermelho' },
-  ];
+  if (erro) {
+    return (
+      <div className="page"><div className="container-lg">
+        <div className="card"><div className="state state-error">
+          <div className="state-icon">⚠️</div>
+          <p className="state-title">Não foi possível carregar</p>
+          <p className="state-text">{erro}</p>
+        </div></div>
+      </div></div>
+    );
+  }
 
-  const renderColunaTime = (atletas, nomeEscola, mando) => (
-    <div className="card">
-      <div className="card-body">
-        <h3 className="card-title center">
-          {nomeEscola}
-          <span className="form-hint" style={{ display: 'block', marginTop: '4px' }}>{mando}</span>
-        </h3>
-
-        {atletas.length === 0 ? (
-          <div className="state state-compact">
-            <p className="state-text">Nenhum atleta cadastrado nesta equipe.</p>
-          </div>
-        ) : (
-          <div className="stack" style={{ gap: '10px' }}>
-            {atletas.map(atleta => (
-              <div key={atleta.id} className="player-row">
-                <div className="player-name">
-                  {atleta.nome}
-                  <span className="player-meta">RG: {atleta.rg_ou_matricula}</span>
-                </div>
-
-                <div className="player-stats">
-                  {campos.map(({ campo, icone, titulo }) => (
-                    <label key={campo} className="player-stat" title={titulo}>
-                      <span>{icone}</span>
-                      <input
-                        className="form-control input-num"
-                        type="number"
-                        min="0"
-                        value={getValor(atleta.id, campo)}
-                        onChange={(e) => handleEventoChange(atleta.id, campo, e.target.value)}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  const { jogo } = sumula;
+  const placar1 = golsDe(equipes[0]);
+  const placar2 = golsDe(equipes[1]);
+  const precisaPenaltis = jogo.fase !== 'GRUPOS' && placar1 === placar2;
 
   return (
     <div className="page">
       <div className="container-lg">
-        <header className="page-header center">
-          <p className="eyebrow">Súmula Oficial</p>
-          <h1 className="page-title">Preenchimento de Súmula</h1>
+        <header className="page-header">
+          <p className="eyebrow">
+            {jogo.modalidade_nome} · {jogo.categoria_nome} · Jogo nº {jogo.numero_jogo}
+          </p>
+          <h1 className="page-title">Preencher Súmula</h1>
           <p className="page-subtitle">
-            Lançamento de Gols e Cartões — Jogo <strong className="text-accent">#{jogo.numero_jogo}</strong> ({jogo.fase})
-            <br />
-            <span className="form-hint">O placar da partida é calculado automaticamente pela soma dos gols lançados aqui.</span>
+            O placar é a soma dos gols lançados: não existe campo de placar para digitar.
           </p>
         </header>
 
-        <div className="grid-2">
-          {renderColunaTime(atletasA, jogo.escola_1_nome, 'mandante')}
-          {renderColunaTime(atletasB, jogo.escola_2_nome, 'visitante')}
+        {aviso && <p className={`alert alert-${aviso.tipo}`}>{aviso.texto}</p>}
+
+        <div className="card mb-lg">
+          <div className="card-body placar-ao-vivo">
+            <div>
+              <p className="placar-equipe">{equipes[0].escola_nome}</p>
+              <p className="placar-numero">{placar1}</p>
+            </div>
+            <span className="placar-x">x</span>
+            <div>
+              <p className="placar-equipe">{equipes[1].escola_nome}</p>
+              <p className="placar-numero">{placar2}</p>
+            </div>
+          </div>
         </div>
 
-        <div className="text-center mt-lg">
-          <button className="btn btn-primary btn-pill btn-lg" onClick={handleSalvar} disabled={salvando}>
-            {salvando ? 'Salvando...' : 'Salvar Súmula da Partida'}
-          </button>
+        {equipes.map((equipe, indice) => (
+          <section key={equipe.equipe_id} className="card mb-lg">
+            <div className="card-body">
+              <h2 className="card-title">{equipe.escola_nome}</h2>
+
+              <div className="table-wrap">
+                <table className="table-sge compact">
+                  <thead>
+                    <tr>
+                      <th>Nº</th>
+                      <th className="text-left">Atleta</th>
+                      <th>Gols</th>
+                      <th>Amarelos</th>
+                      <th>🟥</th>
+                      <th>Cap.</th>
+                      <th>Presente</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {equipe.atletas.map((atleta) => (
+                      <tr key={atleta.atleta_id}>
+                        <td className="strong">{atleta.numero_camisa ?? '—'}</td>
+                        <td className="text-left">{atleta.nome}</td>
+                        <td>
+                          <Contador
+                            valor={Number(atleta.gols)}
+                            rotulo={`gols de ${atleta.nome}`}
+                            aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'gols', v)}
+                          />
+                        </td>
+                        <td>
+                          <Contador
+                            valor={Number(atleta.amarelos)}
+                            max={MAX_AMARELOS}
+                            rotulo={`amarelos de ${atleta.nome}`}
+                            aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'amarelos', v)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={atleta.vermelho}
+                            onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'vermelho', e.target.checked)}
+                            aria-label={`Cartão vermelho para ${atleta.nome}`}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={atleta.capitao}
+                            onChange={() => marcarCapitao(indice, atleta.atleta_id)}
+                            aria-label={`Capitão: ${atleta.nome}`}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={atleta.presente}
+                            onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'presente', e.target.checked)}
+                            aria-label={`Presente: ${atleta.nome}`}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+
+                    {equipe.atletas.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="text-left">Nenhum atleta inscrito nesta equipe.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="rodape-equipe">
+                <div className="form-group">
+                  <label className="form-label" htmlFor={`tecnico-${indice}`}>Técnico</label>
+                  <input
+                    id={`tecnico-${indice}`}
+                    className="form-control"
+                    type="text"
+                    value={equipe.tecnico_nome || ''}
+                    onChange={(e) => mudarEquipe(indice, 'tecnico_nome', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <span className="form-label">Faltas 1º tempo</span>
+                  <Contador
+                    valor={Number(equipe.faltas_1t)}
+                    rotulo="faltas do primeiro tempo"
+                    aoMudar={(v) => mudarEquipe(indice, 'faltas_1t', v)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <span className="form-label">Faltas 2º tempo</span>
+                  <Contador
+                    valor={Number(equipe.faltas_2t)}
+                    rotulo="faltas do segundo tempo"
+                    aoMudar={(v) => mudarEquipe(indice, 'faltas_2t', v)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <span className="form-label">Tempo técnico</span>
+                  <div className="linha-checks">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={equipe.tempo_tecnico_1t}
+                        onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_1t', e.target.checked)}
+                      /> 1º T
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={equipe.tempo_tecnico_2t}
+                        onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_2t', e.target.checked)}
+                      /> 2º T
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ))}
+
+        {precisaPenaltis && (
+          <div className="card mb-lg">
+            <div className="card-body">
+              <h2 className="card-title">Pênaltis</h2>
+              <p className="form-hint">
+                Empate no mata-mata não decide nada: informe os pênaltis para finalizar.
+              </p>
+              <div className="rodape-equipe">
+                <div className="form-group">
+                  <span className="form-label">{equipes[0].escola_nome}</span>
+                  <Contador
+                    valor={penaltis.penaltis_1}
+                    rotulo="pênaltis da primeira equipe"
+                    aoMudar={(v) => setPenaltis((p) => ({ ...p, penaltis_1: v }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <span className="form-label">{equipes[1].escola_nome}</span>
+                  <Contador
+                    valor={penaltis.penaltis_2}
+                    rotulo="pênaltis da segunda equipe"
+                    aoMudar={(v) => setPenaltis((p) => ({ ...p, penaltis_2: v }))}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="page-toolbar">
+          <div className="acoes">
+            <button type="button" className="btn btn-outline" onClick={() => enviar(false)} disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Salvar parcial'}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => enviar(true)} disabled={salvando}>
+              Finalizar súmula
+            </button>
+          </div>
+
+          <Link className="btn btn-outline btn-sm" to={`/detalhes-sumula/${id}`}>
+            🖨️ Ver / imprimir
+          </Link>
         </div>
       </div>
     </div>
