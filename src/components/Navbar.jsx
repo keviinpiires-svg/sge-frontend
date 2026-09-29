@@ -6,8 +6,6 @@ const links = [
   { to: '/', label: 'Início', end: true },
   { to: '/modalidades/futsal', label: 'Modalidades' },
   { to: '/cadastro', label: 'Cadastrar Time', admin: true },
-  { to: '/grupos', label: 'Fase de Grupos' },
-  { to: '/classificacao', label: 'Classificação' },
   { to: '/artilharia', label: 'Artilharia' },
   { to: '/matamata', label: 'Mata-Mata' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
@@ -16,7 +14,7 @@ const links = [
 
 function Navbar() {
   const navigate = useNavigate();
-  const { isAdmin, usuario, logout } = useAuth();
+  const { isAdmin, podeLancar, perfil, usuario, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -39,10 +37,11 @@ function Navbar() {
       </div>
 
       <div className="navbar-session">
-        {isAdmin ? (
+        {podeLancar ? (
           <>
             <span className="navbar-user" title={usuario?.email || ''}>
-              👤 {usuario?.nome || usuario?.email || 'Administrador'}
+              👤 {usuario?.nome || usuario?.email || 'Usuário'}
+              <span className="navbar-perfil">{perfil === 'PLACAR' ? 'mesa' : 'admin'}</span>
             </span>
             <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Sair</button>
           </>

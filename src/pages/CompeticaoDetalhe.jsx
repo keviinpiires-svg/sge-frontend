@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PainelModalidades from '../components/PainelModalidades';
 import TabelaJogos from '../components/TabelaJogos';
+import ClassificacaoGrupos from '../components/ClassificacaoGrupos';
 import { buscarCompeticao } from '../services/competicoes';
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
@@ -117,29 +118,7 @@ function CompeticaoDetalhe() {
 
       <TabelaJogos competicao={competicao} />
 
-      {competicao.grupos.map((grupo) => (
-        <section key={grupo.id ?? 'sem-grupo'} className="card mb-lg">
-          <div className="card-body">
-            <h2 className="card-title">
-              {grupo.nome.startsWith('Sem') ? grupo.nome : `Grupo ${grupo.nome}`}
-            </h2>
-
-            <div className="grid-cards">
-              {grupo.equipes.map((equipe) => (
-                <div key={equipe.id} className="tile">
-                  <p className="tile-title">{equipe.escola_nome}</p>
-                  <p className="tile-meta">
-                    {equipe.total_inscritos === 1
-                      ? '1 atleta inscrito'
-                      : `${equipe.total_inscritos} atletas inscritos`}
-                  </p>
-                  {equipe.tecnico_nome && <p className="tile-meta">Técnico: {equipe.tecnico_nome}</p>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      ))}
+      <ClassificacaoGrupos competicao={competicao} />
 
       <button
         type="button"

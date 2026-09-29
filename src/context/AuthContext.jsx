@@ -35,13 +35,21 @@ export function AuthProvider({ children }) {
   }, []);
 
   const valor = useMemo(() => {
-    const perfil = (usuario?.perfil || usuario?.role || '').toString().toUpperCase();
+    // O backend manda o perfil no login (ADMIN ou PLACAR). Sem perfil
+    // reconhecido, a sessão vale só para leitura: logado não é mais sinônimo
+    // de administrador.
+    const perfil = (usuario?.perfil || '').toString().toUpperCase();
+    const autenticado = Boolean(token);
+
     return {
       token,
       usuario,
-      autenticado: Boolean(token),
-      // Sem campo de perfil no backend, todo usuário logado é tratado como administrador
-      isAdmin: Boolean(token) && (perfil === '' || perfil.includes('ADMIN')),
+      perfil,
+      autenticado,
+      isAdmin: autenticado && perfil === 'ADMIN',
+      isPlacar: autenticado && perfil === 'PLACAR',
+      // Quem lança súmula e placar: o administrador e a mesa
+      podeLancar: autenticado && (perfil === 'ADMIN' || perfil === 'PLACAR'),
       login,
       logout,
     };

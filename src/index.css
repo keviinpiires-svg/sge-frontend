@@ -261,6 +261,31 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .alert-success { background: rgba(46, 204, 113, 0.1); color: var(--sge-success); border-color: rgba(46, 204, 113, 0.35); }
 .alert-error { background: rgba(231, 76, 60, 0.1); color: var(--sge-danger-text); border-color: rgba(231, 76, 60, 0.35); }
+.alert-aviso {
+  background: rgba(241, 196, 15, 0.08); color: var(--sge-text);
+  border-color: rgba(241, 196, 15, 0.45); text-align: left;
+}
+.alert-titulo { margin: 0 0 6px; font-size: 15px; font-weight: 800; color: var(--sge-accent); }
+.alert-texto { margin: 0; font-size: 14px; font-weight: 400; color: var(--sge-text-soft); line-height: 1.5; }
+
+/* Classificação: destaque de quem avança e marca de como o empate foi quebrado */
+.table-sge tbody tr.row-classificado td:first-child { box-shadow: inset 3px 0 0 var(--sge-success); }
+.table-sge tbody tr.row-classificado { background: rgba(46, 204, 113, 0.06); }
+.tag-desempate, .tag-sorteio {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  background: rgba(255, 255, 255, 0.08); color: var(--sge-text-muted);
+}
+.tag-sorteio { background: rgba(241, 196, 15, 0.18); color: var(--sge-accent); }
+.legenda-desempate { margin: 0 0 24px; font-size: 13px; color: var(--sge-text-muted); line-height: 1.6; }
+.legenda-desempate b { color: var(--sge-text-soft); }
+
+/* Perfil do usuário logado, ao lado do nome na barra superior */
+.navbar-perfil {
+  margin-left: 6px; padding: 2px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  background: rgba(241, 196, 15, 0.16); color: var(--sge-accent);
+}
 
 /* ---------- Cards estatísticos (painel) ---------- */
 .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
