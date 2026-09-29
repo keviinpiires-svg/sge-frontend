@@ -22,6 +22,8 @@ function CadastroAtleta() {
   const [escolas, setEscolas] = useState([]);
   const [salvando, setSalvando] = useState(false);
   const [erroCadastro, setErroCadastro] = useState('');
+  // Dono do RG quando o cadastro esbarra na duplicidade
+  const [duplicado, setDuplicado] = useState(null);
 
   // Atleta recém-criado: enquanto existir, a tela mostra a etapa de inscrição
   const [atleta, setAtleta] = useState(null);
@@ -72,7 +74,13 @@ function CadastroAtleta() {
 
   const cadastrar = async (e) => {
     e.preventDefault();
+
+    // Trava contra o segundo clique: com o atleta já criado, reenviar criaria
+    // um duplicado (ou esbarraria no RG, confundindo quem já teve sucesso).
+    if (atleta || salvando) return;
+
     setErroCadastro('');
+    setDuplicado(null);
     setSalvando(true);
 
     try {
@@ -94,9 +102,23 @@ function CadastroAtleta() {
       });
     } catch (falha) {
       setErroCadastro(falha.mensagem);
+      // O backend diz quem já tem esse RG: dá para seguir com ele
+      setDuplicado(falha.response?.data?.atleta ?? null);
     } finally {
       setSalvando(false);
     }
+  };
+
+  // Segue para a etapa 2 com o atleta que já existia, em vez de cadastrar outro
+  const usarExistente = () => {
+    setAtleta({
+      id: duplicado.id,
+      nome: duplicado.nome,
+      escola_id: duplicado.escola_id,
+      escola_nome: duplicado.escola_nome
+    });
+    setErroCadastro('');
+    setDuplicado(null);
   };
 
   const inscrever = async (e) => {
@@ -143,6 +165,7 @@ function CadastroAtleta() {
     setInscricoes([]);
     setErroCadastro('');
     setErroInscricao('');
+    setDuplicado(null);
   };
 
   const jaInscritas = new Set(inscricoes.map((i) => i.equipe?.id));
@@ -164,7 +187,22 @@ function CadastroAtleta() {
           <form onSubmit={cadastrar} className="card-body form">
             <h2 className="card-title">1. Dados do atleta</h2>
 
-            {erroCadastro && <p className="alert alert-error" style={{ margin: 0 }}>{erroCadastro}</p>}
+            {erroCadastro && (
+              <div className="alert alert-error" style={{ margin: 0 }}>
+                <p style={{ margin: 0 }}>{erroCadastro}</p>
+
+                {duplicado && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ marginTop: '10px' }}
+                    onClick={usarExistente}
+                  >
+                    Inscrever {duplicado.nome} nas competições
+                  </button>
+                )}
+              </div>
+            )}
 
             {atleta && (
               <p className="alert alert-success" style={{ margin: 0 }}>
