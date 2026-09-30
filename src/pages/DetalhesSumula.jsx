@@ -1,13 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { buscarSumulaPorJogo } from '../services/sumulas';
 
-const formatarData = (valor) =>
-  valor ? new Date(valor).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
+// A folha impressa segue docs/referencias/sumula_futsal_modelo.pdf: mesma
+// ordem de campos, mesmas colunas e mesmo rodapé. O que muda é o número de
+// linhas — o papel traz 12 e aqui são 14, o elenco máximo do regulamento.
+const LINHAS_POR_EQUIPE = 14;
+const CAIXAS_DE_GOLS = 11;
+const FALTAS_POR_TEMPO = 5;
 
-const formatarHora = (valor) =>
-  valor ? new Date(valor).toLocaleTimeString('pt-BR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' }) : '';
+const partesDaData = (valor) => {
+  if (!valor) return ['', '', ''];
+  const data = new Date(valor);
+  if (isNaN(data.getTime())) return ['', '', ''];
+  return [
+    String(data.getUTCDate()).padStart(2, '0'),
+    String(data.getUTCMonth() + 1).padStart(2, '0'),
+    String(data.getUTCFullYear())
+  ];
+};
 
 // A folha tem um número fixo de linhas, esteja o elenco cheio ou não: é o que
 // permite levá-la impressa para a quadra e escrever à mão o que faltar.
@@ -17,13 +29,21 @@ const completarLinhas = (atletas, total) => {
   return linhas;
 };
 
+const sequencia = (quantidade) => Array.from({ length: quantidade }, (_, i) => i);
+
 function DetalhesSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [carga, setCarga] = useState(null);
-  // Em branco: mesma folha, sem os lançamentos — para levar à quadra
-  const [emBranco, setEmBranco] = useState(false);
+  // Em branco: mesma folha, sem os lançamentos — para levar à quadra.
+  // ?em-branco=1 abre direto assim, para imprimir sem passar pela tela.
+  const [busca, setBusca] = useSearchParams();
+  const emBranco = busca.get('em-branco') === '1';
+  const setEmBranco = (valor) => {
+    const proximo = typeof valor === 'function' ? valor(emBranco) : valor;
+    setBusca(proximo ? { 'em-branco': '1' } : {}, { replace: true });
+  };
 
   const pronto = carga?.id === id;
   const sumula = pronto ? carga.dados : null;
@@ -33,7 +53,12 @@ function DetalhesSumula() {
   const imprimir = useReactToPrint({
     contentRef: folhaRef,
     documentTitle: `Sumula_Jogo_${sumula?.jogo?.numero_jogo || id}${emBranco ? '_em_branco' : ''}`,
-    pageStyle: '@page { size: A4 portrait; margin: 10mm; } html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }'
+    // margem 0 na página + margem própria na folha: é o que tira o cabeçalho
+    // e o rodapé que o navegador imprime por conta própria.
+    pageStyle: `
+      @page { size: A4 portrait; margin: 0; }
+      html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    `
   });
 
   useEffect(() => {
@@ -75,52 +100,101 @@ function DetalhesSumula() {
     );
   }
 
-  const { evento, jogo, equipes, linhas_sumula } = sumula;
-  const mostrar = (valor) => (emBranco ? '' : valor);
+  const { evento, jogo, equipes } = sumula;
+  // Em branco apaga só os lançamentos da partida. Local, data, árbitros e
+  // anotador são dados do jogo e vão impressos nas duas versões.
+  const lancado = (valor) => (emBranco ? '' : (valor ?? ''));
+  const [dia, mes, ano] = partesDaData(jogo.data_hora);
 
   const renderEquipe = (equipe, indice) => (
     <section key={equipe.equipe_id} className="folha-equipe">
-      <div className="folha-equipe-topo">
-        <span className="folha-rotulo">Equipe {indice === 0 ? 'A' : 'B'}</span>
-        <strong className="folha-equipe-nome">{equipe.escola_nome}</strong>
+      <div className="folha-equipe-titulo">
+        EQUIPE {indice === 0 ? 'A' : 'B'}
+        {equipe.escola_nome ? ` — ${equipe.escola_nome}` : ''}
       </div>
 
       <table className="folha-tabela">
+        <colgroup>
+          <col className="c-cartao" /><col className="c-cartao" /><col className="c-cartao" />
+          <col className="c-numero" />
+          <col className="c-atleta" />
+          {sequencia(CAIXAS_DE_GOLS).map((i) => <col key={i} className="c-gol" />)}
+          <col className="c-capitao" />
+        </colgroup>
+
         <thead>
           <tr>
-            <th className="col-cartao">A</th>
-            <th className="col-cartao">A</th>
-            <th className="col-cartao">V</th>
-            <th className="col-numero">Nº</th>
-            <th className="col-atleta">Atleta</th>
-            <th className="col-gols">Gols</th>
-            <th className="col-capitao">Cap.</th>
+            <th className="rotulo" colSpan={3}>Cartões</th>
+            <th className="rotulo">Nº</th>
+            <th className="rotulo">Atletas</th>
+            <th className="rotulo" colSpan={CAIXAS_DE_GOLS}>Gols</th>
+            <th className="celula-capitao-topo" />
           </tr>
         </thead>
+
         <tbody>
-          {completarLinhas(equipe.atletas, linhas_sumula).map((atleta, linha) => (
-            <tr key={atleta ? atleta.atleta_id : `vazia-${linha}`}>
-              <td className="col-cartao">{atleta && !emBranco && atleta.amarelos >= 1 ? '✕' : ''}</td>
-              <td className="col-cartao">{atleta && !emBranco && atleta.amarelos >= 2 ? '✕' : ''}</td>
-              <td className="col-cartao">{atleta && !emBranco && atleta.vermelho ? '✕' : ''}</td>
-              <td className="col-numero">{atleta ? atleta.numero_camisa ?? '' : ''}</td>
-              <td className="col-atleta">{atleta ? atleta.nome : ''}</td>
-              <td className="col-gols">{atleta && !emBranco && atleta.gols > 0 ? atleta.gols : ''}</td>
-              <td className="col-capitao">{atleta && !emBranco && atleta.capitao ? '✕' : ''}</td>
-            </tr>
-          ))}
+          {completarLinhas(equipe.atletas, LINHAS_POR_EQUIPE).map((atleta, linha) => {
+            const lancado = atleta && !emBranco;
+            const gols = lancado ? Number(atleta.gols || 0) : 0;
+
+            return (
+              <tr key={atleta ? atleta.atleta_id : `vazia-${linha}`}>
+                <td className="cartao">{lancado && atleta.amarelos >= 1 ? '✕' : 'A'}</td>
+                <td className="cartao">{lancado && atleta.amarelos >= 2 ? '✕' : 'A'}</td>
+                <td className="cartao">{lancado && atleta.vermelho ? '✕' : 'V'}</td>
+                <td className="numero">{atleta ? (atleta.numero_camisa ?? '') : ''}</td>
+                <td className="atleta">{atleta ? atleta.nome : ''}</td>
+                {sequencia(CAIXAS_DE_GOLS).map((i) => (
+                  <td key={i} className="gol">{i < gols ? '✕' : ''}</td>
+                ))}
+                {linha === 0 && (
+                  <td className="celula-capitao" rowSpan={LINHAS_POR_EQUIPE}>
+                    <span className="texto-vertical">Capitão:</span>
+                  </td>
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
-      <div className="folha-rodape">
-        <span><strong>Faltas 1º T:</strong> {mostrar(equipe.faltas_1t)}</span>
-        <span><strong>Faltas 2º T:</strong> {mostrar(equipe.faltas_2t)}</span>
-        <span><strong>Tempo técnico:</strong> {emBranco ? '' : [
-          equipe.tempo_tecnico_1t ? '1º T' : null,
-          equipe.tempo_tecnico_2t ? '2º T' : null
-        ].filter(Boolean).join(' e ') || '—'}</span>
-        <span className="folha-tecnico"><strong>Técnico:</strong> {mostrar(equipe.tecnico_nome)}</span>
-      </div>
+      <table className="folha-rodape">
+        <tbody>
+          <tr>
+            <td className="rotulo esquerda" colSpan={2}>Faltas acumuladas</td>
+            <td className="rotulo tempo">1º T</td>
+            {sequencia(FALTAS_POR_TEMPO).map((i) => (
+              <td key={`f1-${i}`} className={`falta ${lancouFalta(equipe.faltas_1t, i, emBranco) ? 'marcada' : ''}`}>
+                {i + 1}
+              </td>
+            ))}
+            <td className="rotulo tempo">2º T</td>
+            {sequencia(FALTAS_POR_TEMPO).map((i) => (
+              <td key={`f2-${i}`} className={`falta ${lancouFalta(equipe.faltas_2t, i, emBranco) ? 'marcada' : ''}`}>
+                {i + 1}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            <td className="rotulo esquerda" colSpan={2}>Tempo técnico</td>
+            <td className="sem-borda" colSpan={10}>
+              <table className="folha-tempo">
+                <tbody>
+                  <tr>
+                    <td className="rotulo">1º T</td>
+                    <td className="rotulo">2º T</td>
+                    <td className="tecnico" rowSpan={2}>Técnico: {lancado(equipe.tecnico_nome)}</td>
+                  </tr>
+                  <tr>
+                    <td className="caixa">{emBranco || !equipe.tempo_tecnico_1t ? '' : '✕'}</td>
+                    <td className="caixa">{emBranco || !equipe.tempo_tecnico_2t ? '' : '✕'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </section>
   );
 
@@ -145,58 +219,64 @@ function DetalhesSumula() {
         </div>
 
         <div ref={folhaRef} className="folha-sumula print-area">
-          <header className="folha-cabecalho">
-            <h1 className="folha-titulo">{evento.nome_evento}</h1>
-            <p className="folha-subtitulo">Súmula — {jogo.modalidade_nome}</p>
-
-            <div className="folha-campos">
-              <span><strong>Jogo nº</strong> {jogo.numero_jogo}</span>
-              <span><strong>Chave</strong> {jogo.grupo_nome || jogo.fase}</span>
-              <span><strong>Rodada</strong> {jogo.rodada ?? ''}</span>
-              <span><strong>Categoria</strong> {jogo.categoria_nome} {jogo.genero}</span>
-              <span><strong>Ginásio</strong> {jogo.local_nome || ''}</span>
-              <span><strong>Cidade</strong> {evento.cidade} — {evento.estado}</span>
-              <span><strong>Data</strong> {formatarData(jogo.data_hora)}</span>
-              <span><strong>Horário</strong> {formatarHora(jogo.data_hora)}</span>
-              <span><strong>Árbitro 1</strong> {jogo.arbitro_1 || ''}</span>
-              <span><strong>Árbitro 2</strong> {jogo.arbitro_2 || ''}</span>
-              <span><strong>Anotador</strong> {jogo.anotador || ''}</span>
-            </div>
-
-            <div className="folha-placar">
-              <div>
-                <span className="folha-placar-equipe">{equipes[0].escola_nome}</span>
-                <span className="folha-placar-caixa">{emBranco ? '' : equipes[0].gols}</span>
-              </div>
-              <span className="folha-placar-x">×</span>
-              <div>
-                <span className="folha-placar-caixa">{emBranco ? '' : equipes[1].gols}</span>
-                <span className="folha-placar-equipe">{equipes[1].escola_nome}</span>
-              </div>
-            </div>
-
-            {!emBranco && jogo.penaltis_1 !== null && jogo.penaltis_2 !== null && (
-              <p className="folha-penaltis">
-                Pênaltis: {jogo.penaltis_1} × {jogo.penaltis_2}
-              </p>
-            )}
-
-            {!emBranco && jogo.status === 'WO' && (
-              <p className="folha-penaltis">W.O. — {jogo.observacoes}</p>
-            )}
-          </header>
+          <table className="folha-cabecalho">
+            <colgroup>
+              <col className="a" /><col className="b" /><col className="c" /><col className="d" />
+            </colgroup>
+            <tbody>
+              <tr className="linha-titulo">
+                <td className="logo"><img src="/logo-jogos-estudantis.png" alt="" /></td>
+                <td className="titulo" colSpan={2}>SÚMULA DE {jogo.modalidade_nome.toUpperCase()}</td>
+                <td className="logo"><img src="/logo-barra-do-choca.png" alt="" /></td>
+              </tr>
+              <tr>
+                <td colSpan={4}>Campeonato:&nbsp;&nbsp;&nbsp;{evento.nome_evento}</td>
+              </tr>
+              <tr>
+                <td colSpan={2}>LOCAL: {jogo.local_nome || ''}</td>
+                <td>Nº DO JOGO ( {jogo.numero_jogo} )</td>
+                <td>Cidade: {evento.cidade}</td>
+              </tr>
+              <tr>
+                <td colSpan={2}>Categoria: {jogo.categoria_nome} {jogo.genero ? jogo.genero.toLowerCase() : ''}</td>
+                <td colSpan={2} className="data">
+                  Data: <span className="slot">{dia}</span> / <span className="slot">{mes}</span> / <span className="slot">{ano}</span>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2}>Árbitro 1: {jogo.arbitro_1 || ''}</td>
+                <td colSpan={2} />
+              </tr>
+              <tr>
+                <td colSpan={2}>Árbitro 2: {jogo.arbitro_2 || ''}</td>
+                <td colSpan={2} />
+              </tr>
+              <tr>
+                <td colSpan={2}>Anotador: {jogo.anotador || ''}</td>
+                <td colSpan={2} />
+              </tr>
+              <tr className="linha-equipes">
+                <td colSpan={4}>
+                  <div className="confronto">
+                    <span className="nome-equipe">EQUIPE A</span>
+                    <span className="caixa-placar">{emBranco ? '' : equipes[0].gols}</span>
+                    <span className="x">X</span>
+                    <span className="caixa-placar">{emBranco ? '' : equipes[1].gols}</span>
+                    <span className="nome-equipe">EQUIPE B</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           {equipes.map(renderEquipe)}
-
-          <footer className="folha-assinaturas">
-            <div><span />Árbitro</div>
-            <div><span />Técnico {equipes[0].escola_nome}</div>
-            <div><span />Técnico {equipes[1].escola_nome}</div>
-          </footer>
         </div>
       </div>
     </div>
   );
 }
+
+// Uma falta lançada marca as caixas de 1 até o total do tempo
+const lancouFalta = (total, indice, emBranco) => !emBranco && Number(total || 0) > indice;
 
 export default DetalhesSumula;

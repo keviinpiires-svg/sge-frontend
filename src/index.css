@@ -763,67 +763,118 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .linha-checks { display: flex; gap: 16px; align-items: center; font-size: 14px; }
 
-/* ---------- Súmula: folha para impressão ---------- */
+/* ---------- Súmula: folha para impressão ----------
+   Segue docs/referencias/sumula_futsal_modelo.pdf. Medidas em mm porque a
+   folha é um documento de papel: A4 retrato, uma página, 14 linhas por
+   equipe. O quadriculado fica vazio para ser preenchido à mão.            */
 .no-print { }
 
 .folha-sumula {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 8mm 10mm;
   background: #ffffff;
   color: #000000;
-  padding: 18px 20px;
-  border-radius: var(--sge-radius);
-  font-size: 12px;
+  font-family: Calibri, Carlito, 'Segoe UI', sans-serif;
+  font-size: 9pt;
+  line-height: 1.15;
+  border: 1px solid #ccc;
 }
 
-.folha-cabecalho { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 12px; }
-.folha-titulo { margin: 0; font-size: 18px; text-align: center; text-transform: uppercase; }
-.folha-subtitulo { margin: 2px 0 10px; text-align: center; font-size: 12px; }
+.folha-sumula table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.folha-sumula td, .folha-sumula th { border: 0.6pt solid #000; padding: 0 2pt; vertical-align: middle; }
+.folha-sumula .rotulo { color: #d40000; font-weight: 600; text-align: center; white-space: nowrap; }
 
-.folha-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 12px; }
-.folha-campos span { border-bottom: 1px dotted #999; padding: 2px 0; }
+/* Cabeçalho */
+.folha-cabecalho { border: 1.4pt solid #000; }
+.folha-cabecalho td { height: 6.6mm; }
+.folha-cabecalho .linha-titulo td { height: 11mm; }
+.folha-cabecalho .titulo { text-align: center; font-size: 15pt; letter-spacing: 0.02em; }
+.folha-cabecalho .logo { width: 22%; text-align: center; }
+.folha-cabecalho col.a { width: 22.1% } .folha-cabecalho col.b { width: 28.6% }
+.folha-cabecalho col.c { width: 27.4% } .folha-cabecalho col.d { width: 21.9% }
+.folha-cabecalho .logo img { max-height: 9.5mm; max-width: 100%; vertical-align: middle; }
+.folha-cabecalho .data { text-align: right; padding-right: 8mm; }
+.folha-cabecalho .slot { display: inline-block; min-width: 9mm; text-align: center; }
 
-.folha-placar { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 12px; }
-.folha-placar > div { display: flex; align-items: center; gap: 10px; }
-.folha-placar-equipe { font-weight: 700; text-transform: uppercase; }
-.folha-placar-caixa {
-  display: inline-block; min-width: 42px; height: 34px; line-height: 32px;
-  border: 1.5px solid #000; text-align: center; font-size: 20px; font-weight: 700;
+.folha-cabecalho .linha-equipes td { height: 10mm; }
+.confronto { display: flex; align-items: center; justify-content: center; gap: 6mm; }
+.confronto .nome-equipe {
+  flex: 1; text-align: center; color: #d40000; font-weight: 700; font-size: 11pt; letter-spacing: 0.02em;
 }
-.folha-placar-x { font-size: 16px; }
-.folha-penaltis { margin: 8px 0 0; text-align: center; font-weight: 700; }
+.confronto .caixa-placar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16mm; height: 8mm; border: 1.2pt solid #000; border-radius: 2mm;
+  font-size: 13pt; font-weight: 700;
+}
+.confronto .x { font-size: 11pt; }
 
-.folha-equipe { margin-bottom: 14px; break-inside: avoid; }
-.folha-equipe-topo { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
-.folha-rotulo { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
-.folha-equipe-nome { font-size: 14px; text-transform: uppercase; }
+/* Bloco de cada equipe */
+.folha-equipe { border: 1.4pt solid #000; border-top: 0; break-inside: avoid; }
+.folha-equipe-titulo {
+  height: 8mm; display: flex; align-items: center; justify-content: center;
+  font-size: 11pt; font-weight: 600; border-bottom: 0.6pt solid #000;
+}
 
-.folha-tabela { width: 100%; border-collapse: collapse; }
-.folha-tabela th, .folha-tabela td { border: 1px solid #000; padding: 3px 5px; height: 21px; }
-.folha-tabela th { background: #eeeeee; font-size: 10px; text-transform: uppercase; }
-.folha-tabela .col-cartao { width: 22px; text-align: center; }
-.folha-tabela .col-numero { width: 34px; text-align: center; }
-.folha-tabela .col-gols { width: 44px; text-align: center; }
-.folha-tabela .col-capitao { width: 34px; text-align: center; }
-.folha-tabela .col-atleta { text-align: left; }
+.folha-tabela th { height: 5mm; font-size: 10pt; }
+.folha-tabela td { height: 5.6mm; }
+.folha-tabela .c-cartao { width: 4.23% }
+.folha-tabela .c-numero { width: 5% }
+.folha-tabela .c-atleta { width: 24.8% }
+.folha-tabela .c-gol { width: 3.85% }
+.folha-tabela .c-capitao { width: 15.2% }
+.folha-tabela .cartao { text-align: center; font-size: 6pt; color: #333; background: #e6e0f0; }
+.folha-tabela .numero { text-align: center; }
+.folha-tabela .atleta { text-align: left; font-size: 8.5pt; overflow: hidden; white-space: nowrap; }
+.folha-tabela .gol { background: #e6e0f0; text-align: center; font-size: 8pt; }
+.folha-tabela .celula-capitao { vertical-align: bottom; padding: 0 0 3mm; height: 100%; }
+.folha-tabela .celula-capitao-topo { border-bottom: 0; }
+.texto-vertical { writing-mode: vertical-rl; transform: rotate(180deg); font-weight: 600; font-size: 9pt; }
 
-.folha-rodape { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 4px; font-size: 11px; }
-.folha-tecnico { flex: 1; min-width: 180px; }
+/* Rodapé de cada equipe */
+.folha-rodape td { height: 6.6mm; }
+.folha-rodape .esquerda { text-align: left; font-size: 11pt; padding-left: 3pt; }
+.folha-rodape .tempo { width: 9%; font-size: 11pt; }
+.folha-rodape .falta { width: 4.4%; text-align: center; background: #d9d9d9; }
+.folha-rodape .falta.marcada { background: #9b9b9b; font-weight: 700; }
+.folha-rodape .sem-borda { border: 0; padding: 0; }
 
-.folha-assinaturas { display: flex; gap: 24px; margin-top: 26px; font-size: 11px; text-align: center; }
-.folha-assinaturas > div { flex: 1; }
-.folha-assinaturas span { display: block; border-top: 1px solid #000; margin-bottom: 4px; }
+.folha-tempo { table-layout: fixed; }
+.folha-tempo td { height: 5.2mm; text-align: center; }
+.folha-tempo .rotulo { width: 11%; }
+.folha-tempo .caixa { background: #d9d9d9; }
+.folha-tempo .tecnico { text-align: left; padding-left: 3pt; border-right: 0; }
+
+/* A4 sem margem de página: a folha traz a própria margem, e assim o
+   navegador não imprime cabeçalho nem rodapé dele. */
+@page { size: A4 portrait; margin: 0; }
 
 @media print {
   .no-print { display: none !important; }
+  body { background: #ffffff !important; }
+
+  /* Só a folha vai para o papel: menu, botões e o enquadramento da tela somem */
+  .navbar, .painel-modalidades, .menu-lateral { display: none !important; }
+  .page { padding: 0 !important; }
+  .container, .container-sm, .container-lg { max-width: none !important; margin: 0 !important; padding: 0 !important; }
 
   .folha-sumula {
-    padding: 0;
-    border-radius: 0;
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 8mm 10mm;
+    border: 0;
     background: #ffffff !important;
     color: #000000 !important;
   }
 
-  .folha-tabela th { background: #eeeeee !important; }
   .folha-equipe { break-inside: avoid; page-break-inside: avoid; }
+  .folha-tabela .gol, .folha-tabela .cartao { background: #e6e0f0 !important; }
+  .folha-rodape .falta { background: #d9d9d9 !important; }
+  .folha-rodape .falta.marcada { background: #9b9b9b !important; }
+  .folha-tempo .caixa { background: #d9d9d9 !important; }
 }
 
 .painel-wo {
