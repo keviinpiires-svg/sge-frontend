@@ -4,10 +4,11 @@ import Contador from '../components/Contador';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 import { suspensosNoJogo } from '../services/suspensoes';
 
-const MAX_AMARELOS = 2;
-
 // A súmula é regravada inteira a cada envio, então o estado local é a folha
 // toda: as duas equipes, cada uma com o seu rodapé e as suas linhas.
+// Quais colunas existem (cartões, faltas, quanto cabe em cada uma) vem do
+// backend, de src/config/folhasSumula.js: o basquete não tem cartão e o
+// futsal não tem falta por atleta.
 function PreencherSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -155,13 +156,16 @@ function PreencherSumula() {
     );
   }
 
-  const { jogo } = sumula;
+  const { jogo, folha } = sumula;
   const listaSuspensos = suspensao?.id === id && suspensao.dados ? suspensao.dados.suspensos : [];
   const avisosSuspensao = suspensao?.id === id && suspensao.dados ? suspensao.dados.avisos : [];
   const suspensoPorAtleta = new Map(listaSuspensos.map((s) => [s.atleta_id, s]));
 
   const placar1 = golsDe(equipes[0]);
   const placar2 = golsDe(equipes[1]);
+  // Nº, atleta, estatística, capitão e presente são fixos; faltas e cartões
+  // dependem da folha da modalidade.
+  const colunasDaTabela = 5 + (folha.faltasIndividuais > 0 ? 1 : 0) + (folha.cartoes ? 2 : 0);
   // A regra de desempate vem do backend (src/config/regrasProvisorias.js):
   // a tela não guarda cópia de qual modalidade joga prorrogação.
   const desempate = sumula.desempate || { sequencia: ['PENALTIS'], nomeCobranca: 'pênaltis' };
@@ -178,7 +182,9 @@ function PreencherSumula() {
           </p>
           <h1 className="page-title">Preencher Súmula</h1>
           <p className="page-subtitle">
-            O placar é a soma dos gols lançados: não existe campo de placar para digitar.
+            O placar é a soma {folha.rotuloEstatistica === 'Pontos' ? 'dos pontos lançados'
+              : `${folha.rotuloEstatistica === 'Eliminações' ? 'das eliminações lançadas' : 'dos gols lançados'}`}:
+            não existe campo de placar para digitar.
           </p>
         </header>
 
@@ -228,9 +234,10 @@ function PreencherSumula() {
                     <tr>
                       <th>Nº</th>
                       <th className="text-left">Atleta</th>
-                      <th>Gols</th>
-                      <th>Amarelos</th>
-                      <th>🟥</th>
+                      <th>{folha.rotuloEstatistica}</th>
+                      {folha.faltasIndividuais > 0 && <th>Faltas</th>}
+                      {folha.cartoes && <th>Amarelos</th>}
+                      {folha.cartoes && <th>🟥</th>}
                       <th>Cap.</th>
                       <th>Presente</th>
                     </tr>
@@ -256,26 +263,43 @@ function PreencherSumula() {
                         <td>
                           <Contador
                             valor={Number(atleta.gols)}
-                            rotulo={`gols de ${atleta.nome}`}
+                            rotulo={`${folha.rotuloEstatistica.toLowerCase()} de ${atleta.nome}`}
                             aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'gols', v)}
                           />
                         </td>
-                        <td>
-                          <Contador
-                            valor={Number(atleta.amarelos)}
-                            max={MAX_AMARELOS}
-                            rotulo={`amarelos de ${atleta.nome}`}
-                            aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'amarelos', v)}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={atleta.vermelho}
-                            onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'vermelho', e.target.checked)}
-                            aria-label={`Cartão vermelho para ${atleta.nome}`}
-                          />
-                        </td>
+
+                        {folha.faltasIndividuais > 0 && (
+                          <td>
+                            <Contador
+                              valor={Number(atleta.faltas || 0)}
+                              max={folha.faltasIndividuais}
+                              rotulo={`faltas de ${atleta.nome}`}
+                              aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'faltas', v)}
+                            />
+                          </td>
+                        )}
+
+                        {folha.cartoes && (
+                          <td>
+                            <Contador
+                              valor={Number(atleta.amarelos)}
+                              max={folha.maxAmarelos}
+                              rotulo={`amarelos de ${atleta.nome}`}
+                              aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'amarelos', v)}
+                            />
+                          </td>
+                        )}
+
+                        {folha.cartoes && (
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={atleta.vermelho}
+                              onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'vermelho', e.target.checked)}
+                              aria-label={`Cartão vermelho para ${atleta.nome}`}
+                            />
+                          </td>
+                        )}
                         <td>
                           <input
                             type="checkbox"
@@ -297,12 +321,21 @@ function PreencherSumula() {
 
                     {equipe.atletas.length === 0 && (
                       <tr>
-                        <td colSpan="7" className="text-left">Nenhum atleta inscrito nesta equipe.</td>
+                        <td colSpan={colunasDaTabela} className="text-left">
+                          Nenhum atleta inscrito nesta equipe.
+                        </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+
+              {folha.faltasIndividuais > 0 && (
+                <p className="form-hint">
+                  Falta individual vai de 0 a {folha.faltasIndividuais}: com {folha.faltasIndividuais} o
+                  atleta está excluído. As faltas acumulativas da equipe vão até {folha.faltasAcumuladas} por tempo.
+                </p>
+              )}
 
               <div className="rodape-equipe">
                 <div className="form-group">
@@ -316,23 +349,33 @@ function PreencherSumula() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <span className="form-label">Faltas 1º tempo</span>
-                  <Contador
-                    valor={Number(equipe.faltas_1t)}
-                    rotulo="faltas do primeiro tempo"
-                    aoMudar={(v) => mudarEquipe(indice, 'faltas_1t', v)}
-                  />
-                </div>
+                {folha.faltasAcumuladas > 0 && (
+                  <div className="form-group">
+                    <span className="form-label">
+                      Faltas 1º tempo <small>(até {folha.faltasAcumuladas})</small>
+                    </span>
+                    <Contador
+                      valor={Number(equipe.faltas_1t)}
+                      max={folha.faltasAcumuladas}
+                      rotulo="faltas do primeiro tempo"
+                      aoMudar={(v) => mudarEquipe(indice, 'faltas_1t', v)}
+                    />
+                  </div>
+                )}
 
-                <div className="form-group">
-                  <span className="form-label">Faltas 2º tempo</span>
-                  <Contador
-                    valor={Number(equipe.faltas_2t)}
-                    rotulo="faltas do segundo tempo"
-                    aoMudar={(v) => mudarEquipe(indice, 'faltas_2t', v)}
-                  />
-                </div>
+                {folha.faltasAcumuladas > 0 && (
+                  <div className="form-group">
+                    <span className="form-label">
+                      Faltas 2º tempo <small>(até {folha.faltasAcumuladas})</small>
+                    </span>
+                    <Contador
+                      valor={Number(equipe.faltas_2t)}
+                      max={folha.faltasAcumuladas}
+                      rotulo="faltas do segundo tempo"
+                      aoMudar={(v) => mudarEquipe(indice, 'faltas_2t', v)}
+                    />
+                  </div>
+                )}
 
                 <div className="form-group">
                   <span className="form-label">Tempo técnico</span>
