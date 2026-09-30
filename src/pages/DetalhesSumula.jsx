@@ -6,6 +6,11 @@ import { buscarSumulaPorJogo } from '../services/sumulas';
 // A folha impressa segue docs/referencias/sumula_futsal_modelo.pdf: mesma
 // ordem de campos, mesmas colunas e mesmo rodapé. O que muda é o número de
 // linhas — o papel traz 12 e aqui são 14, o elenco máximo do regulamento.
+// Futsal, Futebol Society e Handebol usam exatamente esta folha: muda só o
+// título (docs/referencias/sumulas_modelos.md). Basquete e vôlei têm folha
+// própria e o baleado não tem modelo em papel — fatia 6.
+const MODALIDADES_DESTA_FOLHA = ['futsal', 'futebol-society', 'handebol'];
+
 const LINHAS_POR_EQUIPE = 14;
 const CAIXAS_DE_GOLS = 11;
 const FALTAS_POR_TEMPO = 5;
@@ -101,6 +106,7 @@ function DetalhesSumula() {
   }
 
   const { evento, jogo, equipes } = sumula;
+  const folhaCombina = MODALIDADES_DESTA_FOLHA.includes(jogo.modalidade_slug);
   // Em branco apaga só os lançamentos da partida. Local, data, árbitros e
   // anotador são dados do jogo e vão impressos nas duas versões.
   const lancado = (valor) => (emBranco ? '' : (valor ?? ''));
@@ -217,6 +223,17 @@ function DetalhesSumula() {
             </button>
           </div>
         </div>
+
+        {!folhaCombina && (
+          <div className="alert alert-aviso mb-lg no-print">
+            <p className="alert-titulo">⚠️ Folha de outra modalidade</p>
+            <p className="alert-texto">
+              Esta é a folha de futsal, que vale também para o futebol society e o handebol.
+              {' '}{jogo.modalidade_nome} tem folha própria (ou ainda não tem modelo em papel) e entra na
+              fatia 6 — demais modalidades coletivas. Até lá, confira à mão o que for imprimir.
+            </p>
+          </div>
+        )}
 
         <div ref={folhaRef} className="folha-sumula print-area">
           <table className="folha-cabecalho">
