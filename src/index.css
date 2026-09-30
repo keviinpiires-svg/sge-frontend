@@ -823,7 +823,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-tabela .c-cartao { width: 4.23% }
 .folha-tabela .c-numero { width: 5% }
 .folha-tabela .c-atleta { width: 24.8% }
-.folha-tabela .c-gol { width: 3.85% }
+/* A largura da caixa da grade vem do componente (FolhaFutsal.jsx), porque
+   depende de quantas caixas a folha tem: 11 no futsal, 14 no baleado. */
 .folha-tabela .c-capitao { width: 15.2% }
 .folha-tabela .cartao { text-align: center; font-size: 6pt; color: #333; background: #e6e0f0; }
 .folha-tabela .numero { text-align: center; }
@@ -915,6 +916,9 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-rodape td { height: 6.6mm; }
 .folha-rodape .esquerda { text-align: left; font-size: 11pt; padding-left: 3pt; }
 .folha-rodape .tempo { width: 9%; font-size: 11pt; }
+/* Rodapé sem faltas acumuladas (baleado): o rótulo fica com a mesma faixa que
+   ocuparia com elas, para o tempo técnico não esticar. */
+.folha-rodape .esquerda.larga { width: 38%; }
 .folha-rodape .falta { width: 4.4%; text-align: center; background: #d9d9d9; }
 .folha-rodape .falta.marcada { background: #9b9b9b; font-weight: 700; }
 .folha-rodape .sem-borda { border: 0; padding: 0; }

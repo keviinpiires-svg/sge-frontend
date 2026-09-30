@@ -11,9 +11,17 @@ import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 // Uma falta lançada marca as caixas de 1 até o total do tempo
 const lancouFalta = (total, indice, emBranco) => !emBranco && Number(total || 0) > indice;
 
+// A faixa da grade ocupa 42,35% da largura da folha (medido no PDF do futsal) e
+// é dividida pelo número de caixas: 11 no futsal, 14 no baleado. A largura vive
+// aqui, e não no CSS, para acompanhar o que folhasSumula.js definir.
+const FAIXA_DA_GRADE = 42.35;
+
 function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
   const caixas = folha.caixasEstatistica;
   const faltasPorTempo = folha.faltasAcumuladas;
+  // Sem faltas acumuladas (baleado) o rodapé tem só duas células
+  const semFaltas = faltasPorTempo === 0;
+  const larguraDaCaixa = `${(FAIXA_DA_GRADE / caixas).toFixed(3)}%`;
   const valor = (v) => (emBranco ? '' : (v ?? ''));
 
   return (
@@ -28,7 +36,9 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
           <col className="c-cartao" /><col className="c-cartao" /><col className="c-cartao" />
           <col className="c-numero" />
           <col className="c-atleta" />
-          {sequencia(caixas).map((i) => <col key={i} className="c-gol" />)}
+          {sequencia(caixas).map((i) => (
+            <col key={i} className="c-gol" style={{ width: larguraDaCaixa }} />
+          ))}
           <col className="c-capitao" />
         </colgroup>
 
@@ -70,24 +80,31 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
 
       <table className="folha-rodape">
         <tbody>
+          {!semFaltas && (
+            <tr>
+              <td className="rotulo esquerda" colSpan={2}>Faltas acumuladas</td>
+              <td className="rotulo tempo">1º T</td>
+              {sequencia(faltasPorTempo).map((i) => (
+                <td key={`f1-${i}`} className={`falta ${lancouFalta(equipe.faltas_1t, i, emBranco) ? 'marcada' : ''}`}>
+                  {i + 1}
+                </td>
+              ))}
+              <td className="rotulo tempo">2º T</td>
+              {sequencia(faltasPorTempo).map((i) => (
+                <td key={`f2-${i}`} className={`falta ${lancouFalta(equipe.faltas_2t, i, emBranco) ? 'marcada' : ''}`}>
+                  {i + 1}
+                </td>
+              ))}
+            </tr>
+          )}
           <tr>
-            <td className="rotulo esquerda" colSpan={2}>Faltas acumuladas</td>
-            <td className="rotulo tempo">1º T</td>
-            {sequencia(faltasPorTempo).map((i) => (
-              <td key={`f1-${i}`} className={`falta ${lancouFalta(equipe.faltas_1t, i, emBranco) ? 'marcada' : ''}`}>
-                {i + 1}
-              </td>
-            ))}
-            <td className="rotulo tempo">2º T</td>
-            {sequencia(faltasPorTempo).map((i) => (
-              <td key={`f2-${i}`} className={`falta ${lancouFalta(equipe.faltas_2t, i, emBranco) ? 'marcada' : ''}`}>
-                {i + 1}
-              </td>
-            ))}
-          </tr>
-          <tr>
-            <td className="rotulo esquerda" colSpan={2}>Tempo técnico</td>
-            <td className="sem-borda" colSpan={faltasPorTempo * 2 + 2}>
+            <td
+              className={`rotulo esquerda ${semFaltas ? 'larga' : ''}`}
+              colSpan={semFaltas ? 1 : 2}
+            >
+              Tempo técnico
+            </td>
+            <td className="sem-borda" colSpan={semFaltas ? 1 : faltasPorTempo * 2 + 2}>
               <table className="folha-tempo">
                 <tbody>
                   <tr>
