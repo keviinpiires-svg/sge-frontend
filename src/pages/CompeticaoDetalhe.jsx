@@ -4,6 +4,7 @@ import PainelModalidades from '../components/PainelModalidades';
 import TabelaJogos from '../components/TabelaJogos';
 import ClassificacaoGrupos from '../components/ClassificacaoGrupos';
 import Suspensoes from '../components/Suspensoes';
+import ArtilhariaCompeticao from '../components/ArtilhariaCompeticao';
 import Elencos from '../components/Elencos';
 import { buscarCompeticao } from '../services/competicoes';
 
@@ -123,6 +124,8 @@ function CompeticaoDetalhe() {
       <TabelaJogos competicao={competicao} />
 
       <ClassificacaoGrupos competicao={competicao} />
+
+      <ArtilhariaCompeticao competicao={competicao} />
 
       <Suspensoes competicao={competicao} />
 

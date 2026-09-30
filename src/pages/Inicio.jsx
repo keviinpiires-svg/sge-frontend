@@ -4,6 +4,9 @@ import { useAuth } from '../context/useAuth';
 import { obterEstatisticas } from '../services/dashboard';
 import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
 import { listarEscolas } from '../services/escolas';
+import Artilheiros from '../components/Artilheiros';
+
+const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
@@ -145,11 +148,30 @@ function Inicio() {
         aoClicar: alternarEscolas
       },
       { icone: '🏃', titulo: 'Atletas Cadastrados', valor: dashboard.total_atletas },
-      { icone: '⚽', titulo: 'Balançaram a Rede', detalhe: 'Total de gols', valor: dashboard.total_gols },
+      {
+        icone: '🏅',
+        titulo: 'Competições',
+        valor: dashboard.total_competicoes,
+        detalhe: `${formatarNumero(dashboard.total_equipes)} equipes inscritas`
+      },
+      {
+        icone: '🗓️',
+        titulo: 'Jogos',
+        valor: dashboard.jogos.total,
+        detalhe: `${dashboard.jogos.FINALIZADO} encerrados · ${dashboard.jogos.AGENDADO} agendados`
+      },
+      {
+        icone: '⚽',
+        titulo: 'Balançaram a Rede',
+        // Só modalidades de gol: somar gols de futsal com pontos de basquete
+        // daria um número sem significado
+        detalhe: 'Gols em futsal, society e handebol',
+        valor: dashboard.total_gols
+      }
     ];
 
     const proximo = dashboard.proximo_jogo;
-    const campeao = dashboard.campeao;
+    const campeoes = dashboard.campeoes || [];
 
     return (
       <div className="stat-grid">
@@ -235,37 +257,49 @@ function Inicio() {
           </section>
         )}
 
-        {campeao ? (
-          <div className="card stat-card stat-card-wide champion-card">
-            <div className="stat-head">
-              <span className="stat-label">Campeão do Campeonato</span>
-              <span className="badge badge-accent">FINAL ENCERRADA</span>
+        {campeoes.length > 0 && (
+          <section className="card stat-card-wide">
+            <div className="card-body">
+              <h3 className="card-title">🏆 Campeões</h3>
+              <div className="grid-cards">
+                {campeoes.map((campeao) => (
+                  <button
+                    key={campeao.competicao_id}
+                    type="button"
+                    className="tile tile-clicavel"
+                    onClick={() => navigate(`/competicoes/${campeao.competicao_id}`)}
+                  >
+                    <p className="tile-meta">
+                      {campeao.modalidade_nome} · {campeao.categoria_nome} {ROTULO_GENERO[campeao.genero]}
+                    </p>
+                    <p className="tile-title">{campeao.campeao_nome}</p>
+                    <p className="tile-meta">
+                      {campeao.status === 'WO'
+                        ? `W.O. sobre ${campeao.vice_nome}`
+                        : `${campeao.placar_campeao} x ${campeao.placar_vice} sobre ${campeao.vice_nome}`}
+                    </p>
+                  </button>
+                ))}
+              </div>
             </div>
+          </section>
+        )}
 
-            <div className="champion-body">
-              <span className="champion-trophy" aria-hidden="true">🏆</span>
-              <p className="champion-name">{campeao.escola_nome}</p>
-              <p className="champion-detail">
-                Venceu a Grande Final por {campeao.gols_campeao} x {campeao.gols_vice} contra {campeao.vice_nome}
-              </p>
-              <button className="btn btn-outline btn-sm" onClick={() => navigate('/matamata')}>
-                Ver chaveamento
-              </button>
-            </div>
-          </div>
-        ) : (
         <div className="card stat-card stat-card-wide">
           <div className="stat-head">
-            <span className="stat-label">Próximo Jogo</span>
+            <span className="stat-label">
+              Próximo Jogo
+              {proximo && ` — ${proximo.modalidade_nome} ${proximo.categoria_nome}`}
+            </span>
             {proximo && <span className="badge badge-accent">{proximo.fase}</span>}
           </div>
 
           {proximo ? (
             <>
               <div className="next-match">
-                <span className="next-match-team home">{proximo.escola_1_nome}</span>
+                <span className="next-match-team home">{proximo.equipe_1_nome}</span>
                 <span className="next-match-vs">VS</span>
-                <span className="next-match-team away">{proximo.escola_2_nome}</span>
+                <span className="next-match-team away">{proximo.equipe_2_nome}</span>
               </div>
 
               <div className="next-match-when">
@@ -282,7 +316,8 @@ function Inicio() {
             </div>
           )}
         </div>
-        )}
+
+        <Artilheiros />
       </div>
     );
   };
