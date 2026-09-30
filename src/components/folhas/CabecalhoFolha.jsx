@@ -4,7 +4,7 @@ import { partesDaData } from './comum';
 // campeonato, local, nº do jogo, cidade, categoria, data, árbitros, anotador e
 // o confronto com as caixas de placar. Muda só o título, que é o nome da
 // modalidade do jogo.
-function CabecalhoFolha({ evento, jogo, equipes, emBranco, placar }) {
+function CabecalhoFolha({ evento, jogo, equipes, folha, emBranco, placar }) {
   const [dia, mes, ano] = partesDaData(jogo.data_hora);
   // No vôlei o placar da caixa é o de sets; nas outras, a soma da folha.
   const caixas = placar || [equipes[0].gols, equipes[1].gols];
@@ -17,7 +17,9 @@ function CabecalhoFolha({ evento, jogo, equipes, emBranco, placar }) {
       <tbody>
         <tr className="linha-titulo">
           <td className="logo"><img src="/logo-jogos-estudantis.png" alt="" /></td>
-          <td className="titulo" colSpan={2}>SÚMULA DE {jogo.modalidade_nome.toUpperCase()}</td>
+          {/* O título vem da folha, não do nome da modalidade: o papel do
+              basquete diz BASQUETEBOL (src/config/folhasSumula.js). */}
+          <td className="titulo" colSpan={2}>{folha.titulo}</td>
           <td className="logo"><img src="/logo-barra-do-choca.png" alt="" /></td>
         </tr>
         <tr>

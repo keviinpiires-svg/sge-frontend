@@ -2,16 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { buscarSumulaPorJogo } from '../services/sumulas';
-import CabecalhoFolha from '../components/folhas/CabecalhoFolha';
 import FolhaFutsal from '../components/folhas/FolhaFutsal';
 import FolhaBasquete from '../components/folhas/FolhaBasquete';
+import FolhaVolei from '../components/folhas/FolhaVolei';
 
 // A folha impressa segue os modelos em papel (docs/referencias/sumulas_modelos.md).
 // Qual folha cada modalidade usa vem do backend, de src/config/folhasSumula.js:
 // esta tela só escolhe o componente correspondente.
 const FOLHAS = {
   FUTSAL: FolhaFutsal,
-  BASQUETE: FolhaBasquete
+  BASQUETE: FolhaBasquete,
+  VOLEI: FolhaVolei
 };
 
 function DetalhesSumula() {
@@ -83,7 +84,7 @@ function DetalhesSumula() {
     );
   }
 
-  const { evento, jogo, equipes, folha } = sumula;
+  const { evento, jogo, equipes, folha, sets } = sumula;
   const Folha = FOLHAS[folha.tipo];
 
   return (
@@ -133,18 +134,15 @@ function DetalhesSumula() {
             </div>
           </div>
         ) : (
-          <div ref={folhaRef} className="folha-sumula print-area">
-            <CabecalhoFolha evento={evento} jogo={jogo} equipes={equipes} emBranco={emBranco} />
-
-            {equipes.map((equipe, indice) => (
-              <Folha
-                key={equipe.equipe_id}
-                equipe={equipe}
-                indice={indice}
-                folha={folha}
-                emBranco={emBranco}
-              />
-            ))}
+          <div ref={folhaRef} className={`folha-sumula print-area folha-tipo-${folha.tipo.toLowerCase()}`}>
+            <Folha
+              evento={evento}
+              jogo={jogo}
+              equipes={equipes}
+              sets={sets}
+              folha={folha}
+              emBranco={emBranco}
+            />
           </div>
         )}
       </div>

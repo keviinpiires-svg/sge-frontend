@@ -4,6 +4,12 @@ import Contador from '../components/Contador';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 import { suspensosNoJogo } from '../services/suspensoes';
 
+const TEXTO_DO_PLACAR = {
+  Gols: 'a soma dos gols lançados',
+  Pontos: 'a soma dos pontos lançados',
+  Eliminações: 'a soma das eliminações lançadas'
+};
+
 // A súmula é regravada inteira a cada envio, então o estado local é a folha
 // toda: as duas equipes, cada uma com o seu rodapé e as suas linhas.
 // Quais colunas existem (cartões, faltas, quanto cabe em cada uma) vem do
@@ -16,6 +22,7 @@ function PreencherSumula() {
   const [carga, setCarga] = useState(null);      // { id, dados, erro }
   const [equipes, setEquipes] = useState(null);  // cópia editável da folha
   const [penaltis, setPenaltis] = useState({ penaltis_1: 0, penaltis_2: 0 });
+  const [sets, setSets] = useState(null);       // vôlei: os três sets do papel
   const [prorrogacao, setProrrogacao] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
@@ -33,6 +40,7 @@ function PreencherSumula() {
         if (!ativo) return;
         setCarga({ id, dados, erro: '' });
         setEquipes(dados.equipes);
+        setSets(dados.sets);
         setPenaltis({
           penaltis_1: dados.jogo.penaltis_1 ?? 0,
           penaltis_2: dados.jogo.penaltis_2 ?? 0
@@ -98,6 +106,12 @@ function PreencherSumula() {
 
   const golsDe = (equipe) => equipe.atletas.reduce((total, a) => total + Number(a.gols || 0), 0);
 
+  const mudarSet = (numero_set, campo, valor) => {
+    setSets((atual) => atual.map((set) => (
+      set.numero_set === numero_set ? { ...set, [campo]: valor } : set
+    )));
+  };
+
   const enviar = async (finalizar) => {
     setAviso(null);
     setSalvando(true);
@@ -109,6 +123,7 @@ function PreencherSumula() {
         penaltis_1: penaltis.penaltis_1,
         penaltis_2: penaltis.penaltis_2,
         prorrogacao,
+        sets,
         equipes: equipes.map((equipe) => ({
           equipe_id: equipe.equipe_id,
           tecnico_nome: equipe.tecnico_nome,
@@ -161,11 +176,20 @@ function PreencherSumula() {
   const avisosSuspensao = suspensao?.id === id && suspensao.dados ? suspensao.dados.avisos : [];
   const suspensoPorAtleta = new Map(listaSuspensos.map((s) => [s.atleta_id, s]));
 
-  const placar1 = golsDe(equipes[0]);
-  const placar2 = golsDe(equipes[1]);
-  // Nº, atleta, estatística, capitão e presente são fixos; faltas e cartões
-  // dependem da folha da modalidade.
-  const colunasDaTabela = 5 + (folha.faltasIndividuais > 0 ? 1 : 0) + (folha.cartoes ? 2 : 0);
+  // No vôlei o placar são os sets vencidos, não a soma de uma coluna.
+  const setsVencidos = (lado) => (sets || []).reduce((total, set) => {
+    const meus = Number(lado === 0 ? set.pontos_1 : set.pontos_2);
+    const deles = Number(lado === 0 ? set.pontos_2 : set.pontos_1);
+    return total + (meus > deles ? 1 : 0);
+  }, 0);
+
+  const placar1 = folha.sets ? setsVencidos(0) : golsDe(equipes[0]);
+  const placar2 = folha.sets ? setsVencidos(1) : golsDe(equipes[1]);
+
+  // Nº, atleta, capitão e presente são fixos; a coluna de estatística, as
+  // faltas e os cartões dependem da folha da modalidade.
+  const colunasDaTabela = 4 + (folha.rotuloEstatistica ? 1 : 0)
+    + (folha.faltasIndividuais > 0 ? 1 : 0) + (folha.cartoes ? 2 : 0);
   // A regra de desempate vem do backend (src/config/regrasProvisorias.js):
   // a tela não guarda cópia de qual modalidade joga prorrogação.
   const desempate = sumula.desempate || { sequencia: ['PENALTIS'], nomeCobranca: 'pênaltis' };
@@ -182,9 +206,10 @@ function PreencherSumula() {
           </p>
           <h1 className="page-title">Preencher Súmula</h1>
           <p className="page-subtitle">
-            O placar é a soma {folha.rotuloEstatistica === 'Pontos' ? 'dos pontos lançados'
-              : `${folha.rotuloEstatistica === 'Eliminações' ? 'das eliminações lançadas' : 'dos gols lançados'}`}:
-            não existe campo de placar para digitar.
+            {folha.sets
+              ? `O placar do jogo são os sets: vence quem ganhar ${folha.setsParaVencer} sets `
+                + `de ${folha.pontosPorSet} pontos, com 2 de vantagem.`
+              : `O placar é ${TEXTO_DO_PLACAR[folha.rotuloEstatistica]}: não existe campo de placar para digitar.`}
           </p>
         </header>
 
@@ -223,6 +248,65 @@ function PreencherSumula() {
           </div>
         </div>
 
+        {folha.sets && sets && (
+          <section className="card mb-lg">
+            <div className="card-body">
+              <h2 className="card-title">Controle dos sets</h2>
+              <p className="form-hint">
+                Lance os pontos de cada set. Um set termina em {folha.pontosPorSet} pontos, com 2 de
+                vantagem, e o jogo acaba quando uma equipe vence {folha.setsParaVencer} sets — aí o
+                3º set não se joga.
+              </p>
+
+              <div className="table-wrap">
+                <table className="table-sge compact">
+                  <thead>
+                    <tr>
+                      <th>Set</th>
+                      <th>{equipes[0].escola_nome}</th>
+                      <th>{equipes[1].escola_nome}</th>
+                      <th>Vencedor do set</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sets.map((set) => {
+                      const um = Number(set.pontos_1);
+                      const dois = Number(set.pontos_2);
+                      const fechado = Math.max(um, dois) >= folha.pontosPorSet
+                        && Math.abs(um - dois) >= 2;
+
+                      return (
+                        <tr key={set.numero_set}>
+                          <td className="strong">{set.numero_set}º</td>
+                          <td>
+                            <Contador
+                              valor={um}
+                              rotulo={`pontos de ${equipes[0].escola_nome} no ${set.numero_set}º set`}
+                              aoMudar={(v) => mudarSet(set.numero_set, 'pontos_1', v)}
+                            />
+                          </td>
+                          <td>
+                            <Contador
+                              valor={dois}
+                              rotulo={`pontos de ${equipes[1].escola_nome} no ${set.numero_set}º set`}
+                              aoMudar={(v) => mudarSet(set.numero_set, 'pontos_2', v)}
+                            />
+                          </td>
+                          <td>
+                            {um === 0 && dois === 0 ? '—'
+                              : fechado ? (um > dois ? equipes[0].escola_nome : equipes[1].escola_nome)
+                                : 'set em andamento'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
+
         {equipes.map((equipe, indice) => (
           <section key={equipe.equipe_id} className="card mb-lg">
             <div className="card-body">
@@ -234,7 +318,7 @@ function PreencherSumula() {
                     <tr>
                       <th>Nº</th>
                       <th className="text-left">Atleta</th>
-                      <th>{folha.rotuloEstatistica}</th>
+                      {folha.rotuloEstatistica && <th>{folha.rotuloEstatistica}</th>}
                       {folha.faltasIndividuais > 0 && <th>Faltas</th>}
                       {folha.cartoes && <th>Amarelos</th>}
                       {folha.cartoes && <th>🟥</th>}
@@ -260,13 +344,15 @@ function PreencherSumula() {
                             </span>
                           )}
                         </td>
-                        <td>
-                          <Contador
-                            valor={Number(atleta.gols)}
-                            rotulo={`${folha.rotuloEstatistica.toLowerCase()} de ${atleta.nome}`}
-                            aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'gols', v)}
-                          />
-                        </td>
+                        {folha.rotuloEstatistica && (
+                          <td>
+                            <Contador
+                              valor={Number(atleta.gols)}
+                              rotulo={`${folha.rotuloEstatistica.toLowerCase()} de ${atleta.nome}`}
+                              aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'gols', v)}
+                            />
+                          </td>
+                        )}
 
                         {folha.faltasIndividuais > 0 && (
                           <td>
@@ -377,25 +463,27 @@ function PreencherSumula() {
                   </div>
                 )}
 
-                <div className="form-group">
-                  <span className="form-label">Tempo técnico</span>
-                  <div className="linha-checks">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={equipe.tempo_tecnico_1t}
-                        onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_1t', e.target.checked)}
-                      /> 1º T
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={equipe.tempo_tecnico_2t}
-                        onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_2t', e.target.checked)}
-                      /> 2º T
-                    </label>
+                {folha.tempoTecnico && (
+                  <div className="form-group">
+                    <span className="form-label">Tempo técnico</span>
+                    <div className="linha-checks">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={equipe.tempo_tecnico_1t}
+                          onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_1t', e.target.checked)}
+                        /> 1º T
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={equipe.tempo_tecnico_2t}
+                          onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_2t', e.target.checked)}
+                        /> 2º T
+                      </label>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </section>

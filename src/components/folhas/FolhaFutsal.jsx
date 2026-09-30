@@ -1,3 +1,4 @@
+import CabecalhoFolha from './CabecalhoFolha';
 import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
 // Folha do futsal (docs/referencias/sumula_futsal_modelo.pdf). A mesma folha
@@ -10,7 +11,7 @@ import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 // Uma falta lançada marca as caixas de 1 até o total do tempo
 const lancouFalta = (total, indice, emBranco) => !emBranco && Number(total || 0) > indice;
 
-function FolhaFutsal({ equipe, indice, folha, emBranco }) {
+function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
   const caixas = folha.caixasEstatistica;
   const faltasPorTempo = folha.faltasAcumuladas;
   const valor = (v) => (emBranco ? '' : (v ?? ''));
@@ -105,6 +106,24 @@ function FolhaFutsal({ equipe, indice, folha, emBranco }) {
         </tbody>
       </table>
     </section>
+  );
+}
+
+function FolhaFutsal({ evento, jogo, equipes, folha, emBranco }) {
+  return (
+    <>
+      <CabecalhoFolha evento={evento} jogo={jogo} equipes={equipes} folha={folha} emBranco={emBranco} />
+
+      {equipes.map((equipe, indice) => (
+        <BlocoDaEquipe
+          key={equipe.equipe_id}
+          equipe={equipe}
+          indice={indice}
+          folha={folha}
+          emBranco={emBranco}
+        />
+      ))}
+    </>
   );
 }
 

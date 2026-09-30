@@ -1,3 +1,4 @@
+import CabecalhoFolha from './CabecalhoFolha';
 import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
 // Folha do basquete (docs/referencias/sumula_basquete_modelo.pdf).
@@ -17,7 +18,7 @@ import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
 const marcada = (valor, emBranco) => (!emBranco && valor ? 'marcada' : '');
 
-function FolhaBasquete({ equipe, indice, folha, emBranco }) {
+function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
   const { de, colunas, porColuna } = folha.pontuacaoCorrida;
   const faltasPorTempo = folha.faltasAcumuladas;
   const maxFaltas = folha.faltasIndividuais;
@@ -140,6 +141,24 @@ function FolhaBasquete({ equipe, indice, folha, emBranco }) {
         </tbody>
       </table>
     </section>
+  );
+}
+
+function FolhaBasquete({ evento, jogo, equipes, folha, emBranco }) {
+  return (
+    <>
+      <CabecalhoFolha evento={evento} jogo={jogo} equipes={equipes} folha={folha} emBranco={emBranco} />
+
+      {equipes.map((equipe, indice) => (
+        <BlocoDaEquipe
+          key={equipe.equipe_id}
+          equipe={equipe}
+          indice={indice}
+          folha={folha}
+          emBranco={emBranco}
+        />
+      ))}
+    </>
   );
 }
 
