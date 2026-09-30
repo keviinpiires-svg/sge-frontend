@@ -15,6 +15,7 @@ function PreencherSumula() {
   const [carga, setCarga] = useState(null);      // { id, dados, erro }
   const [equipes, setEquipes] = useState(null);  // cópia editável da folha
   const [penaltis, setPenaltis] = useState({ penaltis_1: 0, penaltis_2: 0 });
+  const [prorrogacao, setProrrogacao] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
   const [suspensao, setSuspensao] = useState(null);
@@ -106,6 +107,7 @@ function PreencherSumula() {
         finalizar,
         penaltis_1: penaltis.penaltis_1,
         penaltis_2: penaltis.penaltis_2,
+        prorrogacao,
         equipes: equipes.map((equipe) => ({
           equipe_id: equipe.equipe_id,
           tecnico_nome: equipe.tecnico_nome,
@@ -160,7 +162,12 @@ function PreencherSumula() {
 
   const placar1 = golsDe(equipes[0]);
   const placar2 = golsDe(equipes[1]);
-  const precisaPenaltis = jogo.fase !== 'GRUPOS' && placar1 === placar2;
+  // A regra de desempate vem do backend (src/config/regrasProvisorias.js):
+  // a tela não guarda cópia de qual modalidade joga prorrogação.
+  const desempate = sumula.desempate || { sequencia: ['PENALTIS'], nomeCobranca: 'pênaltis' };
+  const exigeProrrogacao = desempate.sequencia.includes('PRORROGACAO');
+  const empatado = jogo.fase !== 'GRUPOS' && placar1 === placar2;
+  const precisaPenaltis = empatado && (!exigeProrrogacao || prorrogacao);
 
   return (
     <div className="page">
@@ -351,12 +358,35 @@ function PreencherSumula() {
           </section>
         ))}
 
+        {empatado && exigeProrrogacao && (
+          <div className="card mb-lg">
+            <div className="card-body">
+              <h2 className="card-title">Prorrogação</h2>
+              <p className="form-hint">
+                Empate no mata-mata: em {jogo.modalidade_nome} joga-se prorrogação antes das
+                cobranças. Lance os gols da prorrogação nas linhas dos atletas acima; se o
+                empate persistir depois dela, marque abaixo para informar as cobranças.
+              </p>
+              <label className="linha-checks">
+                <input
+                  type="checkbox"
+                  checked={prorrogacao}
+                  onChange={(e) => setProrrogacao(e.target.checked)}
+                />{' '}
+                Houve prorrogação e o empate continuou
+              </label>
+            </div>
+          </div>
+        )}
+
         {precisaPenaltis && (
           <div className="card mb-lg">
             <div className="card-body">
-              <h2 className="card-title">Pênaltis</h2>
+              <h2 className="card-title" style={{ textTransform: 'capitalize' }}>
+                {desempate.nomeCobranca}
+              </h2>
               <p className="form-hint">
-                Empate no mata-mata não decide nada: informe os pênaltis para finalizar.
+                Empate no mata-mata não decide nada: informe {desempate.nomeCobranca} para finalizar.
               </p>
               <div className="rodape-equipe">
                 <div className="form-group">
