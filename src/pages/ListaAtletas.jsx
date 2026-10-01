@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { listarEscolas } from '../services/escolas';
-import { listarAtletasPorEquipe, atualizarAtleta, excluirAtleta } from '../services/atletas';
+import {
+  listarAtletasPorEquipe, buscarAtletaPorId, atualizarAtleta, excluirAtleta
+} from '../services/atletas';
+import { soAData, paraCampoData } from '../services/datas';
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
@@ -50,26 +53,23 @@ function ListaAtletas() {
     }
   };
 
-  const formatarData = (dataStr) => {
-    if (!dataStr) return '';
-    // Tratamento simples caso venha formato ISO ou compatível
-    const date = new Date(dataStr);
-    if (isNaN(date.getTime())) return dataStr; // Retorna original se inválido
-    return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-  };
+  const formatarData = (dataStr) => soAData(dataStr);
 
-  const formatarDataParaInput = (dataStr) => {
-    if (!dataStr) return '';
-    const date = new Date(dataStr);
-    if (isNaN(date.getTime())) return dataStr;
-    return date.toISOString().split('T')[0];
-  };
+  const formatarDataParaInput = (dataStr) => paraCampoData(dataStr);
 
-  const handleEditar = (atleta) => {
-    setAtletaEmEdicao({
-      ...atleta,
-      data_nascimento: formatarDataParaInput(atleta.data_nascimento)
-    });
+  // A lista pública não traz o RG de propósito; para editar é preciso buscar o
+  // atleta inteiro na rota de ADMIN, senão o RG volta vazio e o backend recusa.
+  const handleEditar = async (atleta) => {
+    try {
+      const completo = await buscarAtletaPorId(atleta.id);
+      setAtletaEmEdicao({
+        ...completo,
+        data_nascimento: formatarDataParaInput(completo.data_nascimento)
+      });
+    } catch (error) {
+      console.error('Erro ao buscar o atleta:', error);
+      alert(error.mensagem);
+    }
   };
 
   const handleSalvarEdicao = async (e) => {
@@ -142,7 +142,7 @@ function ListaAtletas() {
                   <thead>
                     <tr>
                       <th className="text-left">Nome</th>
-                      <th className="text-left">RG / Matrícula</th>
+                      <th>Sexo</th>
                       <th>Data de Nascimento</th>
                       <th>Ações</th>
                     </tr>
@@ -151,7 +151,8 @@ function ListaAtletas() {
                     {atletas.map((atleta, index) => (
                       <tr key={index}>
                         <td className="text-left strong">{atleta.nome}</td>
-                        <td className="text-left text-soft">{atleta.rg_ou_matricula}</td>
+                        {/* O RG não aparece aqui: a lista é pública */}
+                        <td className="text-soft">{atleta.sexo === 'F' ? 'Feminino' : 'Masculino'}</td>
                         <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>
                         <td>
                           {isAdmin ? (
@@ -195,16 +196,36 @@ function ListaAtletas() {
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="edit-rg">RG / Matrícula</label>
-                <input
-                  id="edit-rg"
-                  className="form-control"
-                  type="text"
-                  value={atletaEmEdicao.rg_ou_matricula || ''}
-                  onChange={(e) => setAtletaEmEdicao({...atletaEmEdicao, rg_ou_matricula: e.target.value})}
-                  required
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="edit-rg">RG</label>
+                  <input
+                    id="edit-rg"
+                    className="form-control"
+                    type="text"
+                    maxLength={20}
+                    value={atletaEmEdicao.rg || ''}
+                    onChange={(e) => setAtletaEmEdicao({ ...atletaEmEdicao, rg: e.target.value })}
+                    required
+                  />
+                  <span className="form-hint">Obrigatório e único: é o que identifica o atleta.</span>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="edit-sexo">Sexo</label>
+                  <select
+                    id="edit-sexo"
+                    className="form-control"
+                    value={atletaEmEdicao.sexo || ''}
+                    onChange={(e) => setAtletaEmEdicao({ ...atletaEmEdicao, sexo: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecione</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Feminino</option>
+                  </select>
+                  <span className="form-hint">Define em quais competições o atleta pode entrar.</span>
+                </div>
               </div>
 
               <div className="form-row">
