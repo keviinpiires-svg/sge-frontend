@@ -10,6 +10,7 @@ const links = [
   { to: '/tabela-geral', label: 'Tabela Geral' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
+  { to: '/usuarios', label: 'Usuários', admin: true },
 ];
 
 function Navbar() {
