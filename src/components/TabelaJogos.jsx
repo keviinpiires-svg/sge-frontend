@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { listarJogos, agendarJogo, excluirJogo, iniciarJogo, declararWO } from '../services/jogos';
 import { listarLocais } from '../services/locais';
+import { dataEHora } from '../services/datas';
 
 const ROTULO_STATUS = {
   AGENDADO: 'Agendado',
@@ -20,15 +21,7 @@ const FORM_VAZIO = {
   arbitro_1: ''
 };
 
-const formatarQuando = (valor) => {
-  if (!valor) return 'Sem data';
-  // O backend devolve DATETIME sem fuso; tratar como UTC mantém a hora que foi
-  // digitada, em vez de deslocá-la pelo fuso de quem abre a tela.
-  const data = new Date(valor);
-  return data.toLocaleString('pt-BR', {
-    timeZone: 'UTC', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-  });
-};
+const formatarQuando = (valor) => dataEHora(valor);
 
 function TabelaJogos({ competicao }) {
   const { isAdmin, autenticado } = useAuth();

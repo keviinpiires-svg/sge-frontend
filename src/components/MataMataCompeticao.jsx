@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { chaveDaCompeticao, gerarProximaFase, desfazerFase } from '../services/matamata';
+import { dataEHora } from '../services/datas';
 
 const ROTULO_FASE = { SEMIFINAL: 'Semifinais', FINAL: 'Final' };
 
@@ -14,12 +15,7 @@ const ROTULO_STATUS = {
 
 const MEDALHA = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-const formatarQuando = (valor) => {
-  if (!valor) return 'Sem data';
-  return new Date(valor).toLocaleString('pt-BR', {
-    timeZone: 'UTC', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-  });
-};
+const formatarQuando = (valor) => dataEHora(valor);
 
 // "2 grupos × 2 → semifinal", em uma linha
 const descreverFormato = (formato) => {

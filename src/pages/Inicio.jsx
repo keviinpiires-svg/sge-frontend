@@ -5,16 +5,15 @@ import { obterEstatisticas } from '../services/dashboard';
 import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
 import { listarEscolas } from '../services/escolas';
 import Artilheiros from '../components/Artilheiros';
+import { dataPorExtenso, soAHora } from '../services/datas';
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
-const formatarData = (dataStr) =>
-  new Date(dataStr).toLocaleDateString('pt-BR', { timeZone: 'UTC', weekday: 'long', day: '2-digit', month: 'long' });
+const formatarData = (dataStr) => dataPorExtenso(dataStr);
 
-const formatarHora = (dataStr) =>
-  new Date(dataStr).toLocaleTimeString('pt-BR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' });
+const formatarHora = (dataStr) => soAHora(dataStr);
 
 function Inicio() {
   const navigate = useNavigate();

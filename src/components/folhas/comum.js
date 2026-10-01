@@ -10,15 +10,8 @@ export const completarLinhas = (atletas, total) => {
 
 export const sequencia = (quantidade) => Array.from({ length: quantidade }, (_, i) => i);
 
-export const partesDaData = (valor) => {
-  if (!valor) return ['', '', ''];
-  const data = new Date(valor);
-  if (isNaN(data.getTime())) return ['', '', ''];
-  return [
-    String(data.getUTCDate()).padStart(2, '0'),
-    String(data.getUTCMonth() + 1).padStart(2, '0'),
-    String(data.getUTCFullYear())
-  ];
-};
+// Quem lê a data do jogo é services/datas.js, para a folha impressa mostrar a
+// mesma hora que a tabela de jogos.
+export { partesDaData } from '../../services/datas';
 
 export const letraDaEquipe = (indice) => (indice === 0 ? 'A' : 'B');
