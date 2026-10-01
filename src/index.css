@@ -302,6 +302,19 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .podio-medalha { font-size: 20px; min-width: 28px; text-align: center; }
 .podio-escola { font-weight: 700; color: var(--sge-text-strong); }
 .podio-como { font-size: 13px; color: var(--sge-text-muted); }
+
+/* Tabela geral: a linha abre a conta de onde vieram os pontos */
+.table-sge tbody tr.linha-clicavel { cursor: pointer; }
+.abrir-abertura { margin-left: 8px; color: var(--sge-text-muted); font-size: 11px; }
+.table-sge tbody tr.linha-abertura:hover { background: inherit; }
+.table-sge tbody tr.linha-abertura td { background: rgba(0, 0, 0, 0.18); padding-left: 58px; }
+.abertura { display: flex; flex-wrap: wrap; gap: 8px 32px; padding: 4px 0; }
+.abertura-lista { list-style: none; margin: 0; padding: 0; min-width: 300px; max-width: 420px; }
+.abertura-lista li { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
+.abertura-medalha { width: 18px; text-align: center; }
+.abertura-competicao { flex: 1; color: var(--sge-text-soft); text-align: left; }
+.abertura-pontos { font-weight: 800; color: var(--sge-success); }
+.abertura-pontos.negativo { color: var(--sge-danger-text); }
 .legenda-desempate b { color: var(--sge-text-soft); }
 
 /* Perfil do usuário logado, ao lado do nome na barra superior */

@@ -9,6 +9,7 @@ import ListaAtletas from './pages/ListaAtletas';
 import PreencherSumula from './pages/PreencherSumula';
 import DetalhesSumula from './pages/DetalhesSumula';
 import Artilharia from './pages/Artilharia';
+import TabelaGeral from './pages/TabelaGeral';
 import Login from './pages/Login';
 import Competicoes from './pages/Competicoes';
 import CompeticaoDetalhe from './pages/CompeticaoDetalhe';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/preencher-sumula/:id" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PreencherSumula /></RotaPrivada>} />
           <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
           <Route path="/artilharia" element={<Artilharia />} />
+          <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/modalidades/:slug" element={<Competicoes />} />
           <Route path="/competicoes/:id" element={<CompeticaoDetalhe />} />
           <Route path="/login" element={<Login />} />
