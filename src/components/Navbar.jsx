@@ -7,7 +7,6 @@ const links = [
   { to: '/modalidades/futsal', label: 'Modalidades' },
   { to: '/cadastro', label: 'Cadastrar Time', admin: true },
   { to: '/artilharia', label: 'Artilharia' },
-  { to: '/matamata', label: 'Mata-Mata' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
 ];

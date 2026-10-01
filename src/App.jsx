@@ -4,7 +4,6 @@ import RotaPrivada from './components/RotaPrivada';
 import { AuthProvider } from './context/AuthContext';
 import Inicio from './pages/Inicio';
 import Cadastro from './pages/Cadastro';
-import MataMata from './pages/MataMata';
 import CadastroAtleta from './pages/CadastroAtleta';
 import ListaAtletas from './pages/ListaAtletas';
 import PreencherSumula from './pages/PreencherSumula';
@@ -23,7 +22,6 @@ function App() {
           <Route path="/" element={<Inicio />} />
           <Route path="/cadastro" element={<RotaPrivada perfis={['ADMIN']}><Cadastro /></RotaPrivada>} />
           <Route path="/editar-escola/:id" element={<RotaPrivada perfis={['ADMIN']}><Cadastro /></RotaPrivada>} />
-          <Route path="/matamata" element={<MataMata />} />
           <Route path="/cadastro-atleta" element={<RotaPrivada perfis={['ADMIN']}><CadastroAtleta /></RotaPrivada>} />
           <Route path="/lista-atletas" element={<ListaAtletas />} />
           <Route path="/preencher-sumula/:id" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PreencherSumula /></RotaPrivada>} />

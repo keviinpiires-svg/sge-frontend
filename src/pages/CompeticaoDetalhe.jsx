@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PainelModalidades from '../components/PainelModalidades';
 import TabelaJogos from '../components/TabelaJogos';
 import ClassificacaoGrupos from '../components/ClassificacaoGrupos';
+import MataMataCompeticao from '../components/MataMataCompeticao';
 import Suspensoes from '../components/Suspensoes';
 import ArtilhariaCompeticao from '../components/ArtilhariaCompeticao';
 import Elencos from '../components/Elencos';
@@ -124,6 +125,8 @@ function CompeticaoDetalhe() {
       <TabelaJogos competicao={competicao} />
 
       <ClassificacaoGrupos competicao={competicao} />
+
+      <MataMataCompeticao competicao={competicao} />
 
       <ArtilhariaCompeticao competicao={competicao} />
 
