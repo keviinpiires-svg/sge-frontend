@@ -70,6 +70,16 @@ export const partesDaData = (valor) => {
   return [dia, mes, ano];
 };
 
+// "2026-11-24T10:30" — o que um <input type="datetime-local"> espera. Recorta
+// o texto do banco, sem passar por Date: a hora de parede fica como está.
+export const paraCampoDataHora = (valor) => {
+  const encontrado = valor ? PARTES.exec(String(valor)) : null;
+  if (!encontrado) return '';
+
+  const [, ano, mes, dia, hora = '00', minuto = '00'] = encontrado;
+  return `${ano}-${mes}-${dia}T${hora}:${minuto}`;
+};
+
 // "2026-11-24" — o que um <input type="date"> espera
 export const paraCampoData = (valor) => {
   const encontrado = valor ? PARTES.exec(String(valor)) : null;

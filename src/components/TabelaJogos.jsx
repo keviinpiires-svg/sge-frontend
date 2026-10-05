@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth';
 import { listarJogos, agendarJogo, excluirJogo, iniciarJogo, declararWO } from '../services/jogos';
 import { listarLocais } from '../services/locais';
 import { dataEHora } from '../services/datas';
+import FormAgendaJogo from './FormAgendaJogo';
 
 const ROTULO_STATUS = {
   AGENDADO: 'Agendado',
@@ -21,9 +22,13 @@ const FORM_VAZIO = {
   arbitro_1: ''
 };
 
-const formatarQuando = (valor) => dataEHora(valor);
+const A_DEFINIR = 'A definir';
 
-function TabelaJogos({ competicao }) {
+const formatarQuando = (valor) => dataEHora(valor, A_DEFINIR);
+
+// versao e aoMudarJogos ligam esta tabela ao card do mata-mata: o que muda num
+// lado (agenda, fase gerada) recarrega o outro.
+function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
   const { isAdmin, autenticado } = useAuth();
 
   // O resultado guarda de qual competição veio, e recarga força nova busca
@@ -36,8 +41,10 @@ function TabelaJogos({ competicao }) {
   const [aviso, setAviso] = useState(null);
   // Painel de W.O.: abre sob a tabela, com 1x0 já sugerido
   const [wo, setWo] = useState(null);
+  // Formulário de data, hora e local: abre sob a tabela, como o de W.O.
+  const [agenda, setAgenda] = useState(null);
 
-  const chave = `${competicao.id}:${recarga}`;
+  const chave = `${competicao.id}:${recarga}:${versao}`;
   const pronto = resultado?.chave === chave;
   const jogos = pronto ? resultado.jogos : [];
   const erro = pronto ? resultado.erro : '';
@@ -80,6 +87,11 @@ function TabelaJogos({ competicao }) {
     grupo.equipes.map((equipe) => ({ ...equipe, grupo: grupo.nome }))
   );
 
+  const recarregar = () => {
+    setRecarga((n) => n + 1);
+    if (aoMudarJogos) aoMudarJogos();
+  };
+
   const alterar = (campo) => (e) => setForm((atual) => ({ ...atual, [campo]: e.target.value }));
 
   const enviar = async (e) => {
@@ -100,7 +112,7 @@ function TabelaJogos({ competicao }) {
 
       setAviso({ tipo: 'success', texto: `Jogo nº ${resposta.numero_jogo}: ${resposta.confronto}` });
       setForm(FORM_VAZIO);
-      setRecarga((n) => n + 1);
+      recarregar();
     } catch (falha) {
       setAviso({ tipo: 'error', texto: falha.mensagem });
     } finally {
@@ -123,19 +135,34 @@ function TabelaJogos({ competicao }) {
           ? `Jogo nº ${resposta.numero_removido} excluído. ${resposta.jogos_renumerados} jogo(s) renumerado(s).`
           : `Jogo nº ${resposta.numero_removido} excluído.`
       });
-      setRecarga((n) => n + 1);
+      recarregar();
     } catch (falha) {
       setAviso({ tipo: 'error', texto: falha.mensagem });
     }
   };
 
-  const abrirWO = (jogo) => setWo({
-    jogo,
-    vencedor_equipe_id: String(jogo.equipe_1_id),
-    placar_1: 1,
-    placar_2: 0,
-    motivo: ''
-  });
+  const abrirWO = (jogo) => {
+    setAgenda(null);
+    setWo({
+      jogo,
+      vencedor_equipe_id: String(jogo.equipe_1_id),
+      placar_1: 1,
+      placar_2: 0,
+      motivo: ''
+    });
+  };
+
+  const abrirAgenda = (jogo) => {
+    setWo(null);
+    setAviso(null);
+    setAgenda(jogo);
+  };
+
+  const agendaSalva = (texto) => {
+    setAviso({ tipo: 'success', texto });
+    setAgenda(null);
+    recarregar();
+  };
 
   const confirmarWO = async () => {
     try {
@@ -147,7 +174,7 @@ function TabelaJogos({ competicao }) {
       });
       setAviso({ tipo: 'success', texto: `W.O. registrado no jogo nº ${wo.jogo.numero_jogo}.` });
       setWo(null);
-      setRecarga((n) => n + 1);
+      recarregar();
     } catch (falha) {
       setAviso({ tipo: 'error', texto: falha.mensagem });
     }
@@ -157,7 +184,7 @@ function TabelaJogos({ competicao }) {
     try {
       await iniciarJogo(jogo.id);
       setAviso({ tipo: 'success', texto: `Jogo nº ${jogo.numero_jogo} iniciado.` });
-      setRecarga((n) => n + 1);
+      recarregar();
     } catch (falha) {
       setAviso({ tipo: 'error', texto: falha.mensagem });
     }
@@ -211,7 +238,7 @@ function TabelaJogos({ competicao }) {
                       {jogo.equipe_1_nome} <span className="versus">x</span> {jogo.equipe_2_nome}
                     </td>
                     <td>{jogo.grupo_nome || '—'}</td>
-                    <td className="text-left">{jogo.local_nome || '—'}</td>
+                    <td className="text-left">{jogo.local_nome || A_DEFINIR}</td>
                     <td className="strong">
                       {jogo.placar_1 === null ? '—' : `${jogo.placar_1} x ${jogo.placar_2}`}
                     </td>
@@ -233,6 +260,12 @@ function TabelaJogos({ competicao }) {
                         <Link className="btn btn-outline btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
                           🖨️
                         </Link>
+                        {/* Jogo que já começou não muda de agenda (o backend recusa) */}
+                        {isAdmin && jogo.status === 'AGENDADO' && (
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirAgenda(jogo)}>
+                            🕒 Horário
+                          </button>
+                        )}
                         {isAdmin && ['AGENDADO', 'EM_ANDAMENTO'].includes(jogo.status) && (
                           <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirWO(jogo)}>
                             W.O.
@@ -250,6 +283,16 @@ function TabelaJogos({ competicao }) {
               </tbody>
             </table>
           </div>
+        )}
+
+        {agenda && (
+          <FormAgendaJogo
+            key={agenda.id}
+            jogo={agenda}
+            confronto={`${agenda.equipe_1_nome} x ${agenda.equipe_2_nome}`}
+            aoSalvar={agendaSalva}
+            aoCancelar={() => setAgenda(null)}
+          />
         )}
 
         {wo && (

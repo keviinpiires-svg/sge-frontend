@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { chaveDaCompeticao, gerarProximaFase, desfazerFase } from '../services/matamata';
 import { dataEHora } from '../services/datas';
+import FormAgendaJogo from './FormAgendaJogo';
 
 const ROTULO_FASE = { SEMIFINAL: 'Semifinais', FINAL: 'Final' };
 
@@ -15,7 +16,9 @@ const ROTULO_STATUS = {
 
 const MEDALHA = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-const formatarQuando = (valor) => dataEHora(valor);
+const A_DEFINIR = 'A definir';
+
+const formatarQuando = (valor) => dataEHora(valor, A_DEFINIR);
 
 // "2 grupos × 2 → semifinal", em uma linha
 const descreverFormato = (formato) => {
@@ -33,15 +36,19 @@ const descreverFormato = (formato) => {
   return `${grupos}, ${porGrupo}${segundos} → ${destino}`;
 };
 
-function MataMataCompeticao({ competicao }) {
+// versao e aoMudarJogos ligam este card à tabela de jogos: o que muda num
+// lado (agenda, fase gerada ou desfeita) recarrega o outro.
+function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
   const { isAdmin } = useAuth();
 
   const [resultado, setResultado] = useState(null);
   const [recarga, setRecarga] = useState(0);
   const [trabalhando, setTrabalhando] = useState(false);
   const [aviso, setAviso] = useState(null);
+  // Jogo cujo formulário de horário e local está aberto, dentro do card
+  const [agendaAberta, setAgendaAberta] = useState(null);
 
-  const chaveDaBusca = `${competicao.id}:${recarga}`;
+  const chaveDaBusca = `${competicao.id}:${recarga}:${versao}`;
   const pronto = resultado?.chave === chaveDaBusca;
   const dados = pronto ? resultado.dados : null;
   const erro = pronto ? resultado.erro : '';
@@ -62,6 +69,17 @@ function MataMataCompeticao({ competicao }) {
     };
   }, [chaveDaBusca, competicao.id]);
 
+  const recarregar = () => {
+    setRecarga((r) => r + 1);
+    if (aoMudarJogos) aoMudarJogos();
+  };
+
+  const agendaSalva = (texto) => {
+    setAviso({ tipo: 'success', texto });
+    setAgendaAberta(null);
+    recarregar();
+  };
+
   const executar = async (acao, sucesso) => {
     setTrabalhando(true);
     setAviso(null);
@@ -69,7 +87,7 @@ function MataMataCompeticao({ competicao }) {
     try {
       const resposta = await acao();
       setAviso({ tipo: 'success', texto: resposta.mensagem || sucesso });
-      setRecarga((r) => r + 1);
+      recarregar();
     } catch (falha) {
       setAviso({ tipo: 'error', texto: falha.mensagem });
     } finally {
@@ -139,9 +157,29 @@ function MataMataCompeticao({ competicao }) {
 
         <footer className="match-foot">
           <p className="match-info">
-            📅 {formatarQuando(jogo.data_hora)}
+            📅 {formatarQuando(jogo.data_hora)} · 📍 {jogo.local_nome || A_DEFINIR}
             {cobrancas && ` · cobranças ${jogo.penaltis_1} × ${jogo.penaltis_2}`}
           </p>
+          {/* Jogo que já começou não muda de agenda (o backend recusa) */}
+          {isAdmin && jogo.status === 'AGENDADO' && agendaAberta !== jogo.id && (
+            <button
+              type="button"
+              className="btn btn-outline btn-block btn-sm"
+              onClick={() => {
+                setAviso(null);
+                setAgendaAberta(jogo.id);
+              }}
+            >
+              🕒 Marcar horário
+            </button>
+          )}
+          {agendaAberta === jogo.id && (
+            <FormAgendaJogo
+              jogo={jogo}
+              aoSalvar={agendaSalva}
+              aoCancelar={() => setAgendaAberta(null)}
+            />
+          )}
           <Link className="btn btn-primary btn-block btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
             {encerrado ? '👁️ Ver súmula' : '📄 Abrir súmula'}
           </Link>

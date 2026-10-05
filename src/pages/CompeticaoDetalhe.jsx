@@ -25,6 +25,10 @@ function CompeticaoDetalhe() {
   // Mesmo padrão da lista: o resultado carrega o id de origem, então o estado
   // de carga é derivado e nenhum setState roda no corpo do efeito.
   const [resultado, setResultado] = useState(null);
+  // Tabela de jogos e mata-mata mostram os mesmos jogos: quando um muda algo
+  // (agenda, W.O., fase gerada), a versão sobe e os dois buscam de novo.
+  const [versaoJogos, setVersaoJogos] = useState(0);
+  const jogosMudaram = () => setVersaoJogos((v) => v + 1);
 
   const pronto = resultado?.id === id;
   const competicao = pronto ? resultado.competicao : null;
@@ -122,11 +126,11 @@ function CompeticaoDetalhe() {
 
       <Elencos competicao={competicao} />
 
-      <TabelaJogos competicao={competicao} />
+      <TabelaJogos competicao={competicao} versao={versaoJogos} aoMudarJogos={jogosMudaram} />
 
       <ClassificacaoGrupos competicao={competicao} />
 
-      <MataMataCompeticao competicao={competicao} />
+      <MataMataCompeticao competicao={competicao} versao={versaoJogos} aoMudarJogos={jogosMudaram} />
 
       <ArtilhariaCompeticao competicao={competicao} />
 
