@@ -9,26 +9,30 @@ dados, fatias, pendências e decisões provisórias estão lá (idêntico nos do
 @docs/CONTEXTO_NOVO_ESCOPO.md
 
 Fontes originais: `docs/referencias/` (regulamento, tabela de grupos, `sumulas_modelos.md` e os PDFs
-das súmulas). Roteiro da virada para produção: `F:\System_jogos\docs\MIGRACAO_PRODUCAO.md`.
+das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\docs\MIGRACAO_PRODUCAO.md`.
 
 ---
 
 ## Estado atual (atualizado em 05/10/2026)
 
-- **Código novo** na branch **`feat/novo-escopo`** (nos dois repositórios); tag do estado anterior:
-  `v1-antes-do-novo-escopo`.
-- Fatias 1–7 e 9 ✅; **8** 🔄 (falta atletismo); **10 — migração da produção** 🔄 (falta executar).
-- **O que está no ar na Vercel é o frontend ANTIGO** (menu com "Fase de Grupos", "Mata-Mata",
-  "Agendar Jogo"…), falando com o backend e o banco antigos. O código deste repositório só vai ao ar
-  junto com a virada do backend e do banco (os três voltam juntos ou nenhum volta).
+- **A produção JÁ RODA O SISTEMA NOVO desde 01/10/2026.** A Vercel publica a branch
+  **`feat/novo-escopo`** (Branch Tracking de produção trocado de `main`, que segue com o frontend
+  antigo) e o backend no Render também publica essa branch, com o banco `jogos_2026` na Railway.
+  Tag do estado anterior: `v1-antes-do-novo-escopo`.
+- ⚠️ **Push na `feat/novo-escopo` = deploy em produção.** Não dê push sem o usuário pedir e sem
+  testar antes com o backend local no banco de dev.
+- Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta atletismo). A fatia 10 foi executada com pendências de
+  produção (backup, senha, contas de mesa): veja `F:\System_jogos\CLAUDE.md`.
+- **Commits locais ainda NÃO publicados:** a tela de marcar/editar data, hora e local do jogo
+  (`FormAgendaJogo`, na tabela de jogos e no card do mata-mata). O sistema no ar ainda não a tem.
 
 ## Infraestrutura
 
 | Peça | Onde |
 |---|---|
-| Frontend | **Vercel** — https://sge-frontend-seven.vercel.app (`vercel.json` com rewrite de SPA) |
+| Frontend | **Vercel** — https://sge-frontend-seven.vercel.app (`vercel.json` com rewrite de SPA; produção = `feat/novo-escopo`) |
 | Backend | **Render** — https://system-jogos-estudantis.onrender.com (plano free: 1ª requisição ~50s) |
-| Banco | **Railway**, MySQL 9.4.0 |
+| Banco | **Railway**, MySQL 9.7.2, banco `jogos_2026` (sem backup automático neste plano; crédito gratuito acaba ~18/10) |
 
 - **`VITE_API_URL`** define a API, **sem barra final**, e é resolvida **no build** (mudou → rebuild).
   Está versionada em `.env.development` (`http://localhost:3000`) e `.env.production` (URL do Render).
