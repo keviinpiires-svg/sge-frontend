@@ -6,7 +6,7 @@ import { listarEscolas } from '../services/escolas';
 
 const ROTULO_GENERO = { MASCULINO: 'M', FEMININO: 'F', MISTO: 'misto' };
 
-const MEDALHA = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const MEDALHA = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '4º', 5: '5º' };
 
 const PUNICAO_VAZIA = { escola_id: '', pontos: '-5', motivo: '' };
 
@@ -132,6 +132,9 @@ function TabelaGeral() {
   // backend, e as empatadas em 1º são todas campeãs gerais.
   const campeas = geral.filter((escola) => escola.posicao === 1);
   const semRegra = regras.posicoes_sem_regra || [];
+  // 4º e 5º entram pela regra provisória (aguardando o chefe)
+  const provisorias = regras.posicoes_provisorias?.posicoes || [];
+  const quantasPontuam = regras.posicoes_que_pontuam.length;
 
   // De onde vieram os pontos de uma escola, agrupado para a tela
   const renderAbertura = (escola) => (
@@ -148,7 +151,9 @@ function TabelaGeral() {
                   <span className="abertura-competicao">
                     {origem.modalidade_nome} {origem.categoria_nome} {ROTULO_GENERO[origem.genero] || origem.genero}
                   </span>
-                  <span className="abertura-pontos">+{origem.pontos}</span>
+                  <span className="abertura-pontos">
+                    +{origem.pontos}{origem.provisoria && ' (provisório)'}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -228,13 +233,26 @@ function TabelaGeral() {
           <p className="page-subtitle">
             Cada competição encerrada dá {regras.pontuacao
               .filter((p) => regras.posicoes_que_pontuam.includes(p.posicao))
-              .map((p) => p.pontos).join(', ')} pontos às três primeiras colocadas.
+              .map((p) => p.pontos).join(', ')} pontos às {quantasPontuam === 3 ? 'três' : quantasPontuam} primeiras colocadas.
             Escolas com a mesma soma dividem a posição.
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>
 
-        {/* A regra que ainda falta: como saem o 4º e o 5º lugar */}
+        {/* 4º e 5º já pontuam, mas por uma regra que o chefe ainda vai confirmar */}
+        {provisorias.length > 0 && (
+          <div className="alert alert-aviso mb-lg">
+            <p className="alert-titulo">
+              ⚠️ {provisorias.map((p) => `${p}º`).join(' e ')} lugar provisórios — aguardando confirmação do chefe
+            </p>
+            <p className="alert-texto">
+              {regras.posicoes_provisorias.descricao} Os pontos que vêm dessas posições aparecem
+              marcados como provisórios na conta de cada escola.
+            </p>
+          </div>
+        )}
+
+        {/* Posição da pontuação que ainda não entra na conta, se houver */}
         {semRegra.length > 0 && (
           <div className="alert alert-aviso mb-lg">
             <p className="alert-titulo">⚠️ 4º e 5º lugar ainda sem regra</p>
