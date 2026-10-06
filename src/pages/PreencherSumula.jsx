@@ -191,11 +191,17 @@ function PreencherSumula() {
   const colunasDaTabela = 4 + (folha.rotuloEstatistica ? 1 : 0)
     + (folha.faltasIndividuais > 0 ? 1 : 0) + (folha.cartoes ? 2 : 0);
   // A regra de desempate vem do backend (src/config/regrasProvisorias.js):
-  // a tela não guarda cópia de qual modalidade joga prorrogação.
-  const desempate = sumula.desempate || { sequencia: ['PENALTIS'], nomeCobranca: 'pênaltis' };
+  // a tela não guarda cópia de qual modalidade joga prorrogação. Sem regra,
+  // não há cobrança genérica: o empate fica pendente com a organização.
+  const desempate = sumula.desempate || {
+    sequencia: [], nomeCobranca: null, pendente: true, motivo: 'a regra de desempate não chegou do servidor'
+  };
   const exigeProrrogacao = desempate.sequencia.includes('PRORROGACAO');
   const empatado = jogo.fase !== 'GRUPOS' && placar1 === placar2;
-  const precisaPenaltis = empatado && (!exigeProrrogacao || prorrogacao);
+  const empatePendente = empatado && Boolean(desempate.pendente);
+  // Só há cobrança onde a modalidade tem uma (o vôlei, por exemplo, não empata)
+  const precisaPenaltis = empatado && !desempate.pendente && Boolean(desempate.nomeCobranca)
+    && (!exigeProrrogacao || prorrogacao);
 
   return (
     <div className="page">
@@ -510,6 +516,17 @@ function PreencherSumula() {
           </div>
         )}
 
+        {empatePendente && (
+          <div className="alert alert-aviso mb-lg">
+            <p className="alert-titulo">⚠️ Empate no mata-mata: regra pendente</p>
+            <p className="alert-texto">
+              Em {jogo.modalidade_nome}, {desempate.motivo}. A regra está pendente com a
+              organização: salve a súmula sem finalizar e aguarde a decisão. O sistema não
+              finaliza este jogo empatado.
+            </p>
+          </div>
+        )}
+
         {precisaPenaltis && (
           <div className="card mb-lg">
             <div className="card-body">
@@ -524,7 +541,7 @@ function PreencherSumula() {
                   <span className="form-label">{equipes[0].escola_nome}</span>
                   <Contador
                     valor={penaltis.penaltis_1}
-                    rotulo="pênaltis da primeira equipe"
+                    rotulo={`${desempate.nomeCobranca} da primeira equipe`}
                     aoMudar={(v) => setPenaltis((p) => ({ ...p, penaltis_1: v }))}
                   />
                 </div>
@@ -532,7 +549,7 @@ function PreencherSumula() {
                   <span className="form-label">{equipes[1].escola_nome}</span>
                   <Contador
                     valor={penaltis.penaltis_2}
-                    rotulo="pênaltis da segunda equipe"
+                    rotulo={`${desempate.nomeCobranca} da segunda equipe`}
                     aoMudar={(v) => setPenaltis((p) => ({ ...p, penaltis_2: v }))}
                   />
                 </div>
