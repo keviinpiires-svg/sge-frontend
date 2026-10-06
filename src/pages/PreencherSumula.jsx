@@ -6,8 +6,7 @@ import { suspensosNoJogo } from '../services/suspensoes';
 
 const TEXTO_DO_PLACAR = {
   Gols: 'a soma dos gols lançados',
-  Pontos: 'a soma dos pontos lançados',
-  Eliminações: 'a soma das eliminações lançadas'
+  Pontos: 'a soma dos pontos lançados'
 };
 
 // A súmula é regravada inteira a cada envio, então o estado local é a folha
@@ -131,7 +130,12 @@ function PreencherSumula() {
           faltas_2t: equipe.faltas_2t,
           tempo_tecnico_1t: equipe.tempo_tecnico_1t,
           tempo_tecnico_2t: equipe.tempo_tecnico_2t,
-          atletas: equipe.atletas
+          baleados: equipe.baleados || 0,
+          // Folha sem coluna por atleta (baleado, vôlei): nada vai na coluna,
+          // nem o que uma súmula antiga tenha gravado nela
+          atletas: sumula.folha.rotuloEstatistica
+            ? equipe.atletas
+            : equipe.atletas.map((atleta) => ({ ...atleta, gols: 0 }))
         }))
       });
 
@@ -183,8 +187,18 @@ function PreencherSumula() {
     return total + (meus > deles ? 1 : 0);
   }, 0);
 
-  const placar1 = folha.sets ? setsVencidos(0) : golsDe(equipes[0]);
-  const placar2 = folha.sets ? setsVencidos(1) : golsDe(equipes[1]);
+  // No baleado cada equipe marca as SUAS atletas baleadas: o placar de uma é
+  // o contador da outra.
+  const baleadasDe = (equipe) => Number(equipe.baleados || 0);
+  let placar1 = golsDe(equipes[0]);
+  let placar2 = golsDe(equipes[1]);
+  if (folha.sets) {
+    placar1 = setsVencidos(0);
+    placar2 = setsVencidos(1);
+  } else if (folha.baleadosPorEquipe) {
+    placar1 = baleadasDe(equipes[1]);
+    placar2 = baleadasDe(equipes[0]);
+  }
 
   // Nº, atleta, capitão e presente são fixos; a coluna de estatística, as
   // faltas e os cartões dependem da folha da modalidade.
@@ -212,10 +226,12 @@ function PreencherSumula() {
           </p>
           <h1 className="page-title">Preencher Súmula</h1>
           <p className="page-subtitle">
-            {folha.sets
-              ? `O placar do jogo são os sets: vence quem ganhar ${folha.setsParaVencer} sets `
-                + `de ${folha.pontosPorSet} pontos, com 2 de vantagem.`
-              : `O placar é ${TEXTO_DO_PLACAR[folha.rotuloEstatistica]}: não existe campo de placar para digitar.`}
+            {folha.sets && `O placar do jogo são os sets: vence quem ganhar ${folha.setsParaVencer} sets `
+              + `de ${folha.pontosPorSet} pontos, com 2 de vantagem.`}
+            {folha.baleadosPorEquipe && 'Em cada equipe, marque as atletas DELA que foram baleadas: '
+              + 'o placar de uma equipe é o número de baleadas da adversária.'}
+            {!folha.sets && !folha.baleadosPorEquipe
+              && `O placar é ${TEXTO_DO_PLACAR[folha.rotuloEstatistica]}: não existe campo de placar para digitar.`}
           </p>
         </header>
 
@@ -440,6 +456,20 @@ function PreencherSumula() {
                     onChange={(e) => mudarEquipe(indice, 'tecnico_nome', e.target.value)}
                   />
                 </div>
+
+                {folha.baleadosPorEquipe > 0 && (
+                  <div className="form-group">
+                    <span className="form-label">
+                      Baleadas desta equipe <small>(0 a {folha.baleadosPorEquipe})</small>
+                    </span>
+                    <Contador
+                      valor={Number(equipe.baleados || 0)}
+                      max={folha.baleadosPorEquipe}
+                      rotulo={`atletas de ${equipe.escola_nome} baleadas`}
+                      aoMudar={(v) => mudarEquipe(indice, 'baleados', v)}
+                    />
+                  </div>
+                )}
 
                 {folha.faltasAcumuladas > 0 && (
                   <div className="form-group">

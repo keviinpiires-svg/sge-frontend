@@ -2,9 +2,9 @@ import CabecalhoFolha from './CabecalhoFolha';
 import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
 // Folha do futsal (docs/referencias/sumula_futsal_modelo.pdf). A mesma folha
-// vale para o Futebol Society e o Handebol — muda só o título — e, por decisão
-// provisória de 30/09/2026, para o Baleado, onde a grade conta ELIMINAÇÕES em
-// vez de gols. O papel traz 12 linhas; aqui são 14, o elenco do regulamento.
+// vale para o Futebol Society — muda só o título. Handebol e baleado têm folha
+// oficial própria desde 06/10/2026 (FolhaHandebol e FolhaBaleado). O papel traz
+// 12 linhas; aqui são 14, o elenco do regulamento.
 // O desenho (quantas caixas, quantas faltas, se tem cartão) vem do backend,
 // de src/config/folhasSumula.js.
 
@@ -12,14 +12,14 @@ import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 const lancouFalta = (total, indice, emBranco) => !emBranco && Number(total || 0) > indice;
 
 // A faixa da grade ocupa 42,35% da largura da folha (medido no PDF do futsal) e
-// é dividida pelo número de caixas: 11 no futsal, 14 no baleado. A largura vive
+// é dividida pelo número de caixas (11 no futsal). A largura vive
 // aqui, e não no CSS, para acompanhar o que folhasSumula.js definir.
 const FAIXA_DA_GRADE = 42.35;
 
 function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
   const caixas = folha.caixasEstatistica;
   const faltasPorTempo = folha.faltasAcumuladas;
-  // Sem faltas acumuladas (baleado) o rodapé tem só duas células
+  // Sem faltas acumuladas o rodapé tem só duas células
   const semFaltas = faltasPorTempo === 0;
   const larguraDaCaixa = `${(FAIXA_DA_GRADE / caixas).toFixed(3)}%`;
   const valor = (v) => (emBranco ? '' : (v ?? ''));

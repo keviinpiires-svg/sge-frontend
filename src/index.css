@@ -857,7 +857,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-tabela .c-numero { width: 5% }
 .folha-tabela .c-atleta { width: 24.8% }
 /* A largura da caixa da grade vem do componente (FolhaFutsal.jsx), porque
-   depende de quantas caixas a folha tem: 11 no futsal, 14 no baleado. */
+   depende de quantas caixas a folha tem (11 no futsal). */
 .folha-tabela .c-capitao { width: 15.2% }
 .folha-tabela .cartao { text-align: center; font-size: 6pt; color: #333; background: #e6e0f0; }
 .folha-tabela .numero { text-align: center; }
@@ -949,7 +949,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-rodape td { height: 6.6mm; }
 .folha-rodape .esquerda { text-align: left; font-size: 11pt; padding-left: 3pt; }
 .folha-rodape .tempo { width: 9%; font-size: 11pt; }
-/* Rodapé sem faltas acumuladas (baleado): o rótulo fica com a mesma faixa que
+/* Rodapé sem faltas acumuladas: o rótulo fica com a mesma faixa que
    ocuparia com elas, para o tempo técnico não esticar. */
 .folha-rodape .esquerda.larga { width: 38%; }
 .folha-rodape .falta { width: 4.4%; text-align: center; background: #d9d9d9; }
@@ -997,12 +997,9 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .oficial-tabela td { height: 6.1mm; }
 .oficial-tabela .esquerda { text-align: left; }
 .oficial-tabela .letra-cartao { font-size: 10.5pt; padding-left: 3pt; }
-/* A marca ✕ como texto preto: sem isto o navegador pode usar a fonte de emoji */
-.oficial-tabela .letra-cartao, .oficial-tabela .caixa-oficial, .oficial-rodape .caixa-tempo {
-  font-family: 'Segoe UI Symbol', 'DejaVu Sans', Calibri, sans-serif;
-  font-variant-emoji: text;
-  color: #000;
-}
+/* A marca é um X de texto, preto: o ✕ sai colorido na fonte de emoji do navegador */
+.oficial-tabela .letra-cartao, .oficial-tabela .caixa-oficial, .oficial-rodape .caixa-tempo { color: #000; }
+.oficial-tabela .caixa-oficial, .oficial-rodape .caixa-tempo { font-weight: 700; }
 .oficial-tabela .caixa-oficial { text-align: center; font-size: 9pt; }
 .oficial-tabela .numero-baleado { text-align: center; font-size: 10.5pt; }
 .oficial-tabela .capitao-oficial { vertical-align: top; }
@@ -1016,7 +1013,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .oficial-rodape .esquerda { text-align: left; padding-left: 3pt; vertical-align: top; }
 .oficial-rodape .caixa-tempo { height: 5.6mm; text-align: center; }
 .oficial-rodape .tecnico-oficial { vertical-align: bottom; padding-bottom: 1mm; }
-.oficial-rodape .tecnico-oficial .valor { color: #000; font-weight: 400; }
+.oficial-rodape .valor { color: #000; font-weight: 400; }
 .oficial-rodape .so-tecnico { height: 10mm; vertical-align: bottom; padding-bottom: 1mm; }
 
 /* A4 sem margem de página: a folha traz a própria margem, e assim o

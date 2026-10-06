@@ -6,6 +6,7 @@ import FolhaFutsal from '../components/folhas/FolhaFutsal';
 import FolhaBasquete from '../components/folhas/FolhaBasquete';
 import FolhaVolei from '../components/folhas/FolhaVolei';
 import FolhaHandebol from '../components/folhas/FolhaHandebol';
+import FolhaBaleado from '../components/folhas/FolhaBaleado';
 
 // A folha impressa segue os modelos em papel (docs/referencias/sumulas_modelos.md).
 // Qual folha cada modalidade usa vem do backend, de src/config/folhasSumula.js:
@@ -14,7 +15,8 @@ const FOLHAS = {
   FUTSAL: FolhaFutsal,
   BASQUETE: FolhaBasquete,
   VOLEI: FolhaVolei,
-  HANDEBOL: FolhaHandebol
+  HANDEBOL: FolhaHandebol,
+  BALEADO: FolhaBaleado
 };
 
 function DetalhesSumula() {
