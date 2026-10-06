@@ -21,15 +21,19 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   Tag do estado anterior: `v1-antes-do-novo-escopo`.
 - ⚠️ **Push na `feat/novo-escopo` = deploy em produção.** Não dê push sem o usuário pedir e sem
   testar antes com o backend local no banco de dev.
-- Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta atletismo). A fatia 10 foi executada com pendências de
+- Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta técnicos/dirigentes, se entrarem); **11 — atletismo** 📝
+  só planejada (nada implementado). A fatia 10 foi executada com pendências de
   produção (backup, senha, contas de mesa): veja `F:\System_jogos\CLAUDE.md`.
 - **Commits locais ainda NÃO publicados:** a resposta do chefe de 06/10/2026 às regras provisórias.
   A tela de agenda de jogos (`FormAgendaJogo`) já foi publicada em 05/10/2026.
 - **Regras respondidas pelo chefe em 06/10/2026** (seção 12.1 do contexto): a tabela geral mostra
   **só a soma geral** (os três blocos saíram) e escolas com a mesma soma **dividem a posição**
   (1, 1, 3); o aviso do "melhor segundo" agora só aparece quando as equipes comparadas têm números
-  de jogos diferentes. Seguem pendentes: 4º e 5º lugar, semifinal com 3 grupos, 3º lugar sem
-  semifinal, atletismo, xadrez/dama/dominó, número de contas de mesa e a súmula do baleado.
+  de jogos diferentes. No mesmo dia: a semifinal com 3 grupos ficou 1ºA × melhor 2º e 1ºB × 1ºC,
+  e o card do mata-mata mostra o aviso de revanche (vem em `observacao`) quando o melhor 2º é do
+  grupo A; o 3º lugar sem semifinal vale 6 pontos e perdeu a marca de "regra provisória". Seguem
+  pendentes: a revanche na semifinal, quem é o 4º e o 5º (valores 4 e 2 já decididos), atletismo
+  (fatia 11, planejada), xadrez/dama/dominó, número de contas de mesa e a súmula do baleado.
 
 ## Infraestrutura
 
