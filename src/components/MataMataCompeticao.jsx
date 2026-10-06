@@ -370,8 +370,9 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
           <div className="podio">
             <h3 className="card-title" style={{ marginTop: '24px' }}>Colocações</h3>
             {colocacoes.map((colocacao) => (
-              <div key={colocacao.posicao} className="podio-linha">
-                <span className="podio-medalha">{MEDALHA[colocacao.posicao] || colocacao.posicao}</span>
+              // A posição sozinha não basta de chave: o 5º pode ser dividido
+              <div key={`${colocacao.posicao}-${colocacao.equipe_id}`} className="podio-linha">
+                <span className="podio-medalha">{MEDALHA[colocacao.posicao] || `${colocacao.posicao}º`}</span>
                 <span className="podio-escola">{colocacao.escola_nome}</span>
                 <span className="podio-como">
                   {colocacao.como}
