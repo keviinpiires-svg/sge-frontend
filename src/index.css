@@ -962,6 +962,63 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-tempo .caixa { background: #d9d9d9; }
 .folha-tempo .tecnico { text-align: left; padding-left: 3pt; border-right: 0; }
 
+/* ---------- Folhas oficiais de 2026: handebol e baleado ----------
+   docs/referencias/SUMULA HANDEBOL.pdf e SUMULA BALEADO.pdf. Fundo branco
+   (o papel não tem as caixas cinzas/lilás do futsal), blocos de equipe com
+   borda própria e um espaço entre o cabeçalho e o primeiro bloco, como no
+   modelo. Larguras de coluna medidas no PDF, nos componentes. */
+.folha-oficial-cabecalho td { height: 5.4mm; font-size: 9pt; padding: 0 3pt; }
+.folha-oficial-cabecalho .linha-titulo td { height: 9mm; }
+.oficial-titulo { display: flex; align-items: center; justify-content: space-between; }
+.oficial-titulo img { height: 7.5mm; width: 32mm; object-fit: contain; }
+.oficial-titulo span { flex: 1; text-align: center; font-weight: 700; font-size: 10.5pt; }
+.oficial-linha { display: grid; grid-template-columns: 44% 33% 23%; align-items: center; }
+.oficial-linha .largura-2 { grid-column: span 2; }
+.oficial-linha .centro { text-align: center; }
+.folha-oficial-cabecalho .slot { display: inline-block; min-width: 7mm; text-align: center; }
+.folha-oficial-cabecalho .linha-equipes td { height: 13mm; vertical-align: top; padding-top: 1mm; }
+.oficial-confronto { display: grid; grid-template-columns: 30% 13% 13% 13% 31%; align-items: start; }
+.rotulo-oficial { color: #d40000; font-weight: 700; font-size: 9.5pt; }
+.oficial-confronto .rotulo-oficial:last-child { text-align: right; padding-right: 6mm; }
+.oficial-confronto .x { text-align: center; font-size: 13pt; padding-top: 3mm; }
+.caixa-placar-oficial {
+  display: flex; align-items: center; justify-content: center;
+  height: 11mm; border: 1.2pt solid #e8743b; border-radius: 1.6mm;
+  font-size: 13pt; font-weight: 700;
+}
+
+.folha-oficial-equipe { border: 1.2pt solid #000; margin-top: 7mm; }
+.folha-oficial-cabecalho + .folha-oficial-equipe { margin-top: 24mm; }
+.oficial-equipe-titulo {
+  height: 6.5mm; display: flex; align-items: center; justify-content: center;
+  color: #d40000; font-weight: 700; font-size: 11pt; border-bottom: 0.6pt solid #000;
+}
+.oficial-tabela th { height: 4.3mm; font-size: 9pt; }
+.oficial-tabela td { height: 6.1mm; }
+.oficial-tabela .esquerda { text-align: left; }
+.oficial-tabela .letra-cartao { font-size: 10.5pt; padding-left: 3pt; }
+/* A marca ✕ como texto preto: sem isto o navegador pode usar a fonte de emoji */
+.oficial-tabela .letra-cartao, .oficial-tabela .caixa-oficial, .oficial-rodape .caixa-tempo {
+  font-family: 'Segoe UI Symbol', 'DejaVu Sans', Calibri, sans-serif;
+  font-variant-emoji: text;
+  color: #000;
+}
+.oficial-tabela .caixa-oficial { text-align: center; font-size: 9pt; }
+.oficial-tabela .numero-baleado { text-align: center; font-size: 10.5pt; }
+.oficial-tabela .capitao-oficial { vertical-align: top; }
+.oficial-tabela .capitao-nome { display: block; margin-top: 2mm; color: #000; font-weight: 400; white-space: normal; }
+.oficial-tabela .linha-vazia td { height: 6.3mm; }
+/* O X de canto a canto da área de BALEADOS que não se usa */
+.oficial-tabela .area-riscada { position: relative; padding: 0; }
+.oficial-tabela .area-riscada svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.oficial-rodape td { height: 4.3mm; font-size: 9pt; }
+.oficial-rodape .esquerda { text-align: left; padding-left: 3pt; vertical-align: top; }
+.oficial-rodape .caixa-tempo { height: 5.6mm; text-align: center; }
+.oficial-rodape .tecnico-oficial { vertical-align: bottom; padding-bottom: 1mm; }
+.oficial-rodape .tecnico-oficial .valor { color: #000; font-weight: 400; }
+.oficial-rodape .so-tecnico { height: 10mm; vertical-align: bottom; padding-bottom: 1mm; }
+
 /* A4 sem margem de página: a folha traz a própria margem, e assim o
    navegador não imprime cabeçalho nem rodapé dele. */
 @page { size: A4 portrait; margin: 0; }
