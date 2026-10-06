@@ -127,7 +127,10 @@ function TabelaGeral() {
     );
   }
 
-  const { blocos, geral, ajustes, competicoes, regras } = dados;
+  const { geral, ajustes, competicoes, regras } = dados;
+  // Mesma soma, mesma posição (decisão de 06/10/2026): a posição vem pronta do
+  // backend, e as empatadas em 1º são todas campeãs gerais.
+  const campeas = geral.filter((escola) => escola.posicao === 1);
   const semRegra = regras.posicoes_sem_regra || [];
 
   // De onde vieram os pontos de uma escola, agrupado para a tela
@@ -167,7 +170,7 @@ function TabelaGeral() {
     </tr>
   );
 
-  const renderTabela = (escolasDaTabela, { comAjustes }) => (
+  const renderTabela = (escolasDaTabela) => (
     <div className="table-wrap">
       <table className="table-sge compact">
         <thead>
@@ -178,18 +181,18 @@ function TabelaGeral() {
             <th title="Primeiros lugares">🥇</th>
             <th title="Segundos lugares">🥈</th>
             <th title="Terceiros lugares">🥉</th>
-            {comAjustes && <th title="Punições da Comissão">⚖️</th>}
+            <th title="Punições da Comissão">⚖️</th>
           </tr>
         </thead>
         <tbody>
           {escolasDaTabela.map((escola) => {
-            const abertaAqui = aberta === `${comAjustes ? 'geral' : 'bloco'}:${escola.escola_id}`;
+            const abertaAqui = aberta === escola.escola_id;
 
             return [
               <tr
                 key={escola.escola_id}
                 className="linha-clicavel"
-                onClick={() => setAberta(abertaAqui ? null : `${comAjustes ? 'geral' : 'bloco'}:${escola.escola_id}`)}
+                onClick={() => setAberta(abertaAqui ? null : escola.escola_id)}
               >
                 <td>
                   <span className={`rank ${escola.posicao <= 3 ? `rank-${escola.posicao}` : ''}`}>
@@ -204,11 +207,9 @@ function TabelaGeral() {
                 <td className="text-soft">{escola.primeiros}</td>
                 <td className="text-soft">{escola.segundos}</td>
                 <td className="text-soft">{escola.terceiros}</td>
-                {comAjustes && (
-                  <td className={escola.ajustes ? 'text-danger' : 'text-soft'}>
-                    {escola.ajustes || '—'}
-                  </td>
-                )}
+                <td className={escola.ajustes ? 'text-danger' : 'text-soft'}>
+                  {escola.ajustes || '—'}
+                </td>
               </tr>,
               abertaAqui ? { ...renderAbertura(escola), key: `abertura-${escola.escola_id}` } : null
             ].filter(Boolean);
@@ -228,11 +229,12 @@ function TabelaGeral() {
             Cada competição encerrada dá {regras.pontuacao
               .filter((p) => regras.posicoes_que_pontuam.includes(p.posicao))
               .map((p) => p.pontos).join(', ')} pontos às três primeiras colocadas.
+            Escolas com a mesma soma dividem a posição.
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>
 
-        {/* As duas regras que ainda não são do regulamento */}
+        {/* A regra que ainda falta: como saem o 4º e o 5º lugar */}
         {semRegra.length > 0 && (
           <div className="alert alert-aviso mb-lg">
             <p className="alert-titulo">⚠️ 4º e 5º lugar ainda sem regra</p>
@@ -242,15 +244,6 @@ function TabelaGeral() {
               mas o regulamento não diz como essas colocações saem. Enquanto não houver regra, a tabela
               distribui só {regras.pontuacao.filter((p) => regras.posicoes_que_pontuam.includes(p.posicao))
                 .map((p) => p.pontos).join(', ')} por competição.
-            </p>
-          </div>
-        )}
-
-        {regras.blocos.provisoria && (
-          <div className="alert alert-aviso mb-lg">
-            <p className="alert-titulo">⚠️ Divisão dos blocos ainda provisória</p>
-            <p className="alert-texto">
-              {regras.blocos.descricao} Decidido em {regras.blocos.decidido_em}.
             </p>
           </div>
         )}
@@ -270,27 +263,19 @@ function TabelaGeral() {
             </div>
           </div>
         ) : (
-          <>
-            <section className="card mb-lg">
-              <div className="card-body" style={{ paddingBottom: 0 }}>
-                <h2 className="card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>
-                  Soma geral
-                </h2>
-              </div>
-              {renderTabela(geral, { comAjustes: true })}
-            </section>
-
-            {blocos.map((bloco) => (
-              <section key={bloco.etapa} className="card mb-lg">
-                <div className="card-body" style={{ paddingBottom: 0 }}>
-                  <h2 className="card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>
-                    {bloco.etapa}
-                  </h2>
-                </div>
-                {renderTabela(bloco.escolas, { comAjustes: false })}
-              </section>
-            ))}
-          </>
+          <section className="card mb-lg">
+            <div className="card-body" style={{ paddingBottom: 0 }}>
+              <h2 className="card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>
+                Soma geral
+              </h2>
+              {campeas.length > 1 && (
+                <p className="state-text" style={{ textAlign: 'left', margin: '8px 0 0' }}>
+                  🏆 {campeas.length} escolas empatadas em 1º lugar: todas são campeãs gerais.
+                </p>
+              )}
+            </div>
+            {renderTabela(geral)}
+          </section>
         )}
 
         {/* Punições: a lista é pública, os botões não */}

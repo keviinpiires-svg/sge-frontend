@@ -318,17 +318,12 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
 
         {aviso && <p className={`alert alert-${aviso.tipo} mb-lg`}>{aviso.texto}</p>}
 
-        {/* O "melhor segundo" é comparado por uma regra que ainda é nossa */}
-        {comparacao?.provisoria && comparacao.equipes_descartadas?.length > 0 && (
+        {/* Os segundos são comparados com todos os jogos (decisão de 06/10/2026);
+            o backend só manda o aviso quando eles jogaram números diferentes */}
+        {comparacao?.aviso_jogos_diferentes && (
           <div className="alert alert-aviso mb-lg">
-            <p className="alert-titulo">⚠️ Comparação entre grupos ainda provisória</p>
-            <p className="alert-texto">
-              Os grupos têm tamanhos diferentes, então os jogos contra o último colocado dos
-              grupos maiores foram descartados para comparar todo mundo pelo mesmo número de
-              partidas — decisão de {comparacao.decidido_em}, a confirmar.
-              {comparacao.jogos_descartados > 0
-                && ` ${comparacao.jogos_descartados} jogo(s) ficaram de fora da conta.`}
-            </p>
+            <p className="alert-titulo">⚠️ Equipes comparadas com números de jogos diferentes</p>
+            <p className="alert-texto">{comparacao.aviso_jogos_diferentes}</p>
           </div>
         )}
 

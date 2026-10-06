@@ -23,8 +23,13 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   testar antes com o backend local no banco de dev.
 - Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta atletismo). A fatia 10 foi executada com pendências de
   produção (backup, senha, contas de mesa): veja `F:\System_jogos\CLAUDE.md`.
-- **Commits locais ainda NÃO publicados:** a tela de marcar/editar data, hora e local do jogo
-  (`FormAgendaJogo`, na tabela de jogos e no card do mata-mata). O sistema no ar ainda não a tem.
+- **Commits locais ainda NÃO publicados:** a resposta do chefe de 06/10/2026 às regras provisórias.
+  A tela de agenda de jogos (`FormAgendaJogo`) já foi publicada em 05/10/2026.
+- **Regras respondidas pelo chefe em 06/10/2026** (seção 12.1 do contexto): a tabela geral mostra
+  **só a soma geral** (os três blocos saíram) e escolas com a mesma soma **dividem a posição**
+  (1, 1, 3); o aviso do "melhor segundo" agora só aparece quando as equipes comparadas têm números
+  de jogos diferentes. Seguem pendentes: 4º e 5º lugar, semifinal com 3 grupos, 3º lugar sem
+  semifinal, atletismo, xadrez/dama/dominó, número de contas de mesa e a súmula do baleado.
 
 ## Infraestrutura
 
@@ -88,7 +93,7 @@ src/context/              AuthContext, useAuth (isAdmin, isPlacar, podeLancar, p
   comando apontado para lá.
 - Dúvida de regra do campeonato: **pare e pergunte**. Itens **[PENDENTE]** (seção 12 do contexto) não
   se implementam por conta própria. Decisão provisória mora em config (no backend:
-  `src/config/regrasProvisorias.js`, `chavesMataMata.js`, `folhasSumula.js`, `blocosTabelaGeral.js`)
+  `src/config/regrasProvisorias.js`, `chavesMataMata.js`, `folhasSumula.js`)
   e na seção 12.1, nunca copiada dentro de um componente. Quando a API marca algo como provisório,
   a tela **mostra o aviso**.
 - **Fatias:** só a tabela da seção 9 do contexto numera. Cite número e nome e atualize o estado dela
