@@ -31,9 +31,12 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   (1, 1, 3); o aviso do "melhor segundo" agora só aparece quando as equipes comparadas têm números
   de jogos diferentes. No mesmo dia: a semifinal com 3 grupos ficou 1ºA × melhor 2º e 1ºB × 1ºC,
   e o card do mata-mata mostra o aviso de revanche (vem em `observacao`) quando o melhor 2º é do
-  grupo A; o 3º lugar sem semifinal vale 6 pontos e perdeu a marca de "regra provisória". Seguem
-  pendentes: a revanche na semifinal, quem é o 4º e o 5º (valores 4 e 2 já decididos), atletismo
-  (fatia 11, planejada), xadrez/dama/dominó, número de contas de mesa e a súmula do baleado.
+  grupo A; o 3º lugar sem semifinal vale 6 pontos e perdeu a marca de "regra provisória". O 4º e
+  o 5º lugar pontuam (4 e 2) por regra provisória: a tabela geral mostra o aviso e marca esses
+  pontos. Na súmula não há mais pênalti genérico: modalidade com regra de empate pendente (hoje o
+  baleado) mostra o aviso e o jogo não é finalizado empatado. Seguem pendentes: a revanche na
+  semifinal, o empate do baleado, atletismo (fatia 11, planejada), xadrez/dama/dominó, número de
+  contas de mesa e a súmula do baleado.
 
 ## Infraestrutura
 
