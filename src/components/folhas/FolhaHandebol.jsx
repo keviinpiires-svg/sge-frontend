@@ -51,12 +51,12 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
 
             return (
               <tr key={atleta ? atleta.atleta_id : `vazia-${linha}`}>
-                <td className="letra-cartao">{lancado && atleta.amarelos >= 1 ? '✕' : 'A'}</td>
-                <td className="letra-cartao">{lancado && atleta.vermelho ? '✕' : 'V'}</td>
+                <td className="letra-cartao">{lancado && atleta.amarelos >= 1 ? 'X' : 'A'}</td>
+                <td className="letra-cartao">{lancado && atleta.vermelho ? 'X' : 'V'}</td>
                 <td className="numero">{atleta ? (atleta.numero_camisa ?? '') : ''}</td>
                 <td className="atleta">{atleta ? atleta.nome : ''}</td>
                 {sequencia(caixas).map((i) => (
-                  <td key={i} className="caixa-oficial">{i < gols ? '✕' : ''}</td>
+                  <td key={i} className="caixa-oficial">{i < gols ? 'X' : ''}</td>
                 ))}
               </tr>
             );
@@ -81,8 +81,8 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
             </td>
           </tr>
           <tr>
-            <td className="caixa-tempo">{!emBranco && equipe.tempo_tecnico_1t ? '✕' : ''}</td>
-            <td className="caixa-tempo">{!emBranco && equipe.tempo_tecnico_2t ? '✕' : ''}</td>
+            <td className="caixa-tempo">{!emBranco && equipe.tempo_tecnico_1t ? 'X' : ''}</td>
+            <td className="caixa-tempo">{!emBranco && equipe.tempo_tecnico_2t ? 'X' : ''}</td>
           </tr>
         </tbody>
       </table>
