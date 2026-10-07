@@ -37,6 +37,12 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   baleado) mostra o aviso e o jogo não é finalizado empatado. Seguem pendentes: a revanche na
   semifinal, o empate do baleado, atletismo (fatia 11, planejada), xadrez/dama/dominó, número de
   contas de mesa e a súmula do baleado.
+- **Respostas do chefe de 07/10/2026:** 4º e 5º lugar e a revanche na semifinal viraram definitivos
+  (os avisos saíram da tabela geral e do card do mata-mata); a tabela geral mostra o critério de
+  desempate (mais 1ºs, depois 2ºs e 3ºs); a súmula do baleado tem o quadro "Acréscimo de 4 minutos"
+  na final empatada; handebol e baleado com folhas de 12 linhas sempre; grade do vôlei de 1 a 30.
+  Pendentes: empate do baleado na semifinal e no ida e volta, tamanho do set do vôlei, contas de mesa e
+  o lançamento de resultado de atletismo, xadrez, dama e dominó (fatia 11, só planejada).
 
 ## Infraestrutura
 
