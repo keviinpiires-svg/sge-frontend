@@ -23,6 +23,8 @@ function PreencherSumula() {
   const [penaltis, setPenaltis] = useState({ penaltis_1: 0, penaltis_2: 0 });
   const [sets, setSets] = useState(null);       // vôlei: os três sets do papel
   const [prorrogacao, setProrrogacao] = useState(false);
+  // Final do baleado empatada: a equipe que baleou primeiro no acréscimo
+  const [baleouPrimeiro, setBaleouPrimeiro] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
   const [suspensao, setSuspensao] = useState(null);
@@ -44,6 +46,7 @@ function PreencherSumula() {
           penaltis_1: dados.jogo.penaltis_1 ?? 0,
           penaltis_2: dados.jogo.penaltis_2 ?? 0
         });
+        setBaleouPrimeiro(dados.jogo.baleou_primeiro_equipe_id ?? null);
       })
       .catch((falha) => {
         if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
@@ -122,6 +125,7 @@ function PreencherSumula() {
         penaltis_1: penaltis.penaltis_1,
         penaltis_2: penaltis.penaltis_2,
         prorrogacao,
+        baleou_primeiro_equipe_id: baleouPrimeiro,
         sets,
         equipes: equipes.map((equipe) => ({
           equipe_id: equipe.equipe_id,
@@ -212,7 +216,10 @@ function PreencherSumula() {
   };
   const exigeProrrogacao = desempate.sequencia.includes('PRORROGACAO');
   const empatado = jogo.fase !== 'GRUPOS' && placar1 === placar2;
-  const empatePendente = empatado && Boolean(desempate.pendente);
+  // Final do baleado (07/10/2026): acréscimo de 4 minutos, vence quem balear
+  // primeiro. Fora da final, o empate do baleado no mata-mata segue pendente.
+  const acrescimoDaFinal = empatado && Boolean(desempate.pendente && desempate.final) && jogo.fase === 'FINAL';
+  const empatePendente = empatado && Boolean(desempate.pendente) && !acrescimoDaFinal;
   // Só há cobrança onde a modalidade tem uma (o vôlei, por exemplo, não empata)
   const precisaPenaltis = empatado && !desempate.pendente && Boolean(desempate.nomeCobranca)
     && (!exigeProrrogacao || prorrogacao);
@@ -542,6 +549,28 @@ function PreencherSumula() {
                 />{' '}
                 Houve prorrogação e o empate continuou
               </label>
+            </div>
+          </div>
+        )}
+
+        {acrescimoDaFinal && (
+          <div className="card mb-lg">
+            <div className="card-body">
+              <h2 className="card-title">Acréscimo de {desempate.final.minutosDeAcrescimo} minutos</h2>
+              <p className="form-hint">{desempate.final.descricao} Marque a equipe que baleou primeiro.</p>
+              <div className="linha-checks">
+                {equipes.map((equipe) => (
+                  <label key={equipe.equipe_id}>
+                    <input
+                      type="radio"
+                      name="baleou-primeiro"
+                      checked={baleouPrimeiro === equipe.equipe_id}
+                      onChange={() => setBaleouPrimeiro(equipe.equipe_id)}
+                    />{' '}
+                    {equipe.escola_nome}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         )}
