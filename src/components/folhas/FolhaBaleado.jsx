@@ -1,7 +1,7 @@
 import CabecalhoOficial from './CabecalhoOficial';
 import { completarLinhas, sequencia, letraDaEquipe, linhasDaFolha } from './comum';
 
-// Folha oficial do baleado (docs/referencias/SUMULA BALEADO.pdf). Por equipe:
+// Folha oficial do baleado (docs/referencias/SUMULA_BALEADO.pdf). Por equipe:
 // Nº | ATLETAS | BALEADOS | CAPITÃO: e, no rodapé, só o TÉCNICO. Não tem
 // cartões, faltas nem tempo técnico.
 //

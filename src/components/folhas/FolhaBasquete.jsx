@@ -1,7 +1,7 @@
 import CabecalhoFolha from './CabecalhoFolha';
 import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
-// Folha do basquete (docs/referencias/sumula_basquete_modelo.pdf).
+// Folha do basquete (docs/referencias/SUMULA_BASQUETE_MODELO.pdf).
 // Colunas do papel: FALTAS INDIVIDUAIS (1 a 5), Nº, ATLETAS, PONTOS e o
 // Capitão na faixa da direita. Rodapé: FALTAS ACUMULATIVAS 1ºT e 2ºT (1 a 7),
 // TEMPO TÉCNICO e TÉCNICO. Não há cartões.

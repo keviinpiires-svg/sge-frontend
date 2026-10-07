@@ -1,6 +1,6 @@
 import { completarLinhas, sequencia, partesDaData, letraDaEquipe } from './comum';
 
-// Folha do vôlei (docs/referencias/sumula_volei_modelo.pdf). É uma folha à
+// Folha do vôlei (docs/referencias/SUMULA_VOLEI_MODELO.pdf). É uma folha à
 // parte, não uma variação da do futsal:
 //  - cabeçalho sem caixa de placar (o resultado fica no rodapé);
 //  - as duas equipes LADO A LADO, com nome da equipe e assinatura do capitão;

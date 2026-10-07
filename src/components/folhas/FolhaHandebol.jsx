@@ -1,7 +1,7 @@
 import CabecalhoOficial from './CabecalhoOficial';
 import { completarLinhas, sequencia, letraDaEquipe, linhasDaFolha } from './comum';
 
-// Folha oficial do handebol (docs/referencias/SUMULA HANDEBOL.pdf). Por equipe:
+// Folha oficial do handebol (docs/referencias/SUMULA_HANDEBOL.pdf). Por equipe:
 // CARTÕES (A e V) | Nº | ATLETAS | GOLS (10 caixas) | CAPITÃO: — uma célula
 // só, onde se escreve o nome —, e no rodapé TEMPO TÉCNICO 1º T / 2ºT e
 // TÉCNICO. Não tem falta individual nem falta acumulada. As caixas de gols e

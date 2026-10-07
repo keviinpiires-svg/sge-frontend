@@ -1,7 +1,7 @@
 import { partesDaData } from './comum';
 
 // Cabeçalho das folhas oficiais de 2026 (handebol e baleado), linha a linha
-// como no papel (docs/referencias/SUMULA HANDEBOL.pdf e SUMULA BALEADO.pdf):
+// como no papel (docs/referencias/SUMULA_HANDEBOL.pdf e SUMULA_BALEADO.pdf):
 //   1. logo dos Jogos | título | logo da Prefeitura
 //   2. CAMPEONATO: JOGOS ESTUDANTIS 2026 (fixo)
 //   3. LOCAL | CIDADE (fixa: Barra do Choça)

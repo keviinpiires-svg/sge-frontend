@@ -797,7 +797,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .linha-checks { display: flex; gap: 16px; align-items: center; font-size: 14px; }
 
 /* ---------- Súmula: folha para impressão ----------
-   Segue docs/referencias/sumula_futsal_modelo.pdf. Medidas em mm porque a
+   Segue docs/referencias/SUMULA_FUTSAL_MODELO.pdf. Medidas em mm porque a
    folha é um documento de papel: A4 retrato, uma página, 14 linhas por
    equipe. O quadriculado fica vazio para ser preenchido à mão.            */
 .no-print { }
@@ -867,7 +867,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-tabela .celula-capitao-topo { border-bottom: 0; }
 .texto-vertical { writing-mode: vertical-rl; transform: rotate(180deg); font-weight: 600; font-size: 9pt; }
 
-/* Folha do basquete (docs/referencias/sumula_basquete_modelo.pdf).
+/* Folha do basquete (docs/referencias/SUMULA_BASQUETE_MODELO.pdf).
    As larguras saem das colunas do papel, medidas no PDF: faltas individuais
    ocupam a faixa da esquerda, a grade de PONTOS a da direita e o Capitão a
    tira final. A coluna "Pts" (pontos do atleta) é acréscimo do sistema.   */
@@ -894,7 +894,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .grade-pontos td.marcada { background: #9b9b9b; font-weight: 700; }
 
-/* ---------- Folha do vôlei (docs/referencias/sumula_volei_modelo.pdf) ----------
+/* ---------- Folha do vôlei (docs/referencias/SUMULA_VOLEI_MODELO.pdf) ----------
    Desenho próprio: cabeçalho sem caixa de placar, as duas equipes lado a lado,
    o controle dos três sets e o resultado final no rodapé. O papel traz 12
    linhas de atleta; aqui são 14, com a linha mais baixa para caber na página. */
@@ -963,7 +963,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-tempo .tecnico { text-align: left; padding-left: 3pt; border-right: 0; }
 
 /* ---------- Folhas oficiais de 2026: handebol e baleado ----------
-   docs/referencias/SUMULA HANDEBOL.pdf e SUMULA BALEADO.pdf. Fundo branco
+   docs/referencias/SUMULA_HANDEBOL.pdf e SUMULA_BALEADO.pdf. Fundo branco
    (o papel não tem as caixas cinzas/lilás do futsal), blocos de equipe com
    borda própria e um espaço entre o cabeçalho e o primeiro bloco, como no
    modelo. Larguras de coluna medidas no PDF, nos componentes. */

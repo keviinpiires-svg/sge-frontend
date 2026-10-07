@@ -1,7 +1,7 @@
 import CabecalhoFolha from './CabecalhoFolha';
 import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
-// Folha do futsal (docs/referencias/sumula_futsal_modelo.pdf). A mesma folha
+// Folha do futsal (docs/referencias/SUMULA_FUTSAL_MODELO.pdf). A mesma folha
 // vale para o Futebol Society — muda só o título. Handebol e baleado têm folha
 // oficial própria desde 06/10/2026 (FolhaHandebol e FolhaBaleado). O papel traz
 // 12 linhas; aqui são 14, o elenco do regulamento.
