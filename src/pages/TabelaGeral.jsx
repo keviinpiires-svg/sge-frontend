@@ -128,8 +128,8 @@ function TabelaGeral() {
   }
 
   const { geral, ajustes, competicoes, regras } = dados;
-  // Mesma soma, mesma posição (decisão de 06/10/2026): a posição vem pronta do
-  // backend, e as empatadas em 1º são todas campeãs gerais.
+  // A posição vem pronta do backend: mesma soma desempata por 1ºs, 2ºs e 3ºs, e
+  // empatadas em tudo dividem a posição (empatadas em 1º são todas campeãs).
   const campeas = geral.filter((escola) => escola.posicao === 1);
   const semRegra = regras.posicoes_sem_regra || [];
   // 4º e 5º entram pela regra provisória (aguardando o chefe)
@@ -234,7 +234,7 @@ function TabelaGeral() {
             Cada competição encerrada dá {regras.pontuacao
               .filter((p) => regras.posicoes_que_pontuam.includes(p.posicao))
               .map((p) => p.pontos).join(', ')} pontos às {quantasPontuam === 3 ? 'três' : quantasPontuam} primeiras colocadas.
-            Escolas com a mesma soma dividem a posição.
+            {regras.desempate?.descricao || 'Escolas com a mesma soma dividem a posição.'}
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>
