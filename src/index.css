@@ -913,7 +913,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .volei-assinatura { height: 7mm; display: flex; align-items: center; padding: 0 2mm; border-top: 0.6pt solid #000; }
 
 .volei-elenco th { height: 5mm; font-size: 10pt; }
-.volei-elenco td { height: 6.4mm; }
+.volei-elenco td { height: 6mm; }
 .volei-elenco .c-numero { width: 16% }
 .volei-elenco .c-atleta { width: 84% }
 .volei-elenco .numero { text-align: center; }
@@ -934,7 +934,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 
 .grade-set { table-layout: fixed; }
 .grade-set td {
-  border: 0.4pt solid #000; padding: 0; height: 4.6mm;
+  /* 6 linhas de 5 (1 a 30): célula mais baixa para a folha caber em uma página */
+  border: 0.4pt solid #000; padding: 0; height: 4mm;
   text-align: center; font-size: 6.5pt; background: #e6e0f0;
 }
 .grade-set td.marcada { background: #9b9b9b; font-weight: 700; }

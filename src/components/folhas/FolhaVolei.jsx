@@ -1,11 +1,12 @@
 import { completarLinhas, sequencia, partesDaData, letraDaEquipe } from './comum';
 
-// Folha do vôlei (docs/referencias/SUMULA_VOLEI_MODELO.pdf). É uma folha à
+// Folha do vôlei (docs/referencias/SUMULA_VOLEIBOL.pdf). É uma folha à
 // parte, não uma variação da do futsal:
 //  - cabeçalho sem caixa de placar (o resultado fica no rodapé);
 //  - as duas equipes LADO A LADO, com nome da equipe e assinatura do capitão;
 //  - CONTROLE DOS SETS: 3 sets, cada um com Saque A / Saque B, a sequência de
-//    pontos 1 a 20 por equipe e o placar do set;
+//    pontos por equipe (1 a 30 desde 07/10/2026; o papel traz 1 a 20) e o
+//    placar do set;
 //  - RESULTADO FINAL: sets de cada equipe, vencedor, observações e as
 //    assinaturas dos árbitros.
 // Não há gols, cartões, faltas nem tempo técnico.
@@ -21,8 +22,8 @@ import { completarLinhas, sequencia, partesDaData, letraDaEquipe } from './comum
 // set só, "1 SETS" ficaria errado.
 const rotuloSets = (quantos, emBranco) => (!emBranco && quantos === 1 ? 'SET' : 'SETS');
 
-// Coluna de uma equipe dentro de um set: a sequência 1 a 20, marcada até o
-// ponto que a equipe fez.
+// Coluna de uma equipe dentro de um set: a sequência de folha.gradeDoSet
+// (1 a 30), marcada até o ponto que a equipe fez.
 function GradeDoSet({ pontos, folha }) {
   const { ate, porLinha } = folha.gradeDoSet;
   const linhas = Math.ceil(ate / porLinha);
