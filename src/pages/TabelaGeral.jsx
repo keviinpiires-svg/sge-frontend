@@ -233,8 +233,8 @@ function TabelaGeral() {
           <p className="page-subtitle">
             Cada competição encerrada dá {regras.pontuacao
               .filter((p) => regras.posicoes_que_pontuam.includes(p.posicao))
-              .map((p) => p.pontos).join(', ')} pontos às {quantasPontuam === 3 ? 'três' : quantasPontuam} primeiras colocadas.
-            {regras.desempate?.descricao || 'Escolas com a mesma soma dividem a posição.'}
+              .map((p) => p.pontos).join(', ')} pontos às {quantasPontuam === 3 ? 'três' : quantasPontuam} primeiras colocadas.{' '}
+            {regras.desempate?.descricao || 'Escolas com a mesma soma dividem a posição.'}{' '}
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>
