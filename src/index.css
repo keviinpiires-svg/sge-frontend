@@ -520,14 +520,48 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .nav-link:hover { color: var(--sge-accent); background: rgba(241, 196, 15, 0.08); }
 .nav-link.active { color: var(--sge-accent); background: rgba(241, 196, 15, 0.12); }
 .navbar-session { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-shrink: 0; }
+/* Acima de 768 px o invólucro do menu some do layout (display: contents) e os
+   links e a sessão continuam filhos diretos da barra, como antes */
+.navbar-menu { display: contents; }
+.navbar-toggle { display: none; }
 .navbar-user { font-size: 13px; font-weight: 600; color: var(--sge-text-soft); white-space: nowrap; }
 
 /* ---------- Responsivo ---------- */
-@media (max-width: 760px) {
-  .navbar { flex-direction: column; align-items: stretch; gap: 4px; padding: 10px 16px 8px; }
-  .navbar-brand { justify-content: center; }
-  .navbar-session { margin-left: 0; justify-content: center; padding-bottom: 4px; }
-  .navbar-user { overflow: hidden; text-overflow: ellipsis; }
+/* Até 768 px: título à esquerda, botão de menu à direita, e os itens abrem
+   numa lista vertical logo abaixo da barra */
+@media (max-width: 768px) {
+  .navbar { flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 6px 8px 6px 16px; min-height: 60px; }
+  .navbar-brand { min-width: 0; white-space: nowrap; }
+  .navbar-toggle {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 48px; height: 48px; padding: 0;
+    background: transparent; color: var(--sge-accent);
+    border: 1px solid rgba(241, 196, 15, 0.35); border-radius: var(--sge-radius-sm);
+    cursor: pointer;
+  }
+  .navbar-toggle:hover, .navbar-toggle[aria-expanded="true"] { background: rgba(241, 196, 15, 0.12); }
+  .navbar-toggle:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+  .navbar-toggle svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+
+  .navbar-menu {
+    display: none;
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; gap: 4px;
+    max-height: calc(100vh - 64px); overflow-y: auto;
+    padding: 8px 12px 12px;
+    background: var(--sge-primary-dark);
+    border-bottom: 2px solid var(--sge-accent);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+  }
+  .navbar-menu.aberto { display: flex; }
+  .navbar-links { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 2px; }
+  .nav-link { display: flex; align-items: center; min-height: 44px; padding: 10px 14px; font-size: 16px; }
+  .navbar-session {
+    flex-direction: column; align-items: stretch; gap: 8px; margin-left: 0;
+    padding-top: 8px; border-top: 1px solid var(--sge-border);
+  }
+  .navbar-session .btn { min-height: 44px; font-size: 16px; justify-content: center; }
+  .navbar-user { padding: 4px 14px; overflow: hidden; text-overflow: ellipsis; }
 }
 
 @media (max-width: 600px) {
