@@ -9,6 +9,11 @@ import { dataPorExtenso, soAHora } from '../services/datas';
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
 
+// Botão "Reiniciar Campeonato" desativado a pedido do usuário (07/10/2026):
+// a Zona de Perigo não aparece nem para o ADMIN. A rota DELETE
+// /api/campeonato/reset continua no backend; para reativar, troque para true.
+const REINICIAR_CAMPEONATO_ATIVO = false;
+
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
 const formatarData = (dataStr) => dataPorExtenso(dataStr);
@@ -332,7 +337,7 @@ function Inicio() {
 
         {renderConteudo()}
 
-        {isAdmin && !carregando && !erro && (
+        {REINICIAR_CAMPEONATO_ATIVO && isAdmin && !carregando && !erro && (
           <section className="card danger-zone mt-lg">
             <div className="card-body">
               <h3 className="card-title">⚠️ Zona de Perigo</h3>
