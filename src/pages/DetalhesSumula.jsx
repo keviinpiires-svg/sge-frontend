@@ -138,16 +138,25 @@ function DetalhesSumula() {
             </div>
           </div>
         ) : (
-          <div ref={folhaRef} className={`folha-sumula print-area folha-tipo-${folha.tipo.toLowerCase()}`}>
-            <Folha
-              evento={evento}
-              jogo={jogo}
-              equipes={equipes}
-              sets={sets}
-              folha={folha}
-              emBranco={emBranco}
-            />
-          </div>
+          <>
+            {/* A folha tem o tamanho do papel (A4). Em tela estreita ela rola de
+                lado dentro deste quadro, sem alargar a página */}
+            <p className="folha-dica no-print">
+              A folha está no tamanho do papel (A4). Arraste para o lado para ver a folha inteira.
+            </p>
+            <div className="folha-rolagem">
+              <div ref={folhaRef} className={`folha-sumula print-area folha-tipo-${folha.tipo.toLowerCase()}`}>
+                <Folha
+                  evento={evento}
+                  jogo={jogo}
+                  equipes={equipes}
+                  sets={sets}
+                  folha={folha}
+                  emBranco={emBranco}
+                />
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -850,6 +850,14 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   border: 1px solid #ccc;
 }
 
+/* Na tela, a folha rola de lado dentro deste quadro quando não cabe (celular),
+   e a página não alarga. A dica só aparece até 768 px. */
+.folha-rolagem { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.folha-dica { display: none; margin: 12px 0 8px; font-size: 13px; color: var(--sge-text-muted); }
+@media (max-width: 768px) {
+  .folha-dica { display: block; }
+}
+
 .folha-sumula table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .folha-sumula td, .folha-sumula th { border: 0.6pt solid #000; padding: 0 2pt; vertical-align: middle; }
 .folha-sumula .rotulo { color: #d40000; font-weight: 600; text-align: center; white-space: nowrap; }
@@ -1061,6 +1069,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 
   /* Só a folha vai para o papel: menu, botões e o enquadramento da tela somem */
   .navbar, .painel-modalidades, .menu-lateral { display: none !important; }
+  .folha-rolagem { overflow: visible !important; }
   .page { padding: 0 !important; }
   .container, .container-sm, .container-lg { max-width: none !important; margin: 0 !important; padding: 0 !important; }
 
