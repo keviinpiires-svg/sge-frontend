@@ -12,6 +12,7 @@ import Artilharia from './pages/Artilharia';
 import TabelaGeral from './pages/TabelaGeral';
 import Usuarios from './pages/Usuarios';
 import ImportarJogos from './pages/ImportarJogos';
+import PontosLancados from './pages/PontosLancados';
 import Login from './pages/Login';
 import Competicoes from './pages/Competicoes';
 import CompeticaoDetalhe from './pages/CompeticaoDetalhe';
@@ -33,6 +34,7 @@ function App() {
           <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />
           <Route path="/importar-jogos" element={<RotaPrivada perfis={['ADMIN']}><ImportarJogos /></RotaPrivada>} />
+          <Route path="/pontos-lancados" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados /></RotaPrivada>} />
           <Route path="/modalidades/:slug" element={<Competicoes />} />
           <Route path="/competicoes/:id" element={<CompeticaoDetalhe />} />
           <Route path="/login" element={<Login />} />

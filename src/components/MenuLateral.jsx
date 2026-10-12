@@ -46,17 +46,10 @@ function MenuLateral() {
       {!carregando && !erro && modalidades.map((modalidade) => {
         const icone = ICONES[modalidade.slug] || '🏅';
 
-        // Atletismo ainda não tem competição importada: aparece na lista, mas
-        // sem link, para não levar a uma tela vazia sem explicação.
-        if (modalidade.total_competicoes === 0) {
-          return (
-            <span key={modalidade.id} className="menu-lateral-item vazio" title="Sem competições cadastradas">
-              <span aria-hidden="true">{icone}</span>
-              <span className="menu-lateral-nome">{modalidade.nome}</span>
-              <span className="menu-lateral-contador">—</span>
-            </span>
-          );
-        }
+        // Atletismo, xadrez, dama e dominó não têm competição: funcionam fora
+        // do sistema, e a mesa só lança os pontos (/pontos-lancados). Ficam
+        // fora do menu, que leva às tabelas de jogos.
+        if (modalidade.total_competicoes === 0) return null;
 
         return (
           <NavLink

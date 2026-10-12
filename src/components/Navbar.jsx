@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
 // admin: true → link só aparece para quem está logado como administrador
+// mesa: true → aparece para o administrador e para a mesa (perfil de placar)
 const links = [
   { to: '/', label: 'Início', end: true },
   { to: '/modalidades/futsal', label: 'Modalidades' },
@@ -12,6 +13,7 @@ const links = [
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
   { to: '/importar-jogos', label: 'Importar Jogos', admin: true },
+  { to: '/pontos-lancados', label: 'Pontos Lançados', mesa: true },
   { to: '/usuarios', label: 'Usuários', admin: true },
 ];
 
@@ -71,7 +73,7 @@ function Navbar() {
         {/* NavLink aplica a classe "active" automaticamente na rota atual */}
         <div className="navbar-links">
           {links
-            .filter(({ admin }) => !admin || isAdmin)
+            .filter(({ admin, mesa }) => (!admin || isAdmin) && (!mesa || podeLancar))
             .map(({ to, label, end }) => (
               <NavLink key={to} to={to} end={end} className="nav-link" onClick={fechar}>
                 {label}

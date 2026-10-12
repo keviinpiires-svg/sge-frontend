@@ -1166,3 +1166,60 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .elenco-meta { font-size: 13px; color: var(--sge-text-muted); }
 
 .elenco-form { border-top: 1px solid var(--sge-border); padding-top: 12px; }
+
+/* ---------- Pontos lançados (mesa: atletismo, xadrez, dama e dominó) ---------- */
+.abas-pontos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.aba-pontos {
+  flex: 1 1 140px; min-height: 48px; padding: 10px 16px;
+  font: inherit; font-size: 16px; font-weight: 700; color: var(--sge-text-soft);
+  background: var(--sge-surface-2); border: 1px solid var(--sge-border-strong);
+  border-radius: var(--sge-radius-sm); cursor: pointer;
+  transition: background var(--sge-transition), color var(--sge-transition);
+}
+.aba-pontos:hover { color: var(--sge-text-strong); background: rgba(255, 255, 255, 0.08); }
+.aba-pontos.ativa { color: #0d131b; background: var(--sge-accent); border-color: var(--sge-accent); }
+.aba-pontos:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+
+.combinacoes-pontos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px 24px; }
+.combinacao-pontos { display: flex; align-items: center; gap: 8px; }
+.combinacao-categoria { min-width: 64px; font-weight: 700; color: var(--sge-text-strong); }
+.combinacao-pontos .btn { min-height: 40px; }
+
+.grade-pontos { display: flex; flex-direction: column; border-top: 1px solid var(--sge-border); }
+.grade-pontos-cabecalho,
+.grade-pontos-linha {
+  display: grid; grid-template-columns: 1fr 110px 130px; gap: 12px; align-items: center;
+  padding: 10px 20px; border-bottom: 1px solid var(--sge-border);
+}
+.grade-pontos-cabecalho {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--sge-text-muted);
+}
+.grade-pontos-linha.acima { background: rgba(241, 196, 15, 0.10); box-shadow: inset 4px 0 0 var(--sge-accent); }
+.grade-pontos-linha.com-erro { background: rgba(231, 76, 60, 0.12); box-shadow: inset 4px 0 0 var(--sge-danger); }
+.grade-pontos-escola { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.grade-pontos-nome { font-size: 16px; font-weight: 700; color: var(--sge-text-strong); }
+.grade-pontos-rastro { font-size: 12px; color: var(--sge-text-muted); }
+.grade-pontos-alerta { font-size: 13px; font-weight: 700; color: var(--sge-accent); }
+.grade-pontos-alerta.erro { color: var(--sge-danger-text); }
+
+.campo-ponto {
+  height: 52px; padding: 8px 10px; text-align: center;
+  font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.campo-colocacao { font-size: 18px; font-weight: 600; }
+.grade-pontos-linha.com-erro .campo-ponto { border-color: var(--sge-danger); }
+.grade-pontos-linha.acima .campo-ponto { border-color: var(--sge-accent); }
+.resumo-pontos { font-size: 17px; color: var(--sge-text-strong); margin: 0 0 10px; }
+
+/* Celular: a escola em cima, os dois campos lado a lado embaixo */
+@media (max-width: 600px) {
+  .grade-pontos-cabecalho { display: none; }
+  .grade-pontos-linha { grid-template-columns: 1fr 1fr; padding: 12px 16px; }
+  .grade-pontos-escola { grid-column: 1 / -1; }
+  .grade-pontos-linha > [role='cell']:nth-child(2)::before { content: 'Pontos'; }
+  .grade-pontos-linha > [role='cell']:nth-child(3)::before { content: 'Colocação'; }
+  .grade-pontos-linha > [role='cell']:not(:first-child)::before {
+    display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; color: var(--sge-text-muted);
+  }
+}
