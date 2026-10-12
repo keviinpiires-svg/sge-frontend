@@ -13,7 +13,7 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
 
 ---
 
-## Estado atual (atualizado em 05/10/2026)
+## Estado atual (atualizado em 12/10/2026)
 
 - **A produção JÁ RODA O SISTEMA NOVO desde 01/10/2026.** A Vercel publica a branch
   **`feat/novo-escopo`** (Branch Tracking de produção trocado de `main`, que segue com o frontend
@@ -24,7 +24,7 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
 - Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta técnicos/dirigentes, se entrarem); **11 — atletismo** 📝
   só planejada (nada implementado). A fatia 10 foi executada com pendências de
   produção (backup, senha, contas de mesa): veja `F:\System_jogos\CLAUDE.md`.
-- **Commits locais ainda NÃO publicados:** a resposta do chefe de 06/10/2026 às regras provisórias.
+- **Commits locais ainda NÃO publicados:** as respostas do chefe de 12/10/2026 (abaixo). As de 06 e 07/10 já foram publicadas (até `70385ca`).
   A tela de agenda de jogos (`FormAgendaJogo`) já foi publicada em 05/10/2026.
 - **Regras respondidas pelo chefe em 06/10/2026** (seção 12.1 do contexto): a tabela geral mostra
   **só a soma geral** (os três blocos saíram) e escolas com a mesma soma **dividem a posição**
@@ -41,8 +41,14 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   (os avisos saíram da tabela geral e do card do mata-mata); a tabela geral mostra o critério de
   desempate (mais 1ºs, depois 2ºs e 3ºs); a súmula do baleado tem o quadro "Acréscimo de 4 minutos"
   na final empatada; handebol e baleado com folhas de 12 linhas sempre; grade do vôlei de 1 a 30.
-  Pendentes: empate do baleado na semifinal e no ida e volta, tamanho do set do vôlei, contas de mesa e
-  o lançamento de resultado de atletismo, xadrez, dama e dominó (fatia 11, só planejada).
+- **Respostas do chefe de 12/10/2026 (commits locais, sem push):** o quadro "Acréscimo de 4 minutos"
+  aparece também na **semifinal** do baleado empatada (as fases vêm do backend, em
+  `desempate.acrescimo.fases`); o **contador de baleados** de cada equipe conta as **adversárias que
+  ela eliminou**, e o placar é o próprio contador (tela de preencher e folha impressa; o rótulo
+  BALEADOS do papel fica); vôlei com 3 sets de 21, o 3º inclusive (só o texto da tela mudou).
+  ⚠️ A tela nova lê `desempate.acrescimo`, que só o backend de 12/10 manda: publicar o backend antes.
+  Pendentes: empate do baleado no ida e volta, contas de mesa e o lançamento de resultado de
+  atletismo, xadrez, dama e dominó (fatia 11, só planejada).
 
 ## Infraestrutura
 
