@@ -23,7 +23,7 @@ function PreencherSumula() {
   const [penaltis, setPenaltis] = useState({ penaltis_1: 0, penaltis_2: 0 });
   const [sets, setSets] = useState(null);       // vôlei: os três sets do papel
   const [prorrogacao, setProrrogacao] = useState(false);
-  // Final do baleado empatada: a equipe que baleou primeiro no acréscimo
+  // Semifinal ou final do baleado empatada: quem baleou primeiro no acréscimo
   const [baleouPrimeiro, setBaleouPrimeiro] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
@@ -216,10 +216,11 @@ function PreencherSumula() {
   };
   const exigeProrrogacao = desempate.sequencia.includes('PRORROGACAO');
   const empatado = jogo.fase !== 'GRUPOS' && placar1 === placar2;
-  // Final do baleado (07/10/2026): acréscimo de 4 minutos, vence quem balear
-  // primeiro. Fora da final, o empate do baleado no mata-mata segue pendente.
-  const acrescimoDaFinal = empatado && Boolean(desempate.pendente && desempate.final) && jogo.fase === 'FINAL';
-  const empatePendente = empatado && Boolean(desempate.pendente) && !acrescimoDaFinal;
+  // Semifinal e final do baleado (07 e 12/10/2026): acréscimo de 4 minutos,
+  // vence quem balear primeiro. As fases vêm do backend (desempate.acrescimo).
+  const comAcrescimo = empatado && Boolean(desempate.pendente && desempate.acrescimo)
+    && desempate.acrescimo.fases.includes(jogo.fase);
+  const empatePendente = empatado && Boolean(desempate.pendente) && !comAcrescimo;
   // Só há cobrança onde a modalidade tem uma (o vôlei, por exemplo, não empata)
   const precisaPenaltis = empatado && !desempate.pendente && Boolean(desempate.nomeCobranca)
     && (!exigeProrrogacao || prorrogacao);
@@ -553,11 +554,11 @@ function PreencherSumula() {
           </div>
         )}
 
-        {acrescimoDaFinal && (
+        {comAcrescimo && (
           <div className="card mb-lg">
             <div className="card-body">
-              <h2 className="card-title">Acréscimo de {desempate.final.minutosDeAcrescimo} minutos</h2>
-              <p className="form-hint">{desempate.final.descricao} Marque a equipe que baleou primeiro.</p>
+              <h2 className="card-title">Acréscimo de {desempate.acrescimo.minutosDeAcrescimo} minutos</h2>
+              <p className="form-hint">{desempate.acrescimo.descricao} Marque a equipe que baleou primeiro.</p>
               <div className="linha-checks">
                 {equipes.map((equipe) => (
                   <label key={equipe.equipe_id}>
