@@ -191,17 +191,17 @@ function PreencherSumula() {
     return total + (meus > deles ? 1 : 0);
   }, 0);
 
-  // No baleado cada equipe marca as SUAS atletas baleadas: o placar de uma é
-  // o contador da outra.
-  const baleadasDe = (equipe) => Number(equipe.baleados || 0);
+  // No baleado cada equipe marca as ADVERSÁRIAS que eliminou, e o placar dela
+  // é o próprio contador (chefe, 12/10/2026).
+  const eliminadasPor = (equipe) => Number(equipe.baleados || 0);
   let placar1 = golsDe(equipes[0]);
   let placar2 = golsDe(equipes[1]);
   if (folha.sets) {
     placar1 = setsVencidos(0);
     placar2 = setsVencidos(1);
   } else if (folha.baleadosPorEquipe) {
-    placar1 = baleadasDe(equipes[1]);
-    placar2 = baleadasDe(equipes[0]);
+    placar1 = eliminadasPor(equipes[0]);
+    placar2 = eliminadasPor(equipes[1]);
   }
 
   // Nº, atleta, capitão e presente são fixos; a coluna de estatística, as
@@ -236,8 +236,8 @@ function PreencherSumula() {
           <p className="page-subtitle">
             {folha.sets && `O placar do jogo são os sets: vence quem ganhar ${folha.setsParaVencer} sets `
               + `de ${folha.pontosPorSet} pontos, com 2 de vantagem.`}
-            {folha.baleadosPorEquipe && 'Em cada equipe, marque as atletas DELA que foram baleadas: '
-              + 'o placar de uma equipe é o número de baleadas da adversária.'}
+            {folha.baleadosPorEquipe && 'Em cada equipe, marque as adversárias que ELA eliminou (baleou): '
+              + 'o placar de cada equipe é o próprio contador.'}
             {!folha.sets && !folha.baleadosPorEquipe
               && `O placar é ${TEXTO_DO_PLACAR[folha.rotuloEstatistica]}: não existe campo de placar para digitar.`}
           </p>
@@ -468,12 +468,12 @@ function PreencherSumula() {
                 {folha.baleadosPorEquipe > 0 && (
                   <div className="form-group">
                     <span className="form-label">
-                      Baleadas desta equipe <small>(0 a {folha.baleadosPorEquipe})</small>
+                      Adversárias eliminadas por esta equipe <small>(0 a {folha.baleadosPorEquipe})</small>
                     </span>
                     <Contador
                       valor={Number(equipe.baleados || 0)}
                       max={folha.baleadosPorEquipe}
-                      rotulo={`atletas de ${equipe.escola_nome} baleadas`}
+                      rotulo={`adversárias eliminadas por ${equipe.escola_nome}`}
                       aoMudar={(v) => mudarEquipe(indice, 'baleados', v)}
                     />
                   </div>

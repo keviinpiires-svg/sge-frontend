@@ -6,10 +6,10 @@ import { completarLinhas, sequencia, letraDaEquipe, linhasDaFolha } from './comu
 // cartões, faltas nem tempo técnico.
 //
 // BALEADOS é um contador DA EQUIPE, não por atleta: no topo da área, uma
-// linha com os números de 1 a 10 e, logo abaixo, a linha de caixas onde se
-// marca cada atleta da equipe que foi baleada. O resto da área é riscado com
-// um X grande, de canto a canto, como no papel. O placar de uma equipe é o
-// número de baleadas da adversária.
+// linha com os números de 1 a 10 e, logo abaixo, a linha de caixas onde a
+// equipe marca cada adversária que ela eliminou (chefe, 12/10/2026). O resto
+// da área é riscado com um X grande, de canto a canto, como no papel. O placar
+// de uma equipe é o próprio contador. O rótulo BALEADOS é o do papel e fica.
 
 function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
   const caixas = folha.baleadosPorEquipe;
@@ -93,9 +93,9 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
 }
 
 function FolhaBaleado({ jogo, equipes, folha, emBranco }) {
-  // Cada bloco conta as baleadas da própria equipe: o placar de A são as
-  // baleadas de B, e vice-versa
-  const placar = [Number(equipes[1].baleados || 0), Number(equipes[0].baleados || 0)];
+  // Cada bloco conta as adversárias que aquela equipe eliminou: o placar de
+  // cada equipe é o próprio contador
+  const placar = [Number(equipes[0].baleados || 0), Number(equipes[1].baleados || 0)];
 
   return (
     <>
