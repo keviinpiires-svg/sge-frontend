@@ -147,9 +147,15 @@ function TabelaGeral() {
             <ul className="abertura-lista">
               {escola.origens.map((origem, i) => (
                 <li key={`${origem.competicao_id}-${i}`}>
-                  <span className="abertura-medalha">{MEDALHA[origem.posicao]}</span>
+                  {/* Atletismo, xadrez, dama e dominó: pontos lançados pela mesa */}
+                  <span className="abertura-medalha">{origem.lancado ? '📝' : MEDALHA[origem.posicao]}</span>
                   <span className="abertura-competicao">
                     {origem.modalidade_nome} {origem.categoria_nome} {ROTULO_GENERO[origem.genero] || origem.genero}
+                    {origem.lancado && (
+                      <span className="text-soft">
+                        {' '}— lançado pela mesa{origem.colocacao ? `, ${origem.colocacao}º lugar` : ''}
+                      </span>
+                    )}
                   </span>
                   <span className="abertura-pontos">
                     +{origem.pontos}{origem.provisoria && ' (provisório)'}
@@ -235,6 +241,8 @@ function TabelaGeral() {
               .filter((p) => regras.posicoes_que_pontuam.includes(p.posicao))
               .map((p) => p.pontos).join(', ')} pontos às {quantasPontuam === 3 ? 'três' : quantasPontuam} primeiras colocadas.{' '}
             {regras.desempate?.descricao || 'Escolas com a mesma soma dividem a posição.'}{' '}
+            {regras.pontos_lancados && !regras.pontos_lancados.conta_no_desempate
+              && 'Atletismo, xadrez, dama e dominó somam os pontos lançados pela mesa, sem entrar no desempate. '}
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>
