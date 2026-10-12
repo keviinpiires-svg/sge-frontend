@@ -11,6 +11,7 @@ const links = [
   { to: '/tabela-geral', label: 'Tabela Geral' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
+  { to: '/importar-jogos', label: 'Importar Jogos', admin: true },
   { to: '/usuarios', label: 'Usuários', admin: true },
 ];
 
