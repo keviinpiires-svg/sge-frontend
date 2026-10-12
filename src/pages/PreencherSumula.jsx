@@ -283,9 +283,9 @@ function PreencherSumula() {
             <div className="card-body">
               <h2 className="card-title">Controle dos sets</h2>
               <p className="form-hint">
-                Lance os pontos de cada set. Um set termina em {folha.pontosPorSet} pontos, com 2 de
-                vantagem, e o jogo acaba quando uma equipe vence {folha.setsParaVencer} sets — aí o
-                3º set não se joga.
+                Lance os pontos de cada set. Todo set, o 3º inclusive, termina em
+                {' '}{folha.pontosPorSet} pontos, com 2 de vantagem, e o jogo acaba quando uma equipe
+                vence {folha.setsParaVencer} sets — aí o 3º set não se joga.
               </p>
 
               <div className="table-wrap">
