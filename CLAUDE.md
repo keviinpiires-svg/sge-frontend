@@ -47,8 +47,13 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   ela eliminou**, e o placar é o próprio contador (tela de preencher e folha impressa; o rótulo
   BALEADOS do papel fica); vôlei com 3 sets de 21, o 3º inclusive (só o texto da tela mudou).
   ⚠️ A tela nova lê `desempate.acrescimo`, que só o backend de 12/10 manda: publicar o backend antes.
-  Pendentes: empate do baleado no ida e volta, contas de mesa e o lançamento de resultado de
-  atletismo, xadrez, dama e dominó (fatia 11, só planejada).
+  Pendente: empate do baleado no ida e volta.
+- **Mais de 12/10/2026 (commits locais, sem push):** tela do ADMIN `/importar-jogos` (jogos da fase de
+  grupos por CSV, com prévia) e tela `/pontos-lancados` (ADMIN e mesa): atletismo, xadrez, dama e dominó
+  funcionam fora do sistema e a mesa digita os pontos de cada escola por categoria e gênero, com resumo
+  antes de salvar, destaque de valor acima do esperado e rastro de quem digitou e alterou (fatia 11). A
+  Tabela Geral mostra esses pontos na abertura de cada escola, fora do desempate. O menu lateral não mostra
+  mais modalidade sem competição. ⚠️ Depende do backend com o `db/11`.
 
 ## Infraestrutura
 
