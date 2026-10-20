@@ -197,7 +197,7 @@ function Agenda() {
                     <span className="agenda-hora">{jogo.hora || '--:--'}</span>
                     <span className="agenda-corpo">
                       <span className="agenda-competicao">
-                        {nomeDaCompeticao(jogo.competicao)} · {nomeDaFase(jogo)} · Jogo {jogo.numero_jogo}
+                        {nomeDaCompeticao(jogo.competicao)} · {nomeDaFase(jogo)} · Jogo{'\u00a0'}{jogo.numero_jogo}
                       </span>
                       <span className="agenda-confronto">
                         {jogo.equipe_1.escola}
