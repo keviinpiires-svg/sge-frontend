@@ -215,11 +215,19 @@ function PreencherSumula() {
     sequencia: [], nomeCobranca: null, pendente: true, motivo: 'a regra de desempate não chegou do servidor'
   };
   const exigeProrrogacao = desempate.sequencia.includes('PRORROGACAO');
-  const empatado = jogo.fase !== 'GRUPOS' && placar1 === placar2;
-  // Semifinal e final do baleado (07 e 12/10/2026): acréscimo de 4 minutos,
-  // vence quem balear primeiro. As fases vêm do backend (desempate.acrescimo).
-  const comAcrescimo = empatado && Boolean(desempate.pendente && desempate.acrescimo)
-    && desempate.acrescimo.fases.includes(jogo.fase);
+  // "Melhor de dois jogos" (ida e volta sem mata-mata): o backend manda o
+  // placar do outro jogo, do lado deste. Com ele encerrado, este é o último
+  // jogo, e a soma empatada pede o desempate aqui (20/10/2026).
+  const ida = sumula.soma_dos_dois_jogos;
+  const somaEmpatada = Boolean(ida?.resolvidos)
+    && placar1 + ida.soma_1 === placar2 + ida.soma_2;
+  const empatado = somaEmpatada || (jogo.fase !== 'GRUPOS' && placar1 === placar2);
+  // Baleado (07, 12 e 20/10/2026): acréscimo de 4 minutos na semifinal, na
+  // final e no 2º jogo do ida e volta com a soma empatada; vence quem balear
+  // primeiro. Onde vale vem do backend (desempate.acrescimo).
+  const comAcrescimo = empatado && Boolean(desempate.acrescimo) && (somaEmpatada
+    ? Boolean(desempate.acrescimo.somaDosDoisJogos)
+    : desempate.acrescimo.fases.includes(jogo.fase));
   const empatePendente = empatado && Boolean(desempate.pendente) && !comAcrescimo;
   // Só há cobrança onde a modalidade tem uma (o vôlei, por exemplo, não empata)
   const precisaPenaltis = empatado && !desempate.pendente && Boolean(desempate.nomeCobranca)
@@ -578,7 +586,7 @@ function PreencherSumula() {
 
         {empatePendente && (
           <div className="alert alert-aviso mb-lg">
-            <p className="alert-titulo">⚠️ Empate no mata-mata: regra pendente</p>
+            <p className="alert-titulo">⚠️ {somaEmpatada ? 'Soma dos dois jogos empatada' : 'Empate no mata-mata'}: regra pendente</p>
             <p className="alert-texto">
               Em {jogo.modalidade_nome}, {desempate.motivo}. A regra está pendente com a
               organização: salve a súmula sem finalizar e aguarde a decisão. O sistema não
@@ -594,7 +602,9 @@ function PreencherSumula() {
                 {desempate.nomeCobranca}
               </h2>
               <p className="form-hint">
-                Empate no mata-mata não decide nada: informe {desempate.nomeCobranca} para finalizar.
+                {somaEmpatada
+                  ? 'A soma dos dois jogos está empatada'
+                  : 'Empate no mata-mata não decide nada'}: informe {desempate.nomeCobranca} para finalizar.
               </p>
               <div className="rodape-equipe">
                 <div className="form-group">
