@@ -97,7 +97,7 @@ src/context/              AuthContext, useAuth (isAdmin, isPlacar, podeLancar, p
 | Rota | Tela | Acesso |
 |---|---|---|
 | `/` | Início | público |
-| `/agenda`, `/agenda/:id` | Agenda de Jogos: lista por dia e local, filtros na URL, e o detalhe com os atletas (só nome e camisa) | público |
+| `/agenda`, `/agenda/:id` | Agenda de Jogos: lista por dia e local, "Tabela nº" do chefe ao lado do "Jogo" (busca aceita o número), filtros na URL, e o detalhe com os atletas (só nome e camisa) | público |
 | `/modalidades/:slug` | competições da modalidade | público |
 | `/competicoes/:id` | jogos, classificação, mata-mata, suspensões, artilharia | público (ações por perfil) |
 | `/preencher-sumula/:id` | lançar súmula | ADMIN ou PLACAR |
