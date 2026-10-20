@@ -88,3 +88,11 @@ export const paraCampoData = (valor) => {
   const [, ano, mes, dia] = encontrado;
   return `${ano}-${mes}-${dia}`;
 };
+
+// "2026-11-24": a data de HOJE no fuso do evento (Barra do Choça), qualquer
+// que seja o fuso de quem abre a tela. É o mesmo America/Bahia que o backend
+// usa por padrão (FUSO_EVENTO).
+export const FUSO_DO_EVENTO = 'America/Bahia';
+export const hojeNoEvento = () => new Intl.DateTimeFormat('en-CA', {
+  timeZone: FUSO_DO_EVENTO, year: 'numeric', month: '2-digit', day: '2-digit'
+}).format(new Date());

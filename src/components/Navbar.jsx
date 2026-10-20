@@ -6,6 +6,7 @@ import { useAuth } from '../context/useAuth';
 // mesa: true → aparece para o administrador e para a mesa (perfil de placar)
 const links = [
   { to: '/', label: 'Início', end: true },
+  { to: '/agenda', label: 'Agenda' },
   { to: '/modalidades/futsal', label: 'Modalidades' },
   { to: '/cadastro', label: 'Cadastrar Time', admin: true },
   { to: '/artilharia', label: 'Artilharia' },

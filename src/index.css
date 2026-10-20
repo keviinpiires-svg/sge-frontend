@@ -1223,3 +1223,104 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
     display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; color: var(--sge-text-muted);
   }
 }
+
+/* ---------- Agenda de Jogos (pública, celular primeiro) ---------- */
+.agenda-filtros { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+/* Os dias rolam de lado dentro da própria faixa, sem alargar a página */
+.agenda-dias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.agenda-dia-botao {
+  flex-shrink: 0; min-height: 44px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--sge-border-strong); background: transparent; color: var(--sge-text);
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.agenda-dia-botao.ativo { background: var(--sge-accent); border-color: var(--sge-accent); color: #1a1a1a; }
+.agenda-dia-botao:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+.agenda-campos { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.agenda-campos .form-control { min-height: 44px; font-size: 16px; } /* 16px evita o zoom do iPhone */
+.agenda-limpar { align-self: flex-start; }
+.agenda-contagem { margin: 4px 0 12px; font-size: 13px; color: var(--sge-text-muted); min-height: 18px; }
+
+.agenda-dia { margin-bottom: 28px; }
+.agenda-dia-titulo {
+  position: sticky; top: 60px; z-index: 5; margin: 0 0 12px; padding: 8px 0;
+  font-size: 18px; color: var(--sge-text-strong); background: var(--sge-bg);
+}
+.agenda-local { margin-bottom: 16px; }
+.agenda-local-titulo { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--sge-accent); }
+.agenda-jogos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.agenda-jogo {
+  display: grid; grid-template-columns: 52px 1fr; grid-template-areas: "hora corpo" "hora status";
+  gap: 4px 12px; align-items: start; padding: 12px; min-height: 44px;
+  background: var(--sge-surface); border: 1px solid var(--sge-border); border-radius: var(--sge-radius);
+  color: var(--sge-text); text-decoration: none;
+}
+.agenda-jogo:hover, .agenda-jogo:focus-visible { border-color: var(--sge-accent); outline: none; }
+.agenda-hora { grid-area: hora; font-size: 18px; font-weight: 800; color: var(--sge-text-strong); }
+.agenda-corpo { grid-area: corpo; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.agenda-competicao { font-size: 12px; color: var(--sge-text-muted); }
+.agenda-confronto { font-size: 15px; font-weight: 700; color: var(--sge-text-strong); overflow-wrap: anywhere; }
+.agenda-x { color: var(--sge-text-muted); font-weight: 400; }
+.agenda-placar { color: var(--sge-accent); }
+.agenda-status {
+  grid-area: status; justify-self: start; padding: 2px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.agenda-status-agendado { background: rgba(52, 152, 219, 0.15); color: #7cc4f5; }
+.agenda-status-andamento { background: rgba(241, 196, 15, 0.18); color: var(--sge-accent); }
+.agenda-status-encerrado { background: rgba(46, 204, 113, 0.15); color: var(--sge-success); }
+
+/* Detalhe do jogo */
+.agenda-titulo-jogo { overflow-wrap: anywhere; }
+.agenda-placar-grande {
+  display: flex; justify-content: center; align-items: baseline; gap: 16px; margin-bottom: 4px;
+  font-size: 44px; font-weight: 800; color: var(--sge-text-strong);
+}
+.agenda-resultado { margin: 0 0 16px; text-align: center; font-weight: 700; color: var(--sge-accent); }
+.agenda-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 0; }
+.agenda-info dt { font-size: 12px; color: var(--sge-text-muted); }
+.agenda-info dd { margin: 2px 0 0; font-weight: 600; color: var(--sge-text-strong); }
+.agenda-info dd::first-letter { text-transform: uppercase; }
+.agenda-elencos { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.agenda-atletas { list-style: none; margin: 0; padding: 0; }
+.agenda-atletas li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--sge-border); }
+.agenda-atletas li:last-child { border-bottom: 0; }
+.agenda-camisa {
+  flex-shrink: 0; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--sge-accent-soft); color: var(--sge-accent); font-weight: 800; font-size: 14px;
+}
+.agenda-sem-atletas { text-align: left; margin: 0; }
+
+/* Esqueleto de carregamento (o Render free leva ~50 s para acordar) */
+.agenda-esqueleto { display: flex; flex-direction: column; gap: 12px; }
+.agenda-esqueleto .state-text { text-align: left; margin: 0; }
+.agenda-esqueleto-bloco { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.esqueleto {
+  border-radius: var(--sge-radius-sm);
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%; animation: esqueleto-brilho 1.4s ease-in-out infinite;
+}
+.esqueleto-titulo { height: 22px; width: 60%; }
+.esqueleto-linha { height: 64px; }
+.esqueleto-bloco { height: 140px; }
+@keyframes esqueleto-brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .esqueleto { animation: none; } }
+
+@media (min-width: 700px) {
+  .agenda-campos { grid-template-columns: 2fr 1fr 1fr; }
+  .agenda-jogo { grid-template-columns: 64px 1fr auto; grid-template-areas: "hora corpo status"; align-items: center; }
+  .agenda-status { justify-self: end; }
+  .agenda-elencos { grid-template-columns: 1fr 1fr; }
+  .agenda-info { grid-template-columns: repeat(3, 1fr); }
+}
+.agenda-mais-filtros summary {
+  display: inline-flex; align-items: center; min-height: 44px; cursor: pointer;
+  font-weight: 700; font-size: 14px; color: var(--sge-accent); list-style: none;
+}
+.agenda-mais-filtros summary::-webkit-details-marker { display: none; }
+.agenda-mais-filtros summary::before { content: '▸'; margin-right: 8px; transition: transform var(--sge-transition); }
+.agenda-mais-filtros[open] summary::before { transform: rotate(90deg); }
+.agenda-campos-extra { margin-top: 4px; }
+@media (min-width: 700px) {
+  .agenda-campos { grid-template-columns: 1fr; }
+  .agenda-campos-extra { grid-template-columns: repeat(4, 1fr); }
+}

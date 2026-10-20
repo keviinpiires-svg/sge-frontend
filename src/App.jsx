@@ -16,6 +16,8 @@ import PontosLancados from './pages/PontosLancados';
 import Login from './pages/Login';
 import Competicoes from './pages/Competicoes';
 import CompeticaoDetalhe from './pages/CompeticaoDetalhe';
+import Agenda from './pages/Agenda';
+import AgendaJogo from './pages/AgendaJogo';
 
 function App() {
   return (
@@ -37,6 +39,8 @@ function App() {
           <Route path="/pontos-lancados" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados /></RotaPrivada>} />
           <Route path="/modalidades/:slug" element={<Competicoes />} />
           <Route path="/competicoes/:id" element={<CompeticaoDetalhe />} />
+          <Route path="/agenda" element={<Agenda />} />
+          <Route path="/agenda/:id" element={<AgendaJogo />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
