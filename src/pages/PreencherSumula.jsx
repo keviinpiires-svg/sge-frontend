@@ -221,6 +221,8 @@ function PreencherSumula() {
   const ida = sumula.soma_dos_dois_jogos;
   const somaEmpatada = Boolean(ida?.resolvidos)
     && placar1 + ida.soma_1 === placar2 + ida.soma_2;
+  // Competição de 2 escolas com um jogo só (Handebol M Sub 9): fala do jogo
+  const jogoUnico = ida?.outros_jogos === 0;
   const empatado = somaEmpatada || (jogo.fase !== 'GRUPOS' && placar1 === placar2);
   // Baleado (07, 12 e 20/10/2026): acréscimo de 4 minutos na semifinal, na
   // final e no 2º jogo do ida e volta com a soma empatada; vence quem balear
@@ -586,7 +588,7 @@ function PreencherSumula() {
 
         {empatePendente && (
           <div className="alert alert-aviso mb-lg">
-            <p className="alert-titulo">⚠️ {somaEmpatada ? 'Soma dos dois jogos empatada' : 'Empate no mata-mata'}: regra pendente</p>
+            <p className="alert-titulo">⚠️ {somaEmpatada ? (jogoUnico ? 'Jogo empatado' : 'Soma dos dois jogos empatada') : 'Empate no mata-mata'}: regra pendente</p>
             <p className="alert-texto">
               Em {jogo.modalidade_nome}, {desempate.motivo}. A regra está pendente com a
               organização: salve a súmula sem finalizar e aguarde a decisão. O sistema não
@@ -603,7 +605,7 @@ function PreencherSumula() {
               </h2>
               <p className="form-hint">
                 {somaEmpatada
-                  ? 'A soma dos dois jogos está empatada'
+                  ? (jogoUnico ? 'O jogo terminou empatado' : 'A soma dos dois jogos está empatada')
                   : 'Empate no mata-mata não decide nada'}: informe {desempate.nomeCobranca} para finalizar.
               </p>
               <div className="rodape-equipe">
