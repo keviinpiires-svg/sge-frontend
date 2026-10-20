@@ -123,8 +123,15 @@ function Agenda() {
     if (filtro.categoria && `${j.competicao.categoria}|${j.competicao.genero}` !== filtro.categoria) return false;
     if (filtro.escola && j.equipe_1.escola !== filtro.escola && j.equipe_2.escola !== filtro.escola) return false;
     if (filtro.busca) {
-      const busca = normalizar(filtro.busca);
-      if (!normalizar(j.equipe_1.escola).includes(busca) && !normalizar(j.equipe_2.escola).includes(busca)) return false;
+      // Só número ("163" ou "nº 163"): procura o número da tabela do chefe;
+      // senão, o nome da escola (sem acento nem maiúscula)
+      const numero = /^\s*(?:n[º°o]?\.?\s*)?(\d+)\s*$/i.exec(filtro.busca);
+      if (numero) {
+        if (j.numero_tabela !== Number(numero[1])) return false;
+      } else {
+        const busca = normalizar(filtro.busca);
+        if (!normalizar(j.equipe_1.escola).includes(busca) && !normalizar(j.equipe_2.escola).includes(busca)) return false;
+      }
     }
     return true;
   });
@@ -198,6 +205,9 @@ function Agenda() {
                     <span className="agenda-corpo">
                       <span className="agenda-competicao">
                         {nomeDaCompeticao(jogo.competicao)} · {nomeDaFase(jogo)} · Jogo{'\u00a0'}{jogo.numero_jogo}
+                        {jogo.numero_tabela && (
+                          <span className="agenda-numero-tabela"> · Tabela nº{'\u00a0'}{jogo.numero_tabela}</span>
+                        )}
                       </span>
                       <span className="agenda-confronto">
                         {jogo.equipe_1.escola}
@@ -255,11 +265,11 @@ function Agenda() {
 
             <div className="agenda-campos">
               <label className="form-group">
-                <span className="form-label">Buscar escola</span>
+                <span className="form-label">Buscar escola ou nº da tabela</span>
                 <input
                   type="search"
                   className="form-control"
-                  placeholder="Ex.: José Dias"
+                  placeholder="Ex.: José Dias ou 163"
                   value={filtro.busca}
                   onChange={(e) => mudar('busca', e.target.value)}
                 />

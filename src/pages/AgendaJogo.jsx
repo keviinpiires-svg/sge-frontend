@@ -97,7 +97,13 @@ function AgendaJogo() {
               <div><dt>Hora</dt><dd>{jogo.hora || 'A definir'}</dd></div>
               <div><dt>Local</dt><dd>{jogo.local?.nome || 'A definir'}</dd></div>
               <div><dt>Fase</dt><dd>{nomeDaFase(jogo)}</dd></div>
-              <div><dt>Jogo</dt><dd>nº {jogo.numero_jogo}</dd></div>
+              <div>
+                <dt>Jogo</dt>
+                <dd>
+                  nº {jogo.numero_jogo}
+                  {jogo.numero_tabela && <span className="agenda-numero-tabela"> · Tabela nº {jogo.numero_tabela}</span>}
+                </dd>
+              </div>
               <div>
                 <dt>Situação</dt>
                 <dd><span className={`agenda-status ${CLASSE_STATUS[jogo.status] || ''}`}>{ROTULO_STATUS[jogo.status] || jogo.status}</span></dd>

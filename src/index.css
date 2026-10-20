@@ -1324,3 +1324,5 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .agenda-campos { grid-template-columns: 1fr; }
   .agenda-campos-extra { grid-template-columns: repeat(4, 1fr); }
 }
+/* Número do jogo na tabela oficial do chefe (db/15): pequeno e cinza */
+.agenda-numero-tabela { font-size: 12px; font-weight: 400; color: var(--sge-text-muted); white-space: nowrap; }

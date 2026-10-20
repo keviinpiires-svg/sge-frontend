@@ -145,11 +145,20 @@ function ImportarJogos() {
                   {plural(resumo.erros, 'com erro', 'com erro')}
                 </span>
                 {' '}e {plural(resumo.com_avisos, 'com aviso', 'com aviso')}.
+                {resumo.numeros_a_preencher > 0 && (
+                  <>
+                    {' '}<strong>
+                      {plural(resumo.numeros_a_preencher,
+                        importado ? 'jogo que já existia ganhou o Nº Tabela' : 'jogo que já existe vai ganhar o Nº Tabela',
+                        importado ? 'jogos que já existiam ganharam o Nº Tabela' : 'jogos que já existem vão ganhar o Nº Tabela')}
+                    </strong>.
+                  </>
+                )}
               </p>
               <p className="form-hint">
                 Os jogos novos de cada competição são numerados por data e hora, depois dos que
                 ela já tem. Jogo que já existe (mesma competição, mesmas equipes, mesma data e
-                hora) não é alterado.
+                hora) não é alterado — só ganha o Nº Tabela (coluna opcional), se ainda estiver sem.
               </p>
 
               {!importado && (
@@ -158,11 +167,12 @@ function ImportarJogos() {
                     type="button"
                     className="btn btn-primary"
                     onClick={importar}
-                    disabled={carregando || resumo.novas === 0}
+                    disabled={carregando || (resumo.novas === 0 && !resumo.numeros_a_preencher)}
                   >
-                    {resumo.novas === 0
-                      ? 'Nada novo para importar'
-                      : `Importar ${plural(resumo.novas, 'jogo', 'jogos')}`}
+                    {resumo.novas === 0 && !resumo.numeros_a_preencher && 'Nada novo para importar'}
+                    {resumo.novas > 0 && `Importar ${plural(resumo.novas, 'jogo', 'jogos')}`}
+                    {resumo.novas === 0 && resumo.numeros_a_preencher > 0
+                      && `Preencher o Nº Tabela de ${plural(resumo.numeros_a_preencher, 'jogo', 'jogos')}`}
                   </button>
                   <button type="button" className="btn btn-secondary" onClick={recomecar} disabled={carregando}>
                     Cancelar
@@ -185,6 +195,7 @@ function ImportarJogos() {
                     <th>Linha</th>
                     <th className="text-left">Situação</th>
                     <th>Jogo nº</th>
+                    <th>Nº Tabela</th>
                     <th className="text-left">Competição</th>
                     <th>Grupo</th>
                     <th className="text-left">Confronto</th>
@@ -206,6 +217,10 @@ function ImportarJogos() {
                           </span>
                         </td>
                         <td>{linha.numero_jogo ?? '—'}</td>
+                        <td>
+                          {linha.numero_tabela ?? '—'}
+                          {linha.preencher_numero && <span className="badge badge-accent">{importado ? 'preenchido' : 'preencher'}</span>}
+                        </td>
                         <td className="text-left">
                           {linha.competicao
                             || `${linha.valores.modalidade} ${linha.valores.categoria} ${linha.valores.genero}`}
