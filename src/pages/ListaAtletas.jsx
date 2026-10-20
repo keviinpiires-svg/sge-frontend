@@ -142,8 +142,10 @@ function ListaAtletas() {
                   <thead>
                     <tr>
                       <th className="text-left">Nome</th>
-                      <th>Sexo</th>
-                      <th>Data de Nascimento</th>
+                      {/* Sexo e nascimento só chegam para o ADMIN (pendência 19): o
+                          público vê só o nome — são menores de idade */}
+                      {isAdmin && <th>Sexo</th>}
+                      {isAdmin && <th>Data de Nascimento</th>}
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -152,8 +154,8 @@ function ListaAtletas() {
                       <tr key={index}>
                         <td className="text-left strong">{atleta.nome}</td>
                         {/* O RG não aparece aqui: a lista é pública */}
-                        <td className="text-soft">{atleta.sexo === 'F' ? 'Feminino' : 'Masculino'}</td>
-                        <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>
+                        {isAdmin && <td className="text-soft">{atleta.sexo === 'F' ? 'Feminino' : 'Masculino'}</td>}
+                        {isAdmin && <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>}
                         <td>
                           {isAdmin ? (
                             <div className="btn-group">

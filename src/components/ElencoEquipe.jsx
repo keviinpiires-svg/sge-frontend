@@ -141,7 +141,8 @@ function ElencoEquipe({ equipe, competicao }) {
                 <li key={inscrito.inscricao_id}>
                   <span className="elenco-camisa">{inscrito.numero_camisa ?? '—'}</span>
                   <span className="elenco-nome">{inscrito.nome}</span>
-                  <span className="elenco-meta">{inscrito.ano_nascimento}</span>
+                  {/* O ano de nascimento só chega para o ADMIN (pendência 19) */}
+                  {inscrito.ano_nascimento && <span className="elenco-meta">{inscrito.ano_nascimento}</span>}
                   {isAdmin && (
                     <button
                       type="button"
