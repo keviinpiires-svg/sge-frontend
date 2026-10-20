@@ -102,7 +102,7 @@ src/context/              AuthContext, useAuth (isAdmin, isPlacar, podeLancar, p
 | `/competicoes/:id` | jogos, classificação, mata-mata, suspensões, artilharia | público (ações por perfil) |
 | `/preencher-sumula/:id` | lançar súmula | ADMIN ou PLACAR |
 | `/detalhes-sumula/:id` | ver/imprimir súmula | público |
-| `/artilharia`, `/tabela-geral`, `/lista-atletas` | consultas | público (RG não aparece) |
+| `/artilharia`, `/tabela-geral`, `/lista-atletas` | consultas | público (RG nunca aparece; sexo e nascimento só para o ADMIN — a API não os manda ao público, pendência 19) |
 | `/cadastro`, `/editar-escola/:id`, `/cadastro-atleta` | cadastros | ADMIN |
 | `/usuarios` | contas (cria, edita, desativa, troca senha) | ADMIN |
 | `/login` | login | — |
