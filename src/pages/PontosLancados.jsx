@@ -44,6 +44,10 @@ const hora = (valor) => (valor
   ? new Date(valor).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: FUSO_DO_EVENTO })
   : '');
 
+// Comparação sem acento, maiúscula nem ponto ("J. Dias" acha "JOSE DIAS" pelo apelido)
+const normalizar = (texto) => String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toUpperCase().replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+
 const comoTexto = (numero) => (numero === null || numero === undefined ? '' : String(numero));
 
 // Só dígitos: o resto some ao digitar. Três dígitos cabem, para o 100 aparecer
@@ -74,6 +78,7 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
   const [revisando, setRevisando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
+  const [busca, setBusca] = useState('');            // escola da folha a acrescentar
   const campos = useRef([]);
   const botaoRevisar = useRef(null);
 
@@ -170,12 +175,28 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
   }]));
   const valores = edicao?.chave === chave ? edicao.valores : valoresSalvos;
 
-  const linhas = escolas.map((escola) => ({
-    escola,
-    salvo: salvoDe.get(escola.id),
-    valor: valores[escola.id],
-    ...lerLinha(valores[escola.id], combinacao.esperado, teto)
-  }));
+  // Só as escolas da folha: primeiro as já lançadas, depois as que a mesa
+  // acrescentou agora pela busca (21/10/2026). Nada de 18 escolas fixas.
+  const adicionadas = edicao?.chave === chave ? (edicao.adicionadas || []) : [];
+  const escolaPorId = new Map(escolas.map((e) => [e.id, e]));
+  const idsNaGrade = [...salvos.map((l) => l.escola_id), ...adicionadas.filter((id) => !salvoDe.has(id))];
+  const linhas = idsNaGrade
+    .map((id) => escolaPorId.get(id))
+    .filter(Boolean)
+    .map((escola) => ({
+      escola,
+      salvo: salvoDe.get(escola.id),
+      nova: !salvoDe.has(escola.id),
+      valor: valores[escola.id],
+      ...lerLinha(valores[escola.id], combinacao.esperado, teto)
+    }));
+
+  // Sugestões da busca: nome ou apelido, fora as que já estão na grade
+  const termo = normalizar(busca);
+  const sugestoes = termo
+    ? escolas.filter((e) => !idsNaGrade.includes(e.id)
+      && [e.nome, ...(e.apelidos || [])].some((n) => normalizar(n).includes(termo))).slice(0, 6)
+    : [];
 
   const alterada = (l) => (l.valor.pontos !== valoresSalvos[l.escola.id].pontos)
     || (l.valor.colocacao !== valoresSalvos[l.escola.id].colocacao);
@@ -228,10 +249,29 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
     setRevisando(false);
     setEdicao({
       chave,
+      adicionadas,
       valores: {
         ...valores,
         [escola_id]: { ...valores[escola_id], [campo]: soDigitos(texto, campo === 'pontos' ? 3 : 2) }
       }
+    });
+  };
+
+  // Acrescenta a escola da folha e já põe o cursor no campo de pontos dela
+  const adicionarEscola = (escola) => {
+    setRevisando(false);
+    setEdicao({ chave, valores, adicionadas: [...adicionadas, escola.id] });
+    setBusca('');
+    const indice = idsNaGrade.length;
+    setTimeout(() => { campos.current[indice * 2]?.focus(); }, 0);
+  };
+
+  // Tira da grade uma escola acrescentada e ainda não salva
+  const removerAdicionada = (escola_id) => {
+    setEdicao({
+      chave,
+      adicionadas: adicionadas.filter((id) => id !== escola_id),
+      valores: { ...valores, [escola_id]: valoresSalvos[escola_id] }
     });
   };
 
@@ -417,6 +457,40 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
             </p>
           </div>
 
+          <div className="busca-escola-pontos">
+            <label className="form-label" htmlFor="busca-escola">Escola da folha</label>
+            <input
+              id="busca-escola"
+              className="form-control"
+              type="search"
+              autoComplete="off"
+              placeholder="Digite o nome ou o apelido (ex.: J. Dias)"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && sugestoes[0]) { e.preventDefault(); adicionarEscola(sugestoes[0]); }
+              }}
+            />
+            {termo && (
+              <ul className="sugestoes-escola" role="listbox" aria-label="Escolas encontradas">
+                {sugestoes.map((e) => (
+                  <li key={e.id}>
+                    <button type="button" role="option" aria-selected="false" onClick={() => adicionarEscola(e)}>
+                      {e.nome}
+                      {e.apelidos?.length > 0 && <span className="text-soft"> · {e.apelidos.join(', ')}</span>}
+                    </button>
+                  </li>
+                ))}
+                {sugestoes.length === 0 && <li className="form-hint">Nenhuma escola fora da grade com esse nome.</li>}
+              </ul>
+            )}
+          </div>
+
+          {linhas.length === 0 && (
+            <p className="form-hint grade-pontos-vazia">Nenhuma escola nesta folha ainda: busque a escola acima.</p>
+          )}
+
+          {linhas.length > 0 && (
           <div className="grade-pontos" role="table" aria-label={`Pontos de ${nomeDoLancamento}`}>
             <div className="grade-pontos-cabecalho" role="row">
               <span role="columnheader">Escola</span>
@@ -429,7 +503,19 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
               return (
                 <div key={linha.escola.id} className={`grade-pontos-linha ${estado}`} role="row">
                   <div className="grade-pontos-escola" role="cell">
-                    <span className="grade-pontos-nome">{linha.escola.nome}</span>
+                    <span className="grade-pontos-nome">
+                      {linha.escola.nome}
+                      {linha.nova && (
+                        <button
+                          type="button"
+                          className="remover-escola-pontos"
+                          aria-label={`Tirar ${linha.escola.nome} da grade`}
+                          onClick={() => removerAdicionada(linha.escola.id)}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </span>
                     {provas.length > 1 && totalNaCategoria(linha.escola.id).total > 0 && (
                       <span className="grade-pontos-rastro">
                         Total em {nomeDaCategoria}: {totalNaCategoria(linha.escola.id).total} ({totalNaCategoria(linha.escola.id).partes})
@@ -482,6 +568,7 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
               );
             })}
           </div>
+          )}
 
           <div className="card-body">
             <p className="resumo-pontos"><strong>{resumoTexto}</strong>{mudou ? ' (não salvo)' : ''}</p>
