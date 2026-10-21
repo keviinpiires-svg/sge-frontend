@@ -151,6 +151,7 @@ function TabelaGeral() {
                   <span className="abertura-medalha">{origem.lancado ? '📝' : MEDALHA[origem.posicao]}</span>
                   <span className="abertura-competicao">
                     {origem.modalidade_nome} {origem.categoria_nome} {ROTULO_GENERO[origem.genero] || origem.genero}
+                    {origem.prova && ` · ${origem.prova}`}
                     {origem.lancado && (
                       <span className="text-soft">
                         {' '}— lançado pela mesa{origem.colocacao ? `, ${origem.colocacao}º lugar` : ''}

@@ -31,7 +31,7 @@ const GRUPOS = {
   }
 };
 
-const chaveDe = (slug, categoria_id, genero) => `${slug}|${categoria_id}|${genero}`;
+const chaveDe = (slug, categoria_id, genero, prova_id) => `${slug}|${categoria_id}|${genero}|${prova_id || ''}`;
 
 // Instante (TIMESTAMP, em ISO): a conversão para o fuso de quem lê é a certa
 const quando = (valor) => (valor
@@ -63,6 +63,7 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
   const [recarga, setRecarga] = useState(0);
   const [aba, setAba] = useState(null);
   const [escolhaPorAba, setEscolhaPorAba] = useState({});   // slug -> "categoria_id|genero"
+  const [provaPorCombinacao, setProvaPorCombinacao] = useState({}); // "slug|categoria_id|genero" -> prova_id
   const [edicao, setEdicao] = useState(null);                // { chave, valores: { escola_id: { pontos, colocacao } } }
   const [revisando, setRevisando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -135,12 +136,26 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
     );
   }
 
-  const chave = chaveDe(modalidade.slug, combinacao.categoria_id, combinacao.genero);
-  const nomeDoLancamento = `${modalidade.nome} ${combinacao.categoria_nome} ${ROTULO_GENERO[combinacao.genero]}`;
+  // Atletismo: cada prova da categoria é um lançamento próprio (db/16)
+  const provas = combinacao.provas || [];
+  const chaveDaCombinacao = `${modalidade.slug}|${combinacao.categoria_id}|${combinacao.genero}`;
+  const prova = provas.find((p) => p.id === provaPorCombinacao[chaveDaCombinacao]) || provas[0] || null;
+  const chave = chaveDe(modalidade.slug, combinacao.categoria_id, combinacao.genero, prova?.id);
+  const nomeDaCategoria = `${modalidade.nome} ${combinacao.categoria_nome} ${ROTULO_GENERO[combinacao.genero]}`;
+  const nomeDoLancamento = prova ? `${nomeDaCategoria} — ${prova.rotulo}` : nomeDaCategoria;
 
   // O que está gravado neste lançamento, por escola
-  const salvos = lancamentos.filter((l) => l.modalidade === modalidade.slug
+  const daCategoria = lancamentos.filter((l) => l.modalidade === modalidade.slug
     && l.categoria_id === combinacao.categoria_id && l.genero === combinacao.genero);
+  const salvos = daCategoria.filter((l) => (l.prova_id || null) === (prova?.id || null));
+  // Com mais de uma prova, a soma da escola na categoria (a Tabela Geral soma igual)
+  const totalNaCategoria = (escola_id) => {
+    const doEscola = daCategoria.filter((l) => l.escola_id === escola_id);
+    return {
+      total: doEscola.reduce((soma, l) => soma + l.pontos, 0),
+      partes: provas.map((p) => `${p.rotulo} ${doEscola.find((l) => l.prova_id === p.id)?.pontos ?? '—'}`).join(' + ')
+    };
+  };
   const salvoDe = new Map(salvos.map((l) => [l.escola_id, l]));
 
   const valoresSalvos = Object.fromEntries(escolas.map((e) => [e.id, {
@@ -191,6 +206,14 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
     setEscolhaPorAba((atual) => ({ ...atual, [modalidade.slug]: valor }));
   };
 
+  const trocarProva = (p) => {
+    if (p.id === prova?.id || !podeSair()) return;
+    setEdicao(null);
+    setRevisando(false);
+    setAviso(null);
+    setProvaPorCombinacao((atual) => ({ ...atual, [chaveDaCombinacao]: p.id }));
+  };
+
   const mudarCampo = (escola_id, campo, texto) => {
     setRevisando(false);
     setEdicao({
@@ -223,6 +246,7 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
         modalidade: modalidade.slug,
         categoria_id: combinacao.categoria_id,
         genero: combinacao.genero,
+        prova_id: prova?.id || null,
         linhas: linhas.map((l) => ({ escola_id: l.escola.id, pontos: l.pontos, colocacao: l.colocacao })),
         base: salvos.map((l) => ({ escola_id: l.escola_id, pontos: l.pontos, colocacao: l.colocacao })),
         confirmado: acima.length > 0
@@ -259,7 +283,7 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
 
     setSalvando(true);
     try {
-      const resposta = await apagarLancamento(modalidade.slug, combinacao.categoria_id, combinacao.genero);
+      const resposta = await apagarLancamento(modalidade.slug, combinacao.categoria_id, combinacao.genero, prova?.id);
       setEdicao(null);
       setAviso({ tipo: 'success', texto: resposta.mensagem });
       setRecarga((r) => r + 1);
@@ -334,6 +358,29 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
           </div>
         </section>
 
+        {provas.length > 0 && (
+          <div className="provas-pontos" role="group" aria-label="Prova">
+            <span className="provas-pontos-rotulo">Prova:</span>
+            {provas.map((p) => {
+              const lancadasNaProva = daCategoria.filter((l) => l.prova_id === p.id).length;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`btn ${p.id === prova?.id ? 'btn-primary' : 'btn-secondary'}`}
+                  aria-pressed={p.id === prova?.id}
+                  onClick={() => trocarProva(p)}
+                >
+                  {p.rotulo}{lancadasNaProva > 0 && ` ✓${lancadasNaProva}`}
+                </button>
+              );
+            })}
+            {provas.length > 1 && (
+              <span className="form-hint">Cada prova é uma folha: digite uma de cada vez. As provas somam sozinhas.</span>
+            )}
+          </div>
+        )}
+
         {aviso && (
           <div className={`alert alert-${aviso.tipo} mb-lg`}>
             {aviso.texto}
@@ -372,6 +419,11 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
                 <div key={linha.escola.id} className={`grade-pontos-linha ${estado}`} role="row">
                   <div className="grade-pontos-escola" role="cell">
                     <span className="grade-pontos-nome">{linha.escola.nome}</span>
+                    {provas.length > 1 && totalNaCategoria(linha.escola.id).total > 0 && (
+                      <span className="grade-pontos-rastro">
+                        Total em {nomeDaCategoria}: {totalNaCategoria(linha.escola.id).total} ({totalNaCategoria(linha.escola.id).partes})
+                      </span>
+                    )}
                     {linha.salvo && (
                       <span className="grade-pontos-rastro">
                         Digitado por {linha.salvo.criado_por_nome}, {quando(linha.salvo.criado_em)}

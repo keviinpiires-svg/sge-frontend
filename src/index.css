@@ -1326,3 +1326,9 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 /* Número do jogo na tabela oficial do chefe (db/15): pequeno e cinza */
 .agenda-numero-tabela { font-size: 12px; font-weight: 400; color: var(--sge-text-muted); white-space: nowrap; }
+
+/* Pontos lançados: botões da prova do atletismo (db/16) */
+.provas-pontos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -12px 0 20px; }
+.provas-pontos .btn { min-height: 44px; }
+.provas-pontos-rotulo { font-weight: 700; color: var(--sge-text-soft); }
+.provas-pontos .form-hint { flex-basis: 100%; margin: 0; }

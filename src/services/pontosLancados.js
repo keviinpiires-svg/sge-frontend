@@ -8,12 +8,13 @@ import api from './api';
 export const listarPontosLancados = () =>
   api.get('/pontos-lancados').then((r) => r.data);
 
-// PUT /api/pontos-lancados — { modalidade, categoria_id, genero, linhas, base, confirmado }
+// PUT /api/pontos-lancados — { modalidade, categoria_id, genero, prova_id (atletismo), linhas, base, confirmado }
 // 409: outra pessoa salvou no meio; 422: há escola acima do esperado sem confirmação
 export const salvarPontosLancados = (lancamento) =>
   api.put('/pontos-lancados', lancamento).then((r) => r.data);
 
-// DELETE /api/pontos-lancados/:modalidade/:categoria_id/:genero
-export const apagarLancamento = (modalidade, categoria_id, genero) =>
-  api.delete(`/pontos-lancados/${encodeURIComponent(modalidade)}/${categoria_id}/${genero}`)
+// DELETE /api/pontos-lancados/:modalidade/:categoria_id/:genero[?prova_id=] (no atletismo, a prova)
+export const apagarLancamento = (modalidade, categoria_id, genero, prova_id = null) =>
+  api.delete(`/pontos-lancados/${encodeURIComponent(modalidade)}/${categoria_id}/${genero}`,
+    { params: prova_id ? { prova_id } : {} })
     .then((r) => r.data);
