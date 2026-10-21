@@ -1332,3 +1332,5 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .provas-pontos .btn { min-height: 44px; }
 .provas-pontos-rotulo { font-weight: 700; color: var(--sge-text-soft); }
 .provas-pontos .form-hint { flex-basis: 100%; margin: 0; }
+/* Revisão: valores já gravados que vão ser substituídos */
+.substituicoes-pontos { margin: 8px 0 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }

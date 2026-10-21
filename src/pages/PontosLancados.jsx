@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
+import { FUSO_DO_EVENTO } from '../services/datas';
 import {
   listarPontosLancados, salvarPontosLancados, apagarLancamento
 } from '../services/pontosLancados';
@@ -36,6 +37,11 @@ const chaveDe = (slug, categoria_id, genero, prova_id) => `${slug}|${categoria_i
 // Instante (TIMESTAMP, em ISO): a conversão para o fuso de quem lê é a certa
 const quando = (valor) => (valor
   ? new Date(valor).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  : '');
+
+// "14:20" no fuso do evento: o horário que a mesa lê no relógio de Barra do Choça
+const hora = (valor) => (valor
+  ? new Date(valor).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: FUSO_DO_EVENTO })
   : '');
 
 const comoTexto = (numero) => (numero === null || numero === undefined ? '' : String(numero));
@@ -178,6 +184,10 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
   const acima = linhas.filter((l) => !l.erro && l.acima);
   const lancadas = linhas.filter((l) => l.pontos !== null && !l.erro);
   const total = lancadas.reduce((soma, l) => soma + l.pontos, 0);
+  // Linhas que trocam ou apagam um valor já gravado: a revisão mostra cada
+  // uma e só grava depois de "Confirmar e substituir" (a API também exige)
+  const substituicoes = linhas.filter((l) => l.salvo && !l.erro
+    && (l.pontos !== l.salvo.pontos || (l.colocacao ?? null) !== (l.salvo.colocacao ?? null)));
   const resumoTexto = `${nomeDoLancamento}: ${lancadas.length} ${lancadas.length === 1 ? 'escola' : 'escolas'}, `
     + `total ${total} pontos`;
 
@@ -249,7 +259,8 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
         prova_id: prova?.id || null,
         linhas: linhas.map((l) => ({ escola_id: l.escola.id, pontos: l.pontos, colocacao: l.colocacao })),
         base: salvos.map((l) => ({ escola_id: l.escola_id, pontos: l.pontos, colocacao: l.colocacao })),
-        confirmado: acima.length > 0
+        confirmado: acima.length > 0,
+        substituir: substituicoes.length > 0
       });
       setEdicao(null);
       setRevisando(false);
@@ -484,6 +495,19 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
               <div className="alert alert-aviso mb-lg">
                 <p className="alert-titulo">Conferir antes de salvar</p>
                 <p className="alert-texto">{resumoTexto}.</p>
+                {substituicoes.length > 0 && (
+                  <ul className="substituicoes-pontos">
+                    {substituicoes.map((l) => (
+                      <li key={l.escola.id}>
+                        ⚠️ <strong>{l.escola.nome}</strong> já tinha {l.salvo.pontos}
+                        {l.salvo.colocacao ? ` (${l.salvo.colocacao}º)` : ''}, digitado por{' '}
+                        {l.salvo.alterado_por_nome || l.salvo.criado_por_nome} às{' '}
+                        {hora(l.salvo.alterado_em || l.salvo.criado_em)} —{' '}
+                        {l.pontos === null ? 'tirar do lançamento?' : `substituir por ${l.pontos}${l.colocacao ? ` (${l.colocacao}º)` : ''}?`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {acima.length > 0 && (
                   <p className="alert-texto">
                     ⚠️ {acima.length === 1 ? 'Uma escola passou' : `${acima.length} escolas passaram`} dos{' '}
@@ -494,7 +518,9 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
                 )}
                 <div className="btn-row" style={{ marginTop: '12px' }}>
                   <button type="button" className="btn btn-primary" onClick={salvar} disabled={salvando}>
-                    {salvando ? 'Salvando...' : acima.length ? 'Confirmar e salvar mesmo assim' : 'Confirmar e salvar'}
+                    {salvando ? 'Salvando...'
+                      : substituicoes.length ? 'Confirmar e substituir'
+                        : acima.length ? 'Confirmar e salvar mesmo assim' : 'Confirmar e salvar'}
                   </button>
                   <button type="button" className="btn btn-secondary" onClick={() => setRevisando(false)} disabled={salvando}>
                     Voltar e corrigir
