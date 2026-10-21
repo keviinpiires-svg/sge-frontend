@@ -1180,10 +1180,12 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .aba-pontos.ativa { color: #0d131b; background: var(--sge-accent); border-color: var(--sge-accent); }
 .aba-pontos:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
 
-.combinacoes-pontos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px 24px; }
-.combinacao-pontos { display: flex; align-items: center; gap: 8px; }
-.combinacao-categoria { min-width: 64px; font-weight: 700; color: var(--sge-text-strong); }
-.combinacao-pontos .btn { min-height: 40px; }
+/* Seletor compacto de categoria e gênero (21/10/2026): uma linha só */
+.seletor-pontos { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 20px; }
+.seletor-pontos-categoria { display: flex; flex-direction: column; gap: 6px; flex: 1 1 180px; }
+.seletor-pontos-categoria .form-control { min-height: 48px; font-size: 16px; }
+.seletor-pontos-genero { display: flex; gap: 8px; flex: 1 1 220px; }
+.seletor-pontos-genero .btn { flex: 1; min-height: 48px; }
 
 .grade-pontos { display: flex; flex-direction: column; border-top: 1px solid var(--sge-border); }
 .grade-pontos-cabecalho,
@@ -1353,3 +1355,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .historico-pontos { margin-top: 20px; }
 .historico-pontos summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--sge-accent); }
 .historico-pontos-lista { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+/* Celular: texto do topo mais curto, abas da modalidade mais baixas */
+@media (max-width: 768px) {
+  .so-tela-larga { display: none; }
+  .aba-pontos { min-height: 44px; padding: 8px 12px; }
+}

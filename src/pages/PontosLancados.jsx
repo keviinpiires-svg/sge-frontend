@@ -322,11 +322,12 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
     });
   };
 
-  // Enter passa para o campo seguinte, como o Tab; no último, vai ao botão
+  // Enter vai para o campo de PONTOS da escola seguinte (pula a colocação,
+  // que é opcional: o Tab ainda passa por ela); na última, vai ao botão
   const aoTeclar = (evento, indice) => {
     if (evento.key !== 'Enter') return;
     evento.preventDefault();
-    const proximo = campos.current[indice + 1];
+    const proximo = campos.current[(Math.floor(indice / 2) + 1) * 2];
     if (proximo) {
       proximo.focus();
       proximo.select();
@@ -405,8 +406,11 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
           <h1 className="page-title">{doGrupo.titulo}</h1>
           <p className="page-subtitle">
             {doGrupo.descricao}: digite aqui os pontos de
-            cada escola conforme a folha do juiz. Os pontos somam na Tabela Geral, mas não entram
-            no desempate por 1º, 2º e 3º lugares. Escola em branco fica fora do lançamento.
+            cada escola conforme a folha do juiz.{' '}
+            {/* No celular a explicação some, para a grade subir */}
+            <span className="so-tela-larga">
+              Os pontos somam na Tabela Geral, mas não entram no desempate por 1º, 2º e 3º lugares.
+            </span>
           </p>
         </header>
 
@@ -428,33 +432,51 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
         </div>
         )}
 
-        <section className="card mb-lg">
-          <div className="card-body">
-            <h2 className="card-title">Categoria e gênero</h2>
-            <div className="combinacoes-pontos">
-              {categorias.map(([categoria_id, categoria_nome]) => (
-                <div key={categoria_id} className="combinacao-pontos">
-                  <span className="combinacao-categoria">{categoria_nome}</span>
-                  {modalidade.combinacoes.filter((c) => c.categoria_id === categoria_id).map((c) => {
-                    const ativa = c.categoria_id === combinacao.categoria_id && c.genero === combinacao.genero;
-                    const quantas = lancadasEm(c);
-                    return (
-                      <button
-                        key={c.genero}
-                        type="button"
-                        className={`btn btn-sm ${ativa ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => trocarCombinacao(c)}
-                        aria-pressed={ativa}
-                      >
-                        {ROTULO_GENERO[c.genero]}{quantas > 0 && ` ✓${quantas}`}
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+        {/* Categoria e gênero numa linha só (21/10/2026): a grade fica perto do
+            topo, também no celular. A lista marca quantas escolas já têm pontos. */}
+        <div className="seletor-pontos">
+          <label className="seletor-pontos-categoria">
+            <span className="form-label">Categoria</span>
+            <select
+              className="form-control"
+              value={combinacao.categoria_id}
+              onChange={(e) => {
+                const id = Number(e.target.value);
+                const destino = modalidade.combinacoes.find((c) => c.categoria_id === id && c.genero === combinacao.genero)
+                  || modalidade.combinacoes.find((c) => c.categoria_id === id);
+                if (destino) trocarCombinacao(destino);
+              }}
+            >
+              {categorias.map(([categoria_id, categoria_nome]) => {
+                const quantas = modalidade.combinacoes
+                  .filter((c) => c.categoria_id === categoria_id)
+                  .reduce((soma, c) => soma + lancadasEm(c), 0);
+                return (
+                  <option key={categoria_id} value={categoria_id}>
+                    {categoria_nome}{quantas > 0 ? ` ✓${quantas}` : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          <div className="seletor-pontos-genero" role="group" aria-label="Gênero">
+            {modalidade.combinacoes.filter((c) => c.categoria_id === combinacao.categoria_id).map((c) => {
+              const ativa = c.genero === combinacao.genero;
+              const quantas = lancadasEm(c);
+              return (
+                <button
+                  key={c.genero}
+                  type="button"
+                  className={`btn ${ativa ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => trocarCombinacao(c)}
+                  aria-pressed={ativa}
+                >
+                  {ROTULO_GENERO[c.genero]}{quantas > 0 && ` ✓${quantas}`}
+                </button>
+              );
+            })}
           </div>
-        </section>
+        </div>
 
         {provas.length > 0 && (
           <div className="provas-pontos" role="group" aria-label="Prova">
