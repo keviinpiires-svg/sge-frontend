@@ -18,3 +18,9 @@ export const apagarLancamento = (modalidade, categoria_id, genero, prova_id = nu
   api.delete(`/pontos-lancados/${encodeURIComponent(modalidade)}/${categoria_id}/${genero}`,
     { params: prova_id ? { prova_id } : {} })
     .then((r) => r.data);
+
+// GET /api/pontos-lancados/historico — só ADMIN: correções de um lançamento
+// (valor de antes, quem tinha digitado, valor novo, quem mudou e quando)
+export const listarHistorico = ({ modalidade, categoria_id, genero, prova_id }) =>
+  api.get('/pontos-lancados/historico', { params: { modalidade, categoria_id, genero, ...(prova_id ? { prova_id } : {}) } })
+    .then((r) => r.data.historico);

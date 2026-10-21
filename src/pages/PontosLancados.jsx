@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { FUSO_DO_EVENTO } from '../services/datas';
 import {
-  listarPontosLancados, salvarPontosLancados, apagarLancamento
+  listarPontosLancados, salvarPontosLancados, apagarLancamento, listarHistorico
 } from '../services/pontosLancados';
 
 // Atletismo, xadrez, dama e dominó funcionam fora do sistema (chefe,
@@ -64,6 +64,53 @@ const lerLinha = ({ pontos, colocacao }, esperado, teto) => {
   if (p === null && c !== null) return { pontos: p, colocacao: c, erro: 'Colocação sem pontos.' };
   return { pontos: p, colocacao: c, erro: null, acima: p !== null && p > esperado };
 };
+
+// Histórico das correções de um lançamento (db/17) — só o ADMIN vê. Busca
+// quando é aberto e de novo a cada salvamento (recarga).
+const TEXTO_ACAO = { ALTERACAO: 'corrigido', EXCLUSAO: 'tirado do lançamento', EXCLUSAO_LANCAMENTO: 'lançamento apagado' };
+function HistoricoDeCorrecoes({ filtro, recarga }) {
+  const [aberto, setAberto] = useState(false);
+  const [resultado, setResultado] = useState(null);
+  // O filtro como texto: o objeto nasce de novo a cada renderização
+  const filtroTexto = JSON.stringify(filtro);
+  const chave = `${filtroTexto}|${recarga}`;
+
+  useEffect(() => {
+    if (!aberto) return undefined;
+    let ativo = true;
+    listarHistorico(JSON.parse(filtroTexto))
+      .then((historico) => { if (ativo) setResultado({ chave, historico, erro: '' }); })
+      .catch((falha) => { if (ativo) setResultado({ chave, historico: [], erro: falha.mensagem }); });
+    return () => { ativo = false; };
+  }, [aberto, chave, filtroTexto]);
+
+  const pronto = resultado?.chave === chave;
+  return (
+    <details className="historico-pontos" open={aberto} onToggle={(e) => setAberto(e.currentTarget.open)}>
+      <summary>Histórico de correções (só o ADMIN vê)</summary>
+      {aberto && !pronto && <p className="form-hint">Carregando...</p>}
+      {pronto && resultado.erro && <p className="text-danger">{resultado.erro}</p>}
+      {pronto && !resultado.erro && resultado.historico.length === 0 && (
+        <p className="form-hint">Nenhuma correção neste lançamento.</p>
+      )}
+      {pronto && resultado.historico.length > 0 && (
+        <ul className="historico-pontos-lista">
+          {resultado.historico.map((h) => (
+            <li key={h.id}>
+              <span className="text-soft">{quando(h.feito_em)}</span> — <strong>{h.escola_nome}</strong>:{' '}
+              {h.pontos_antes}{h.colocacao_antes ? ` (${h.colocacao_antes}º)` : ''} →{' '}
+              {h.pontos_depois === null ? TEXTO_ACAO[h.acao] : `${h.pontos_depois}${h.colocacao_depois ? ` (${h.colocacao_depois}º)` : ''}`}
+              <span className="text-soft">
+                {' '}· por {h.usuario_nome}
+                {h.anterior_por_nome && ` · o valor de antes era de ${h.anterior_por_nome}, ${quando(h.anterior_em)}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </details>
+  );
+}
 
 function PontosLancados({ grupo = 'tabuleiro' }) {
   const doGrupo = GRUPOS[grupo] || GRUPOS.tabuleiro;
@@ -631,6 +678,13 @@ function PontosLancados({ grupo = 'tabuleiro' }) {
                   </button>
                 )}
               </div>
+            )}
+
+            {isAdmin && (
+              <HistoricoDeCorrecoes
+                recarga={recarga}
+                filtro={{ modalidade: modalidade.slug, categoria_id: combinacao.categoria_id, genero: combinacao.genero, prova_id: prova?.id || null }}
+              />
             )}
 
             {isAdmin && salvos.length > 0 && (

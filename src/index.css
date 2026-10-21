@@ -1349,3 +1349,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   margin-left: 8px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
   background: transparent; color: var(--sge-text-muted); border: 1px solid var(--sge-border-strong); font-size: 18px; line-height: 1;
 }
+/* Pontos lançados: histórico das correções (ADMIN, db/17) */
+.historico-pontos { margin-top: 20px; }
+.historico-pontos summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--sge-accent); }
+.historico-pontos-lista { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
