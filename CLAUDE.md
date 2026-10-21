@@ -21,12 +21,17 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   Tag do estado anterior: `v1-antes-do-novo-escopo`.
 - ⚠️ **Push na `feat/novo-escopo` = deploy em produção.** Não dê push sem o usuário pedir e sem
   testar antes com o backend local no banco de dev.
-- Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta técnicos/dirigentes, se entrarem); **11 — atletismo** 📝
-  só planejada (nada implementado). A fatia 10 foi executada com pendências de
+- Fatias 1–7, 9 e 10 ✅; **8** 🔄 (falta técnicos/dirigentes, se entrarem); **11 — atletismo, xadrez,
+  dama e dominó** ✅ (pontos lançados pela mesa). A fatia 10 foi executada com pendências de
   produção (backup, senha, contas de mesa): veja `F:\System_jogos\CLAUDE.md`.
-- **Commits locais ainda NÃO publicados:** o trabalho de 20/10/2026 (súmula do "melhor de dois jogos", textos do jogo único
-  e a **Agenda de Jogos**). As respostas de 12/10 já foram publicadas (até `8d1388a`). **Ordem do push: backend primeiro,
-  frontend logo em seguida** — a `/agenda` chama `GET /api/agenda`, que só existe no backend novo.
+- **Publicado em 20/10/2026** (até `5368f07`): súmula do "melhor de dois jogos", textos do jogo único e a **Agenda de
+  Jogos**.
+- **Commits locais ainda NÃO publicados (21/10/2026):** menu "Tabuleiro"/"Atletismo" e o lote dos pontos lançados —
+  atletismo **por prova** (botões Salto/50 m/100 m, total da escola somando as provas), atletismo sem Aberto, aviso
+  na revisão ao **substituir** valor gravado ("já tinha X, digitado por Y às HH:MM — substituir?"), grade **só com
+  as escolas da folha** (busca por nome ou apelido), **histórico de correções** para o ADMIN e toque (categoria numa
+  lista, gênero e prova com 44 px ou mais, Enter vai aos pontos da escola seguinte). ⚠️ Depende do backend do mesmo
+  lote (com `db/16` e `db/17`): **backend primeiro, frontend logo em seguida.**
   A tela de agenda de jogos (`FormAgendaJogo`) já foi publicada em 05/10/2026.
 - **Regras respondidas pelo chefe em 06/10/2026** (seção 12.1 do contexto): a tabela geral mostra
   **só a soma geral** (os três blocos saíram) e escolas com a mesma soma **dividem a posição**
