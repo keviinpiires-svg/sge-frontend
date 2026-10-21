@@ -51,7 +51,8 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   ⚠️ A tela nova lê `desempate.acrescimo`, que só o backend de 12/10 manda: publicar o backend antes.
   Pendente: empate do baleado no ida e volta.
 - **Mais de 12/10/2026 (commits locais, sem push):** tela do ADMIN `/importar-jogos` (jogos da fase de
-  grupos por CSV, com prévia) e tela `/pontos-lancados` (ADMIN e mesa): atletismo, xadrez, dama e dominó
+  grupos por CSV, com prévia) e a tela de pontos lançados (ADMIN e mesa; no menu, desde 21/10/2026, "Tabuleiro" em `/tabuleiro` e "Atletismo" em
+  `/atletismo`; `/pontos-lancados` leva ao Tabuleiro): atletismo, xadrez, dama e dominó
   funcionam fora do sistema e a mesa digita os pontos de cada escola por categoria e gênero, com resumo
   antes de salvar, destaque de valor acima do esperado e rastro de quem digitou e alterou (fatia 11). A
   Tabela Geral mostra esses pontos na abertura de cada escola, fora do desempate. O menu lateral não mostra
