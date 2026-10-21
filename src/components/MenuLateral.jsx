@@ -47,7 +47,7 @@ function MenuLateral() {
         const icone = ICONES[modalidade.slug] || '🏅';
 
         // Atletismo, xadrez, dama e dominó não têm competição: funcionam fora
-        // do sistema, e a mesa só lança os pontos (/pontos-lancados). Ficam
+        // do sistema, e a mesa só lança os pontos (/tabuleiro e /atletismo). Ficam
         // fora do menu, que leva às tabelas de jogos.
         if (modalidade.total_competicoes === 0) return null;
 

@@ -15,6 +15,22 @@ import {
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino' };
 
+// A tela aparece no menu em duas entradas: Tabuleiro (xadrez, dama e dominó)
+// e Atletismo. É a mesma tela e a mesma API; cada entrada mostra só as suas
+// modalidades (os slugs vêm de regrasProvisorias.pontosLancados).
+const GRUPOS = {
+  tabuleiro: {
+    modalidades: ['xadrez', 'dama', 'domino'],
+    titulo: 'Tabuleiro',
+    descricao: 'Xadrez, dama e dominó acontecem fora do sistema'
+  },
+  atletismo: {
+    modalidades: ['atletismo'],
+    titulo: 'Atletismo',
+    descricao: 'O atletismo acontece fora do sistema'
+  }
+};
+
 const chaveDe = (slug, categoria_id, genero) => `${slug}|${categoria_id}|${genero}`;
 
 // Instante (TIMESTAMP, em ISO): a conversão para o fuso de quem lê é a certa
@@ -39,7 +55,8 @@ const lerLinha = ({ pontos, colocacao }, esperado, teto) => {
   return { pontos: p, colocacao: c, erro: null, acima: p !== null && p > esperado };
 };
 
-function PontosLancados() {
+function PontosLancados({ grupo = 'tabuleiro' }) {
+  const doGrupo = GRUPOS[grupo] || GRUPOS.tabuleiro;
   const { isAdmin } = useAuth();
 
   const [resultado, setResultado] = useState(null);
@@ -88,7 +105,22 @@ function PontosLancados() {
     );
   }
 
-  const { configuracao, escolas, lancamentos } = dados;
+  const { escolas, lancamentos } = dados;
+  // Só as modalidades desta entrada do menu, na ordem do grupo
+  const configuracao = {
+    ...dados.configuracao,
+    modalidades: doGrupo.modalidades
+      .map((slug) => dados.configuracao.modalidades.find((m) => m.slug === slug))
+      .filter(Boolean)
+  };
+
+  if (configuracao.modalidades.length === 0) {
+    return (
+      <div className="page"><div className="container-lg">
+        <p className="alert alert-aviso">Nenhuma modalidade de {doGrupo.titulo.toLowerCase()} cadastrada para lançar pontos.</p>
+      </div></div>
+    );
+  }
   const teto = configuracao.teto_absoluto;
   const modalidade = configuracao.modalidades.find((m) => m.slug === aba) || configuracao.modalidades[0];
   const escolhida = escolhaPorAba[modalidade.slug];
@@ -248,14 +280,16 @@ function PontosLancados() {
       <div className="container-lg">
         <header className="page-header">
           <p className="eyebrow">Mesa</p>
-          <h1 className="page-title">Pontos lançados</h1>
+          <h1 className="page-title">{doGrupo.titulo}</h1>
           <p className="page-subtitle">
-            Atletismo, xadrez, dama e dominó acontecem fora do sistema: digite aqui os pontos de
+            {doGrupo.descricao}: digite aqui os pontos de
             cada escola conforme a folha do juiz. Os pontos somam na Tabela Geral, mas não entram
             no desempate por 1º, 2º e 3º lugares. Escola em branco fica fora do lançamento.
           </p>
         </header>
 
+        {/* Botões de modalidade só no Tabuleiro: o Atletismo é uma só */}
+        {configuracao.modalidades.length > 1 && (
         <div className="abas-pontos" role="tablist" aria-label="Modalidades">
           {configuracao.modalidades.map((m) => (
             <button
@@ -270,6 +304,7 @@ function PontosLancados() {
             </button>
           ))}
         </div>
+        )}
 
         <section className="card mb-lg">
           <div className="card-body">

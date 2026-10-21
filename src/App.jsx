@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import RotaPrivada from './components/RotaPrivada';
 import { AuthProvider } from './context/AuthContext';
@@ -36,7 +36,12 @@ function App() {
           <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />
           <Route path="/importar-jogos" element={<RotaPrivada perfis={['ADMIN']}><ImportarJogos /></RotaPrivada>} />
-          <Route path="/pontos-lancados" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados /></RotaPrivada>} />
+          {/* Pontos lançados: duas entradas no menu, a mesma tela (key força
+              uma tela nova ao trocar de uma para a outra) */}
+          <Route path="/tabuleiro" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados key="tabuleiro" grupo="tabuleiro" /></RotaPrivada>} />
+          <Route path="/atletismo" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados key="atletismo" grupo="atletismo" /></RotaPrivada>} />
+          {/* Endereço antigo: continua funcionando */}
+          <Route path="/pontos-lancados" element={<Navigate to="/tabuleiro" replace />} />
           <Route path="/modalidades/:slug" element={<Competicoes />} />
           <Route path="/competicoes/:id" element={<CompeticaoDetalhe />} />
           <Route path="/agenda" element={<Agenda />} />

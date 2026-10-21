@@ -14,7 +14,8 @@ const links = [
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
   { to: '/importar-jogos', label: 'Importar Jogos', admin: true },
-  { to: '/pontos-lancados', label: 'Pontos Lançados', mesa: true },
+  { to: '/tabuleiro', label: 'Tabuleiro', mesa: true },
+  { to: '/atletismo', label: 'Atletismo', mesa: true },
   { to: '/usuarios', label: 'Usuários', admin: true },
 ];
 
