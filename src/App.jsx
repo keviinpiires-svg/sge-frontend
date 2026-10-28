@@ -12,6 +12,7 @@ import Artilharia from './pages/Artilharia';
 import TabelaGeral from './pages/TabelaGeral';
 import Usuarios from './pages/Usuarios';
 import ImportarJogos from './pages/ImportarJogos';
+import ImportarAtletas from './pages/ImportarAtletas';
 import PontosLancados from './pages/PontosLancados';
 import Login from './pages/Login';
 import Competicoes from './pages/Competicoes';
@@ -36,6 +37,7 @@ function App() {
           <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />
           <Route path="/importar-jogos" element={<RotaPrivada perfis={['ADMIN']}><ImportarJogos /></RotaPrivada>} />
+          <Route path="/importar-atletas" element={<RotaPrivada perfis={['ADMIN']}><ImportarAtletas /></RotaPrivada>} />
           {/* Pontos lançados: duas entradas no menu, a mesma tela (key força
               uma tela nova ao trocar de uma para a outra) */}
           <Route path="/tabuleiro" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados key="tabuleiro" grupo="tabuleiro" /></RotaPrivada>} />

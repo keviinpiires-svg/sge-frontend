@@ -14,6 +14,7 @@ const links = [
   { to: '/tabela-geral', label: 'Tabela Geral' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas' },
+  { to: '/importar-atletas', label: 'Importar Atletas', admin: true },
   { to: '/importar-jogos', label: 'Importar Jogos', admin: true },
   { to: '/tabuleiro', label: 'Tabuleiro', mesa: true },
   { to: '/atletismo', label: 'Atletismo', mesa: true },
