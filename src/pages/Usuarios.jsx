@@ -3,6 +3,7 @@ import { useAuth } from '../context/useAuth';
 import {
   listarUsuarios, criarUsuario, atualizarUsuario, trocarSenhaUsuario
 } from '../services/usuarios';
+import { listarLocais } from '../services/locais';
 
 const MINIMO_SENHA = 8;
 
@@ -10,10 +11,13 @@ const ROTULO_PERFIL = { ADMIN: 'Administrador', PLACAR: 'Mesa (placar)' };
 
 const DESCRICAO_PERFIL = {
   ADMIN: 'Faz tudo: cadastra escolas e atletas, agenda jogos, gera o mata-mata e aplica punições.',
-  PLACAR: 'Só lança placar e súmula. Não cadastra nem pune — é a conta de quem fica na mesa.'
+  PLACAR: 'Só inicia jogo e lança súmula — do local dela, se tiver um. Não cadastra nem pune.'
 };
 
-const FORM_VAZIO = { id: null, nome: '', email: '', perfil: 'PLACAR', senha: '' };
+const FORM_VAZIO = { id: null, nome: '', email: '', perfil: 'PLACAR', senha: '', local_id: '' };
+
+// '' no seletor = sem local (null no backend)
+const localParaEnviar = (valor) => (valor === '' ? null : Number(valor));
 
 const formatarData = (valor) =>
   valor ? new Date(valor).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
@@ -28,6 +32,13 @@ function Usuarios() {
   const [novaSenha, setNovaSenha] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
+  const [locais, setLocais] = useState([]);
+
+  useEffect(() => {
+    listarLocais()
+      .then((lista) => setLocais([...lista].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))))
+      .catch(() => setLocais([]));
+  }, []);
 
   const pronto = resultado?.recarga === recarga;
   const usuarios = pronto ? resultado.usuarios : [];
@@ -65,6 +76,7 @@ function Usuarios() {
         // nem é enviado: o backend recusa, e com razão.
         const campos = { nome: form.nome.trim(), email: form.email.trim() };
         if (form.id !== eu?.id) campos.perfil = form.perfil;
+        if (form.perfil === 'PLACAR') campos.local_id = localParaEnviar(form.local_id);
 
         const resposta = await atualizarUsuario(form.id, campos);
         setForm(FORM_VAZIO);
@@ -74,7 +86,8 @@ function Usuarios() {
           nome: form.nome.trim(),
           email: form.email.trim(),
           perfil: form.perfil,
-          senha: form.senha
+          senha: form.senha,
+          ...(form.perfil === 'PLACAR' ? { local_id: localParaEnviar(form.local_id) } : {})
         });
         setForm(FORM_VAZIO);
         recarregar(resposta.mensagem);
@@ -156,6 +169,7 @@ function Usuarios() {
   const admins = usuarios.filter((u) => u.perfil === 'ADMIN' && u.ativo).length;
   const mesas = usuarios.filter((u) => u.perfil === 'PLACAR' && u.ativo).length;
   const inativas = usuarios.filter((u) => !u.ativo).length;
+  const mesasSemLocal = usuarios.filter((u) => u.perfil === 'PLACAR' && u.ativo && !u.local_id);
 
   const editando = Boolean(form.id);
   const editandoEu = form.id === eu?.id;
@@ -179,6 +193,15 @@ function Usuarios() {
           {inativas > 0 && <>, mais {inativas} {inativas === 1 ? 'desativada' : 'desativadas'}</>}.
         </p>
 
+        {mesasSemLocal.length > 0 && (
+          <p className="alert alert-aviso mb-lg">
+            ⚠️ {mesasSemLocal.length === 1 ? 'A conta de mesa' : 'As contas de mesa'}{' '}
+            <b>{mesasSemLocal.map((u) => u.nome).join(', ')}</b>{' '}
+            {mesasSemLocal.length === 1 ? 'está' : 'estão'} <b>sem local definido</b>: lançam em jogo de
+            qualquer local. Edite e escolha o local da mesa para prendê-la à quadra dela.
+          </p>
+        )}
+
         {aviso && <p className={`alert alert-${aviso.tipo} mb-lg`}>{aviso.texto}</p>}
 
         <section className="card mb-lg">
@@ -189,6 +212,7 @@ function Usuarios() {
                   <th className="text-left">Nome</th>
                   <th className="text-left">E-mail</th>
                   <th className="text-left">Perfil</th>
+                  <th className="text-left">Local da mesa</th>
                   <th>Acesso</th>
                   <th className="text-left">Criada em</th>
                   <th>Ações</th>
@@ -213,6 +237,13 @@ function Usuarios() {
                           {ROTULO_PERFIL[usuario.perfil] || usuario.perfil}
                         </span>
                       </td>
+                      <td className="text-left">
+                        {usuario.perfil !== 'PLACAR' && <span className="text-soft">—</span>}
+                        {usuario.perfil === 'PLACAR' && usuario.local_nome}
+                        {usuario.perfil === 'PLACAR' && !usuario.local_id && (
+                          <span className="badge badge-suspenso">⚠️ sem local definido</span>
+                        )}
+                      </td>
                       <td>
                         <span className={`badge ${usuario.ativo ? 'badge-success' : 'badge-suspenso'}`}>
                           {usuario.ativo ? 'ativa' : 'desativada'}
@@ -232,7 +263,8 @@ function Usuarios() {
                                 nome: usuario.nome,
                                 email: usuario.email,
                                 perfil: usuario.perfil,
-                                senha: ''
+                                senha: '',
+                                local_id: usuario.local_id ? String(usuario.local_id) : ''
                               });
                             }}
                           >
@@ -373,6 +405,26 @@ function Usuarios() {
                       : DESCRICAO_PERFIL[form.perfil]}
                   </span>
                 </div>
+
+                {form.perfil === 'PLACAR' && (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="local">Local da mesa</label>
+                    <select
+                      id="local"
+                      className="form-control"
+                      value={form.local_id}
+                      onChange={(e) => setForm({ ...form, local_id: e.target.value })}
+                    >
+                      <option value="">Sem local (lança em qualquer jogo)</option>
+                      {locais.map((l) => <option key={l.id} value={String(l.id)}>{l.nome}</option>)}
+                    </select>
+                    <span className="form-hint">
+                      Uma conta por local de jogo: com o local escolhido, a mesa só inicia e lança
+                      súmula de jogo daquele local. Tabuleiro e Atletismo ficam abertos. Trocar o
+                      local vale na hora, sem a pessoa sair e entrar de novo.
+                    </span>
+                  </div>
+                )}
 
                 {!editando && (
                   <div className="form-group">

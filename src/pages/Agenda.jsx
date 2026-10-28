@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { listarAgenda } from '../services/agenda';
+import { useAuth } from '../context/useAuth';
 import { dataPorExtenso, hojeNoEvento } from '../services/datas';
 import {
   CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaCompeticao, nomeDaFase, normalizar
@@ -59,6 +60,10 @@ function Agenda() {
   const [tentativa, setTentativa] = useState(0);
   const [parametros, setParametros] = useSearchParams();
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  // Mesa com local (db/18): o local dela vem primeiro e marcado; os outros
+  // continuam na lista
+  const { localDaMesa } = useAuth();
+  const idDaMesa = localDaMesa ? String(localDaMesa.id) : null;
 
   useEffect(() => {
     let ativo = true;
@@ -144,9 +149,15 @@ function Agenda() {
     if (!grupoDia) { grupoDia = { dia, locais: [] }; porDia.push(grupoDia); }
     const nomeLocal = jogo.local?.nome || 'Local a definir';
     let grupoLocal = grupoDia.locais.find((g) => g.nome === nomeLocal);
-    if (!grupoLocal) { grupoLocal = { nome: nomeLocal, jogos: [] }; grupoDia.locais.push(grupoLocal); }
+    if (!grupoLocal) {
+      grupoLocal = { nome: nomeLocal, daMesa: idDaMesa !== null && String(jogo.local?.id) === idDaMesa, jogos: [] };
+      grupoDia.locais.push(grupoLocal);
+    }
     grupoLocal.jogos.push(jogo);
   }
+  // O local da mesa primeiro em cada dia (a ordem dos outros não muda)
+  porDia.forEach((g) => g.locais.sort((a, b) => Number(b.daMesa) - Number(a.daMesa)));
+  const soOMeuLocal = idDaMesa !== null && filtro.local === idDaMesa;
 
   const query = parametros.toString();
 
@@ -196,7 +207,10 @@ function Agenda() {
         <h2 className="agenda-dia-titulo">{rotuloDoDia(grupoDia.dia)}</h2>
         {grupoDia.locais.map((grupoLocal) => (
           <div key={grupoLocal.nome} className="agenda-local">
-            <h3 className="agenda-local-titulo">📍 {grupoLocal.nome}</h3>
+            <h3 className="agenda-local-titulo">
+              📍 {grupoLocal.nome}
+              {grupoLocal.daMesa && <span className="badge badge-accent" style={{ marginLeft: '8px' }}>sua mesa</span>}
+            </h3>
             <ul className="agenda-jogos">
               {grupoLocal.jogos.map((jogo) => (
                 <li key={jogo.id}>
@@ -238,6 +252,17 @@ function Agenda() {
           <h1 className="page-title">Agenda de Jogos</h1>
           <p className="page-subtitle">Horários de Barra do Choça. Toque num jogo para ver os atletas.</p>
         </header>
+
+        {localDaMesa && (
+          <div className="alert alert-aviso mb-lg">
+            Sua mesa é do local <b>{localDaMesa.nome}</b>: os jogos dele vêm primeiro em cada dia,
+            marcados como &quot;sua mesa&quot;. Você só inicia e lança súmula de jogo deste local.{' '}
+            <button type="button" className="btn btn-outline btn-sm"
+              onClick={() => mudar('local', soOMeuLocal ? TODOS : idDaMesa)}>
+              {soOMeuLocal ? 'Ver todos os locais' : 'Só o meu local'}
+            </button>
+          </div>
+        )}
 
         {pronto && !erro && jogos.length > 0 && (
           <div className="agenda-filtros">
