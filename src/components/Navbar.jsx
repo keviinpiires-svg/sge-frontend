@@ -8,7 +8,8 @@ const links = [
   { to: '/', label: 'Início', end: true },
   { to: '/agenda', label: 'Agenda' },
   { to: '/modalidades/futsal', label: 'Modalidades' },
-  { to: '/cadastro', label: 'Cadastrar Time', admin: true },
+  // Fora do menu por enquanto; a página e a rota /cadastro continuam
+  // { to: '/cadastro', label: 'Cadastrar Time', admin: true },
   { to: '/artilharia', label: 'Artilharia' },
   { to: '/tabela-geral', label: 'Tabela Geral' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
