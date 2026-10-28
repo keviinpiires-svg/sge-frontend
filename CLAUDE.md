@@ -62,6 +62,13 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   antes de salvar, destaque de valor acima do esperado e rastro de quem digitou e alterou (fatia 11). A
   Tabela Geral mostra esses pontos na abertura de cada escola, fora do desempate. O menu lateral não mostra
   mais modalidade sem competição. ⚠️ Depende do backend com o `db/11`.
+- **28/10/2026:** publicados o lote dos pontos lançados (`0d877c5`) e "Cadastrar Time" fora do menu
+  (`2cc0925`; a página e a rota `/cadastro` continuam, e o botão "Cadastrar Escola" da Início também).
+  **Commits locais, sem push:** tela do ADMIN **`/importar-atletas`** ("Importar Atletas" no menu):
+  escolha do CSV, seletor de escola quando a planilha não tem a coluna Escola, prévia com filtro
+  Todos/OK/Aviso/Erro, "importar só as linhas OK" explícito quando há erro, confirmar e botão do
+  modelo CSV vazio. A tabela não mostra RG nem nascimento. ⚠️ Depende do backend com
+  `/api/importar-atletas` (detalhes em `System_jogos/docs/IMPORTACAO_ATLETAS.md`): publicar o backend antes.
 
 ## Infraestrutura
 
