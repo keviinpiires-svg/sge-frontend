@@ -69,6 +69,12 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   Todos/OK/Aviso/Erro, "importar só as linhas OK" explícito quando há erro, confirmar e botão do
   modelo CSV vazio. A tabela não mostra RG nem nascimento. ⚠️ Depende do backend com
   `/api/importar-atletas` (detalhes em `System_jogos/docs/IMPORTACAO_ATLETAS.md`): publicar o backend antes.
+  **Trava de mesa por local (`db/18`, commits locais):** a tela `/usuarios` escolhe o local da conta de
+  mesa, mostra o local na lista e avisa "sem local definido"; a sessão traz `local_id`/`local_nome` e é
+  relida em `GET /api/eu` ao abrir o app (`localDaMesa` no `useAuth`); a Agenda mostra à mesa o local
+  dela primeiro, marcado "sua mesa", com o botão "Só o meu local". O botão "Reiniciar Campeonato" só
+  aparece se `/saude` disser `reiniciar_permitido` (além da constante desligada de 07/10). ⚠️ Depende
+  do backend com o `db/18` e `/api/eu`: publicar o backend antes.
 
 ## Infraestrutura
 
