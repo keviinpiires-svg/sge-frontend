@@ -1,12 +1,30 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AuthContext } from './auth-context';
 import { getToken, getUsuario, salvarSessao, limparSessao } from '../services/token';
-import { login as autenticar } from '../services/auth';
+import { login as autenticar, buscarEu } from '../services/auth';
 
 export function AuthProvider({ children }) {
   // O estado inicial vem do localStorage: a sessão sobrevive ao F5
   const [token, setToken] = useState(() => getToken());
   const [usuario, setUsuario] = useState(() => getUsuario());
+
+  // Ao abrir o sistema, relê a conta no servidor: o ADMIN pode ter trocado o
+  // local da mesa (ou o perfil) depois do login. A trava em si é do backend,
+  // que lê o banco a cada escrita; aqui é só para a tela mostrar o certo.
+  useEffect(() => {
+    if (!token) return undefined;
+    let ativo = true;
+    buscarEu()
+      .then((atual) => {
+        if (!ativo) return;
+        salvarSessao(token, atual);
+        setUsuario(atual);
+      })
+      .catch(() => {
+        // 401 já encerra a sessão pelo interceptor; sem rede, fica a do login
+      });
+    return () => { ativo = false; };
+  }, [token]);
 
   const login = useCallback(async (email, senha) => {
     let data;
@@ -35,13 +53,25 @@ export function AuthProvider({ children }) {
   }, []);
 
   const valor = useMemo(() => {
-    const perfil = (usuario?.perfil || usuario?.role || '').toString().toUpperCase();
+    // O backend manda o perfil no login (ADMIN ou PLACAR). Sem perfil
+    // reconhecido, a sessão vale só para leitura: logado não é mais sinônimo
+    // de administrador.
+    const perfil = (usuario?.perfil || '').toString().toUpperCase();
+    const autenticado = Boolean(token);
+
     return {
       token,
       usuario,
-      autenticado: Boolean(token),
-      // Sem campo de perfil no backend, todo usuário logado é tratado como administrador
-      isAdmin: Boolean(token) && (perfil === '' || perfil.includes('ADMIN')),
+      perfil,
+      autenticado,
+      isAdmin: autenticado && perfil === 'ADMIN',
+      isPlacar: autenticado && perfil === 'PLACAR',
+      // Quem lança súmula e placar: o administrador e a mesa
+      podeLancar: autenticado && (perfil === 'ADMIN' || perfil === 'PLACAR'),
+      // Local da conta de mesa (db/18); null = mesa sem local, ou ADMIN
+      localDaMesa: autenticado && perfil === 'PLACAR' && usuario?.local_id
+        ? { id: usuario.local_id, nome: usuario.local_nome }
+        : null,
       login,
       logout,
     };

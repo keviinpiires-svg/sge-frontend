@@ -3,15 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { obterEstatisticas } from '../services/dashboard';
 import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
+import { buscarSaude } from '../services/auth';
 import { listarEscolas } from '../services/escolas';
+import Artilheiros from '../components/Artilheiros';
+import { dataPorExtenso, soAHora } from '../services/datas';
+
+const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
+
+// Botão "Reiniciar Campeonato" desativado a pedido do usuário (07/10/2026):
+// a Zona de Perigo não aparece nem para o ADMIN. A rota DELETE
+// /api/campeonato/reset continua no backend; para reativar, troque para true.
+// Mesmo ativo aqui, ele só aparece onde o servidor permite (/saude
+// reiniciar_permitido: em produção, só com PERMITIR_REINICIAR=true). Quem
+// protege é o backend, que recusa com 403.
+const REINICIAR_CAMPEONATO_ATIVO = false;
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
 
-const formatarData = (dataStr) =>
-  new Date(dataStr).toLocaleDateString('pt-BR', { timeZone: 'UTC', weekday: 'long', day: '2-digit', month: 'long' });
+const formatarData = (dataStr) => dataPorExtenso(dataStr);
 
-const formatarHora = (dataStr) =>
-  new Date(dataStr).toLocaleTimeString('pt-BR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' });
+const formatarHora = (dataStr) => soAHora(dataStr);
 
 function Inicio() {
   const navigate = useNavigate();
@@ -29,6 +40,17 @@ function Inicio() {
 
   // Incrementar este valor dispara uma nova busca (botão "Tentar novamente")
   const [tentativa, setTentativa] = useState(0);
+
+  // O servidor permite reiniciar? Na dúvida (sem resposta), não mostra
+  const [reiniciarPermitido, setReiniciarPermitido] = useState(false);
+  useEffect(() => {
+    if (!REINICIAR_CAMPEONATO_ATIVO || !isAdmin) return undefined;
+    let ativo = true;
+    buscarSaude()
+      .then((saude) => { if (ativo) setReiniciarPermitido(saude.reiniciar_permitido === true); })
+      .catch(() => {});
+    return () => { ativo = false; };
+  }, [isAdmin]);
 
   useEffect(() => {
     let ativo = true;
@@ -60,8 +82,9 @@ function Inicio() {
   // Ação irreversível: pede confirmação e depois exige a palavra digitada
   const reiniciarCampeonato = async () => {
     const aviso =
-      'ATENÇÃO: isso apaga TODAS as escolas, atletas, jogos, súmulas e grupos deste campeonato.\n\n' +
-      'Seu login de administrador e os cadastros base (locais, modalidades, categorias) são preservados.\n\n' +
+      'ATENÇÃO: isso apaga TODOS os jogos e súmulas deste campeonato, junto com suspensões,\n' +
+      'colocações e pontuação da tabela geral.\n\n' +
+      'Escolas, competições, grupos, equipes, atletas e inscrições são preservados.\n\n' +
       'Esta ação NÃO pode ser desfeita. Deseja continuar?';
 
     if (!window.confirm(aviso)) return;
@@ -144,11 +167,30 @@ function Inicio() {
         aoClicar: alternarEscolas
       },
       { icone: '🏃', titulo: 'Atletas Cadastrados', valor: dashboard.total_atletas },
-      { icone: '⚽', titulo: 'Balançaram a Rede', detalhe: 'Total de gols', valor: dashboard.total_gols },
+      {
+        icone: '🏅',
+        titulo: 'Competições',
+        valor: dashboard.total_competicoes,
+        detalhe: `${formatarNumero(dashboard.total_equipes)} equipes inscritas`
+      },
+      {
+        icone: '🗓️',
+        titulo: 'Jogos',
+        valor: dashboard.jogos.total,
+        detalhe: `${dashboard.jogos.FINALIZADO} encerrados · ${dashboard.jogos.AGENDADO} agendados`
+      },
+      {
+        icone: '⚽',
+        titulo: 'Balançaram a Rede',
+        // Só modalidades de gol: somar gols de futsal com pontos de basquete
+        // daria um número sem significado
+        detalhe: 'Gols em futsal, society e handebol',
+        valor: dashboard.total_gols
+      }
     ];
 
     const proximo = dashboard.proximo_jogo;
-    const campeao = dashboard.campeao;
+    const campeoes = dashboard.campeoes || [];
 
     return (
       <div className="stat-grid">
@@ -234,37 +276,49 @@ function Inicio() {
           </section>
         )}
 
-        {campeao ? (
-          <div className="card stat-card stat-card-wide champion-card">
-            <div className="stat-head">
-              <span className="stat-label">Campeão do Campeonato</span>
-              <span className="badge badge-accent">FINAL ENCERRADA</span>
+        {campeoes.length > 0 && (
+          <section className="card stat-card-wide">
+            <div className="card-body">
+              <h3 className="card-title">🏆 Campeões</h3>
+              <div className="grid-cards">
+                {campeoes.map((campeao) => (
+                  <button
+                    key={campeao.competicao_id}
+                    type="button"
+                    className="tile tile-clicavel"
+                    onClick={() => navigate(`/competicoes/${campeao.competicao_id}`)}
+                  >
+                    <p className="tile-meta">
+                      {campeao.modalidade_nome} · {campeao.categoria_nome} {ROTULO_GENERO[campeao.genero]}
+                    </p>
+                    <p className="tile-title">{campeao.campeao_nome}</p>
+                    <p className="tile-meta">
+                      {campeao.status === 'WO'
+                        ? `W.O. sobre ${campeao.vice_nome}`
+                        : `${campeao.placar_campeao} x ${campeao.placar_vice} sobre ${campeao.vice_nome}`}
+                    </p>
+                  </button>
+                ))}
+              </div>
             </div>
+          </section>
+        )}
 
-            <div className="champion-body">
-              <span className="champion-trophy" aria-hidden="true">🏆</span>
-              <p className="champion-name">{campeao.escola_nome}</p>
-              <p className="champion-detail">
-                Venceu a Grande Final por {campeao.gols_campeao} x {campeao.gols_vice} contra {campeao.vice_nome}
-              </p>
-              <button className="btn btn-outline btn-sm" onClick={() => navigate('/matamata')}>
-                Ver chaveamento
-              </button>
-            </div>
-          </div>
-        ) : (
         <div className="card stat-card stat-card-wide">
           <div className="stat-head">
-            <span className="stat-label">Próximo Jogo</span>
+            <span className="stat-label">
+              Próximo Jogo
+              {proximo && ` — ${proximo.modalidade_nome} ${proximo.categoria_nome}`}
+            </span>
             {proximo && <span className="badge badge-accent">{proximo.fase}</span>}
           </div>
 
           {proximo ? (
             <>
               <div className="next-match">
-                <span className="next-match-team home">{proximo.escola_1_nome}</span>
+                <span className="next-match-team home">{proximo.equipe_1_nome}</span>
                 <span className="next-match-vs">VS</span>
-                <span className="next-match-team away">{proximo.escola_2_nome}</span>
+                <span className="next-match-team away">{proximo.equipe_2_nome}</span>
               </div>
 
               <div className="next-match-when">
@@ -275,13 +329,14 @@ function Inicio() {
           ) : (
             <div className="state state-compact">
               <p className="state-text">Nenhum jogo agendado no momento.</p>
-              <button className="btn btn-outline btn-sm" onClick={() => navigate('/agendar-jogo')}>
+              <button className="btn btn-outline btn-sm" onClick={() => navigate('/modalidades/futsal')}>
                 🗓️ Agendar Jogo
               </button>
             </div>
           )}
         </div>
-        )}
+
+        <Artilheiros />
       </div>
     );
   };
@@ -297,13 +352,13 @@ function Inicio() {
 
         {renderConteudo()}
 
-        {isAdmin && !carregando && !erro && (
+        {REINICIAR_CAMPEONATO_ATIVO && reiniciarPermitido && isAdmin && !carregando && !erro && (
           <section className="card danger-zone mt-lg">
             <div className="card-body">
               <h3 className="card-title">⚠️ Zona de Perigo</h3>
               <p className="state-text" style={{ textAlign: 'left', marginBottom: '18px' }}>
-                Reiniciar o campeonato apaga todas as escolas, atletas, jogos, súmulas e grupos.
-                Seu login e os cadastros base (locais, modalidades, categorias) são preservados.
+                Reiniciar o campeonato apaga todos os jogos e súmulas, com as suspensões e a pontuação geral.
+                Escolas, competições, grupos, equipes, atletas e inscrições são preservados.
                 Use isto apenas para começar um novo torneio do zero.
               </p>
               <button className="btn btn-danger" onClick={reiniciarCampeonato} disabled={reiniciando}>

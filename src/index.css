@@ -261,6 +261,70 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .alert-success { background: rgba(46, 204, 113, 0.1); color: var(--sge-success); border-color: rgba(46, 204, 113, 0.35); }
 .alert-error { background: rgba(231, 76, 60, 0.1); color: var(--sge-danger-text); border-color: rgba(231, 76, 60, 0.35); }
+.alert-aviso {
+  background: rgba(241, 196, 15, 0.08); color: var(--sge-text);
+  border-color: rgba(241, 196, 15, 0.45); text-align: left;
+}
+.alert-titulo { margin: 0 0 6px; font-size: 15px; font-weight: 800; color: var(--sge-accent); }
+.alert-texto { margin: 0; font-size: 14px; font-weight: 400; color: var(--sge-text-soft); line-height: 1.5; }
+
+/* Classificação: destaque de quem avança e marca de como o empate foi quebrado */
+.table-sge tbody tr.row-classificado td:first-child { box-shadow: inset 3px 0 0 var(--sge-success); }
+.table-sge tbody tr.row-classificado { background: rgba(46, 204, 113, 0.06); }
+.tag-desempate, .tag-sorteio {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  background: rgba(255, 255, 255, 0.08); color: var(--sge-text-muted);
+}
+.tag-sorteio { background: rgba(241, 196, 15, 0.18); color: var(--sge-accent); }
+.tag-suspenso {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  background: rgba(231, 76, 60, 0.18); color: var(--sge-danger-text);
+}
+.badge-suspenso { background: rgba(231, 76, 60, 0.18); color: var(--sge-danger-text); }
+.table-sge tbody tr.row-suspenso { background: rgba(231, 76, 60, 0.07); }
+.table-sge tbody tr.row-suspenso td:first-child { box-shadow: inset 3px 0 0 var(--sge-danger); }
+/* Conta desativada: continua legível (o histórico dela importa), só recua */
+.table-sge tbody tr.row-inativa { opacity: 0.55; }
+.legenda-desempate { margin: 0 0 24px; font-size: 13px; color: var(--sge-text-muted); line-height: 1.6; }
+.match-card.e-previsto { border-style: dashed; }
+.match-card.e-previsto .match-team { padding: 10px 0; }
+.origem-equipe {
+  display: block; margin-top: 2px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--sge-accent);
+}
+
+.podio { margin-top: 8px; }
+.podio-linha {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 0; border-bottom: 1px solid var(--sge-border);
+}
+.podio-linha:last-child { border-bottom: 0; }
+.podio-medalha { font-size: 20px; min-width: 28px; text-align: center; }
+.podio-escola { font-weight: 700; color: var(--sge-text-strong); }
+.podio-como { font-size: 13px; color: var(--sge-text-muted); }
+
+/* Tabela geral: a linha abre a conta de onde vieram os pontos */
+.table-sge tbody tr.linha-clicavel { cursor: pointer; }
+.abrir-abertura { margin-left: 8px; color: var(--sge-text-muted); font-size: 11px; }
+.table-sge tbody tr.linha-abertura:hover { background: inherit; }
+.table-sge tbody tr.linha-abertura td { background: rgba(0, 0, 0, 0.18); padding-left: 58px; }
+.abertura { display: flex; flex-wrap: wrap; gap: 8px 32px; padding: 4px 0; }
+.abertura-lista { list-style: none; margin: 0; padding: 0; min-width: 300px; max-width: 420px; }
+.abertura-lista li { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
+.abertura-medalha { width: 18px; text-align: center; }
+.abertura-competicao { flex: 1; color: var(--sge-text-soft); text-align: left; }
+.abertura-pontos { font-weight: 800; color: var(--sge-success); }
+.abertura-pontos.negativo { color: var(--sge-danger-text); }
+.legenda-desempate b { color: var(--sge-text-soft); }
+
+/* Perfil do usuário logado, ao lado do nome na barra superior */
+.navbar-perfil {
+  margin-left: 6px; padding: 2px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  background: rgba(241, 196, 15, 0.16); color: var(--sge-accent);
+}
 
 /* ---------- Cards estatísticos (painel) ---------- */
 .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
@@ -429,8 +493,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 /* ---------- Navbar ---------- */
 .navbar {
   position: sticky; top: 0; z-index: 50;
-  display: flex; align-items: center; gap: 24px;
-  padding: 0 24px; min-height: 64px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px;
+  padding: 6px 24px; min-height: 64px;
   background: linear-gradient(180deg, var(--sge-primary) 0%, var(--sge-primary-dark) 100%);
   border-bottom: 2px solid var(--sge-accent);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
@@ -440,11 +504,13 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   color: var(--sge-accent); text-decoration: none;
   font-size: 18px; font-weight: 800; letter-spacing: 0.02em;
 }
+/* Os links quebram para uma segunda linha quando não cabem. Antes a faixa
+   rolava de lado com a barra escondida, e o último item aparecia cortado —
+   sem nada dizendo que havia mais. */
 .navbar-links {
-  display: flex; align-items: center; gap: 4px;
-  overflow-x: auto; scrollbar-width: none;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+  min-width: 0;
 }
-.navbar-links::-webkit-scrollbar { display: none; }
 .nav-link {
   position: relative; padding: 8px 12px; border-radius: var(--sge-radius-sm);
   color: #d5dee8; text-decoration: none; white-space: nowrap;
@@ -454,14 +520,48 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .nav-link:hover { color: var(--sge-accent); background: rgba(241, 196, 15, 0.08); }
 .nav-link.active { color: var(--sge-accent); background: rgba(241, 196, 15, 0.12); }
 .navbar-session { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-shrink: 0; }
+/* Acima de 768 px o invólucro do menu some do layout (display: contents) e os
+   links e a sessão continuam filhos diretos da barra, como antes */
+.navbar-menu { display: contents; }
+.navbar-toggle { display: none; }
 .navbar-user { font-size: 13px; font-weight: 600; color: var(--sge-text-soft); white-space: nowrap; }
 
 /* ---------- Responsivo ---------- */
-@media (max-width: 760px) {
-  .navbar { flex-direction: column; align-items: stretch; gap: 4px; padding: 10px 16px 8px; }
-  .navbar-brand { justify-content: center; }
-  .navbar-session { margin-left: 0; justify-content: center; padding-bottom: 4px; }
-  .navbar-user { overflow: hidden; text-overflow: ellipsis; }
+/* Até 768 px: título à esquerda, botão de menu à direita, e os itens abrem
+   numa lista vertical logo abaixo da barra */
+@media (max-width: 768px) {
+  .navbar { flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 6px 8px 6px 16px; min-height: 60px; }
+  .navbar-brand { min-width: 0; white-space: nowrap; }
+  .navbar-toggle {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 48px; height: 48px; padding: 0;
+    background: transparent; color: var(--sge-accent);
+    border: 1px solid rgba(241, 196, 15, 0.35); border-radius: var(--sge-radius-sm);
+    cursor: pointer;
+  }
+  .navbar-toggle:hover, .navbar-toggle[aria-expanded="true"] { background: rgba(241, 196, 15, 0.12); }
+  .navbar-toggle:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+  .navbar-toggle svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+
+  .navbar-menu {
+    display: none;
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; gap: 4px;
+    max-height: calc(100vh - 64px); overflow-y: auto;
+    padding: 8px 12px 12px;
+    background: var(--sge-primary-dark);
+    border-bottom: 2px solid var(--sge-accent);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+  }
+  .navbar-menu.aberto { display: flex; }
+  .navbar-links { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 2px; }
+  .nav-link { display: flex; align-items: center; min-height: 44px; padding: 10px 14px; font-size: 16px; }
+  .navbar-session {
+    flex-direction: column; align-items: stretch; gap: 8px; margin-left: 0;
+    padding-top: 8px; border-top: 1px solid var(--sge-border);
+  }
+  .navbar-session .btn { min-height: 44px; font-size: 16px; justify-content: center; }
+  .navbar-user { padding: 4px 14px; overflow: hidden; text-overflow: ellipsis; }
 }
 
 @media (max-width: 600px) {
@@ -474,6 +574,129 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .player-row { flex-direction: column; align-items: stretch; }
   .player-stats { justify-content: flex-end; }
 }
+
+/* ---------- Competições: menu lateral + conteúdo ---------- */
+.mb-lg { margin-bottom: 32px; }
+
+.layout-competicoes {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.menu-lateral {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--sge-surface);
+  border: 1px solid var(--sge-border);
+  border-radius: var(--sge-radius-lg);
+}
+
+.menu-lateral-titulo {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sge-text-muted);
+}
+
+.menu-lateral-aviso { margin: 0; font-size: 14px; color: var(--sge-text-muted); }
+.menu-lateral-aviso.erro { color: var(--sge-danger-text); }
+
+.menu-lateral-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--sge-radius-sm);
+  color: var(--sge-text);
+  text-decoration: none;
+  font-size: 15px;
+  transition: background var(--sge-transition), color var(--sge-transition);
+}
+
+.menu-lateral-item:hover { background: var(--sge-surface-2); }
+
+.menu-lateral-item.ativo {
+  background: var(--sge-accent-soft);
+  color: var(--sge-accent);
+  font-weight: 700;
+}
+
+/* Modalidade sem competição importada: continua visível, mas não é link */
+.menu-lateral-item.vazio { color: var(--sge-text-muted); cursor: default; }
+.menu-lateral-item.vazio:hover { background: none; }
+
+.menu-lateral-nome { flex: 1; }
+
+.menu-lateral-contador {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--sge-text-muted);
+}
+
+.secao-titulo {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sge-text-soft);
+}
+
+.tile-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+
+.tile-clicavel {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--sge-transition), transform var(--sge-transition);
+}
+
+.tile-clicavel:hover { border-color: var(--sge-accent); transform: translateY(-2px); }
+.tile-clicavel:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+
+.ficha { display: flex; flex-wrap: wrap; gap: 24px 36px; }
+.ficha-rotulo {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sge-text-muted);
+  margin-bottom: 4px;
+}
+.ficha-valor { font-size: 17px; font-weight: 700; color: var(--sge-text-strong); }
+
+/* Telas estreitas: o menu vira uma faixa rolável acima do conteúdo */
+@media (max-width: 860px) {
+  .layout-competicoes { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+
+  .menu-lateral {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+  }
+
+  .menu-lateral-titulo { display: none; }
+  .menu-lateral-item { white-space: nowrap; }
+  .menu-lateral-contador { display: none; }
+}
+
+/* ---------- Tabela de jogos ---------- */
+.versus { color: var(--sge-text-muted); font-size: 12px; padding: 0 4px; }
+.acoes { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+.form-linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.form-jogo { border-top: 1px solid var(--sge-border); margin-top: 8px; }
 
 /* ---------- Impressão / Exportação PDF ---------- */
 .page-toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -567,4 +790,573 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
     break-inside: avoid;
   }
   .print-signatures span { display: block; margin-bottom: 6px; border-top: 1px solid var(--sge-print-text); }
+}
+
+/* ---------- Súmula: preenchimento ---------- */
+.contador { display: inline-flex; align-items: center; gap: 4px; }
+
+.contador-btn {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--sge-border-strong);
+  border-radius: var(--sge-radius-sm);
+  background: var(--sge-surface-2);
+  color: var(--sge-text);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  transition: background var(--sge-transition), border-color var(--sge-transition);
+}
+.contador-btn:hover:not(:disabled) { background: var(--sge-accent-soft); border-color: var(--sge-accent); }
+.contador-btn:disabled { opacity: 0.35; cursor: default; }
+
+.contador-valor {
+  width: 46px; padding: 4px; text-align: center;
+  font-weight: 700; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--sge-border); border-radius: var(--sge-radius-sm);
+  background: transparent; color: var(--sge-text-strong);
+}
+/* As setas nativas do number competem com os botões − e + */
+.contador-valor::-webkit-outer-spin-button,
+.contador-valor::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.contador-valor { -moz-appearance: textfield; appearance: textfield; }
+
+.placar-ao-vivo { display: flex; align-items: center; justify-content: center; gap: 28px; text-align: center; }
+.placar-equipe { margin: 0 0 4px; color: var(--sge-text-muted); font-size: 14px; }
+.placar-numero { margin: 0; font-size: 46px; font-weight: 800; color: var(--sge-accent); font-variant-numeric: tabular-nums; }
+.placar-x { font-size: 22px; color: var(--sge-text-muted); }
+
+.rodape-equipe {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--sge-border);
+}
+.linha-checks { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+
+/* ---------- Súmula: folha para impressão ----------
+   Segue docs/referencias/SUMULA_FUTSAL_MODELO.pdf. Medidas em mm porque a
+   folha é um documento de papel: A4 retrato, uma página, 14 linhas por
+   equipe. O quadriculado fica vazio para ser preenchido à mão.            */
+.no-print { }
+
+.folha-sumula {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 8mm 10mm;
+  background: #ffffff;
+  color: #000000;
+  font-family: Calibri, Carlito, 'Segoe UI', sans-serif;
+  font-size: 9pt;
+  line-height: 1.15;
+  border: 1px solid #ccc;
+}
+
+/* Na tela, a folha rola de lado dentro deste quadro quando não cabe (celular),
+   e a página não alarga. A dica só aparece até 768 px. */
+.folha-rolagem { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.folha-dica { display: none; margin: 12px 0 8px; font-size: 13px; color: var(--sge-text-muted); }
+@media (max-width: 768px) {
+  .folha-dica { display: block; }
+}
+
+.folha-sumula table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.folha-sumula td, .folha-sumula th { border: 0.6pt solid #000; padding: 0 2pt; vertical-align: middle; }
+.folha-sumula .rotulo { color: #d40000; font-weight: 600; text-align: center; white-space: nowrap; }
+
+/* Cabeçalho */
+.folha-cabecalho { border: 1.4pt solid #000; }
+.folha-cabecalho td { height: 6.6mm; }
+.folha-cabecalho .linha-titulo td { height: 11mm; }
+.folha-cabecalho .titulo { text-align: center; font-size: 15pt; letter-spacing: 0.02em; }
+.folha-cabecalho .logo { width: 22%; text-align: center; }
+.folha-cabecalho col.a { width: 22.1% } .folha-cabecalho col.b { width: 28.6% }
+.folha-cabecalho col.c { width: 27.4% } .folha-cabecalho col.d { width: 21.9% }
+.folha-cabecalho .logo img { max-height: 9.5mm; max-width: 100%; vertical-align: middle; }
+.folha-cabecalho .data { text-align: right; padding-right: 8mm; }
+.folha-cabecalho .slot { display: inline-block; min-width: 9mm; text-align: center; }
+
+.folha-cabecalho .linha-equipes td { height: 10mm; }
+.confronto { display: flex; align-items: center; justify-content: center; gap: 6mm; }
+.confronto .nome-equipe {
+  flex: 1; text-align: center; color: #d40000; font-weight: 700; font-size: 11pt; letter-spacing: 0.02em;
+}
+.confronto .caixa-placar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16mm; height: 8mm; border: 1.2pt solid #000; border-radius: 2mm;
+  font-size: 13pt; font-weight: 700;
+}
+.confronto .x { font-size: 11pt; }
+
+/* Bloco de cada equipe */
+.folha-equipe { border: 1.4pt solid #000; border-top: 0; break-inside: avoid; }
+.folha-equipe-titulo {
+  height: 8mm; display: flex; align-items: center; justify-content: center;
+  font-size: 11pt; font-weight: 600; border-bottom: 0.6pt solid #000;
+}
+
+.folha-tabela th { height: 5mm; font-size: 10pt; }
+.folha-tabela td { height: 5.6mm; }
+.folha-tabela .c-cartao { width: 4.23% }
+.folha-tabela .c-numero { width: 5% }
+.folha-tabela .c-atleta { width: 24.8% }
+/* A largura da caixa da grade vem do componente (FolhaFutsal.jsx), porque
+   depende de quantas caixas a folha tem (11 no futsal). */
+.folha-tabela .c-capitao { width: 15.2% }
+.folha-tabela .cartao { text-align: center; font-size: 6pt; color: #333; background: #e6e0f0; }
+.folha-tabela .numero { text-align: center; }
+.folha-tabela .atleta { text-align: left; font-size: 8.5pt; overflow: hidden; white-space: nowrap; }
+.folha-tabela .gol { background: #e6e0f0; text-align: center; font-size: 8pt; }
+.folha-tabela .celula-capitao { vertical-align: bottom; padding: 0 0 3mm; height: 100%; }
+.folha-tabela .celula-capitao-topo { border-bottom: 0; }
+.texto-vertical { writing-mode: vertical-rl; transform: rotate(180deg); font-weight: 600; font-size: 9pt; }
+
+/* Folha do basquete (docs/referencias/SUMULA_BASQUETE_MODELO.pdf).
+   As larguras saem das colunas do papel, medidas no PDF: faltas individuais
+   ocupam a faixa da esquerda, a grade de PONTOS a da direita e o Capitão a
+   tira final. A coluna "Pts" (pontos do atleta) é acréscimo do sistema.   */
+.folha-basquete .c-falta { width: 5.16% }
+.folha-basquete .c-numero { width: 6.4% }
+.folha-basquete .c-atleta { width: 23% }
+.folha-basquete .c-pts { width: 5.3% }
+.folha-basquete .c-pontos { width: 32.2% }
+.folha-basquete .c-capitao { width: 6.8% }
+
+.folha-basquete .falta-individual {
+  text-align: center; font-size: 7pt; color: #333; background: #e6e0f0;
+}
+.folha-basquete .falta-individual.marcada { background: #9b9b9b; color: #000; font-weight: 700; }
+.folha-basquete .pts { text-align: center; font-weight: 600; }
+.folha-basquete .celula-pontos { padding: 0; vertical-align: top; }
+
+/* Pontuação corrida da equipe: 8 colunas de 12 números (2 a 97), como no
+   papel. Não acompanha as linhas de atleta — é o placar da equipe.        */
+.grade-pontos { table-layout: fixed; height: 100%; }
+.grade-pontos td {
+  border: 0.4pt solid #000; padding: 0;
+  text-align: center; font-size: 6.5pt; background: #e6e0f0;
+}
+.grade-pontos td.marcada { background: #9b9b9b; font-weight: 700; }
+
+/* ---------- Folha do vôlei (docs/referencias/SUMULA_VOLEI_MODELO.pdf) ----------
+   Desenho próprio: cabeçalho sem caixa de placar, as duas equipes lado a lado,
+   o controle dos três sets e o resultado final no rodapé. O papel traz 12
+   linhas de atleta; aqui são 14, com a linha mais baixa para caber na página. */
+.folha-cabecalho.volei col.a { width: 22% }
+.folha-cabecalho.volei col.b { width: 20.6% }
+.folha-cabecalho.volei col.c { width: 26.7% }
+.folha-cabecalho.volei col.d { width: 30.7% }
+
+.volei-equipes { display: flex; gap: 4mm; margin-top: 3mm; }
+.volei-equipe { flex: 1 1 0; border: 1.4pt solid #000; }
+.volei-equipe-titulo {
+  height: 7mm; display: flex; align-items: center; justify-content: center;
+  font-size: 11pt; font-weight: 700; color: #d40000; border-bottom: 0.6pt solid #000;
+}
+.volei-nome { height: 6.5mm; display: flex; align-items: center; padding: 0 2mm; border-bottom: 0.6pt solid #000; }
+.volei-assinatura { height: 7mm; display: flex; align-items: center; padding: 0 2mm; border-top: 0.6pt solid #000; }
+
+.volei-elenco th { height: 5mm; font-size: 10pt; }
+.volei-elenco td { height: 6mm; }
+.volei-elenco .c-numero { width: 16% }
+.volei-elenco .c-atleta { width: 84% }
+.volei-elenco .numero { text-align: center; }
+.volei-elenco .atleta { text-align: left; font-size: 8.5pt; overflow: hidden; white-space: nowrap; }
+
+.volei-sets, .volei-resultado { margin-top: 3mm; border: 1.4pt solid #000; }
+.volei-faixa {
+  height: 7mm; display: flex; align-items: center; justify-content: center;
+  font-size: 11pt; font-weight: 700; color: #d40000; border-bottom: 0.6pt solid #000;
+}
+
+.volei-controle .linha-set td { height: 6mm; font-size: 10pt; }
+.volei-controle .linha-saque td { height: 6mm; text-align: center; font-size: 8.5pt; }
+.volei-controle .linha-grade td { padding: 0; }
+.volei-controle .linha-placar td { height: 7mm; }
+.volei-controle .placar-set { text-align: center; font-size: 10pt; }
+.volei-controle .placar-set .slot { min-width: 10mm; border-bottom: 0.6pt solid #000; }
+
+.grade-set { table-layout: fixed; }
+.grade-set td {
+  /* 6 linhas de 5 (1 a 30): célula mais baixa para a folha caber em uma página */
+  border: 0.4pt solid #000; padding: 0; height: 4mm;
+  text-align: center; font-size: 6.5pt; background: #e6e0f0;
+}
+.grade-set td.marcada { background: #9b9b9b; font-weight: 700; }
+
+.volei-final td { height: 7mm; padding: 0 2mm; font-size: 9.5pt; }
+.volei-final .rotulo { text-align: center; }
+.volei-final .slot { min-width: 10mm; display: inline-block; text-align: center; border-bottom: 0.6pt solid #000; }
+.volei-final .linha-observacoes td { height: 11mm; vertical-align: top; }
+.volei-final .linha-assinaturas td { height: 9mm; vertical-align: bottom; font-size: 9pt; }
+
+/* Rodapé de cada equipe */
+.folha-rodape td { height: 6.6mm; }
+.folha-rodape .esquerda { text-align: left; font-size: 11pt; padding-left: 3pt; }
+.folha-rodape .tempo { width: 9%; font-size: 11pt; }
+/* Rodapé sem faltas acumuladas: o rótulo fica com a mesma faixa que
+   ocuparia com elas, para o tempo técnico não esticar. */
+.folha-rodape .esquerda.larga { width: 38%; }
+.folha-rodape .falta { width: 4.4%; text-align: center; background: #d9d9d9; }
+.folha-rodape .falta.marcada { background: #9b9b9b; font-weight: 700; }
+.folha-rodape .sem-borda { border: 0; padding: 0; }
+
+.folha-tempo { table-layout: fixed; }
+.folha-tempo td { height: 5.2mm; text-align: center; }
+.folha-tempo .rotulo { width: 11%; }
+.folha-tempo .caixa { background: #d9d9d9; }
+.folha-tempo .tecnico { text-align: left; padding-left: 3pt; border-right: 0; }
+
+/* ---------- Folhas oficiais de 2026: handebol e baleado ----------
+   docs/referencias/SUMULA_HANDEBOL.pdf e SUMULA_BALEADO.pdf. Fundo branco
+   (o papel não tem as caixas cinzas/lilás do futsal), blocos de equipe com
+   borda própria e um espaço entre o cabeçalho e o primeiro bloco, como no
+   modelo. Larguras de coluna medidas no PDF, nos componentes. */
+.folha-oficial-cabecalho td { height: 5.4mm; font-size: 9pt; padding: 0 3pt; }
+.folha-oficial-cabecalho .linha-titulo td { height: 9mm; }
+.oficial-titulo { display: flex; align-items: center; justify-content: space-between; }
+.oficial-titulo img { height: 7.5mm; width: 32mm; object-fit: contain; }
+.oficial-titulo span { flex: 1; text-align: center; font-weight: 700; font-size: 10.5pt; }
+.oficial-linha { display: grid; grid-template-columns: 44% 33% 23%; align-items: center; }
+.oficial-linha .largura-2 { grid-column: span 2; }
+.oficial-linha .centro { text-align: center; }
+.folha-oficial-cabecalho .slot { display: inline-block; min-width: 7mm; text-align: center; }
+.folha-oficial-cabecalho .linha-equipes td { height: 13mm; vertical-align: top; padding-top: 1mm; }
+.oficial-confronto { display: grid; grid-template-columns: 30% 13% 13% 13% 31%; align-items: start; }
+.rotulo-oficial { color: #d40000; font-weight: 700; font-size: 9.5pt; }
+.oficial-confronto .rotulo-oficial:last-child { text-align: right; padding-right: 6mm; }
+.oficial-confronto .x { text-align: center; font-size: 13pt; padding-top: 3mm; }
+.caixa-placar-oficial {
+  display: flex; align-items: center; justify-content: center;
+  height: 11mm; border: 1.2pt solid #e8743b; border-radius: 1.6mm;
+  font-size: 13pt; font-weight: 700;
+}
+
+.folha-oficial-equipe { border: 1.2pt solid #000; margin-top: 7mm; }
+.folha-oficial-cabecalho + .folha-oficial-equipe { margin-top: 24mm; }
+.oficial-equipe-titulo {
+  height: 6.5mm; display: flex; align-items: center; justify-content: center;
+  color: #d40000; font-weight: 700; font-size: 11pt; border-bottom: 0.6pt solid #000;
+}
+.oficial-tabela th { height: 4.3mm; font-size: 9pt; }
+.oficial-tabela td { height: 6.1mm; }
+.oficial-tabela .esquerda { text-align: left; }
+.oficial-tabela .letra-cartao { font-size: 10.5pt; padding-left: 3pt; }
+/* A marca é um X de texto, preto: o ✕ sai colorido na fonte de emoji do navegador */
+.oficial-tabela .letra-cartao, .oficial-tabela .caixa-oficial, .oficial-rodape .caixa-tempo { color: #000; }
+.oficial-tabela .caixa-oficial, .oficial-rodape .caixa-tempo { font-weight: 700; }
+.oficial-tabela .caixa-oficial { text-align: center; font-size: 9pt; }
+.oficial-tabela .numero-baleado { text-align: center; font-size: 10.5pt; }
+.oficial-tabela .capitao-oficial { vertical-align: top; }
+.oficial-tabela .capitao-nome { display: block; margin-top: 2mm; color: #000; font-weight: 400; white-space: normal; }
+.oficial-tabela .linha-vazia td { height: 6.3mm; }
+/* O X de canto a canto da área de BALEADOS que não se usa */
+.oficial-tabela .area-riscada { position: relative; padding: 0; }
+.oficial-tabela .area-riscada svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.oficial-rodape td { height: 4.3mm; font-size: 9pt; }
+.oficial-rodape .esquerda { text-align: left; padding-left: 3pt; vertical-align: top; }
+.oficial-rodape .caixa-tempo { height: 5.6mm; text-align: center; }
+.oficial-rodape .tecnico-oficial { vertical-align: bottom; padding-bottom: 1mm; }
+.oficial-rodape .valor { color: #000; font-weight: 400; }
+.oficial-rodape .so-tecnico { height: 10mm; vertical-align: bottom; padding-bottom: 1mm; }
+
+/* A4 sem margem de página: a folha traz a própria margem, e assim o
+   navegador não imprime cabeçalho nem rodapé dele. */
+@page { size: A4 portrait; margin: 0; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #ffffff !important; }
+
+  /* Só a folha vai para o papel: menu, botões e o enquadramento da tela somem */
+  .navbar, .painel-modalidades, .menu-lateral { display: none !important; }
+  .folha-rolagem { overflow: visible !important; }
+  .page { padding: 0 !important; }
+  .container, .container-sm, .container-lg { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+
+  .folha-sumula {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 8mm 10mm;
+    border: 0;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .folha-equipe { break-inside: avoid; page-break-inside: avoid; }
+  .folha-tabela .gol, .folha-tabela .cartao { background: #e6e0f0 !important; }
+  .folha-rodape .falta { background: #d9d9d9 !important; }
+  .folha-rodape .falta.marcada { background: #9b9b9b !important; }
+  .folha-tempo .caixa { background: #d9d9d9 !important; }
+  .folha-basquete .falta-individual { background: #e6e0f0 !important; }
+  .folha-basquete .falta-individual.marcada { background: #9b9b9b !important; }
+  .grade-pontos td { background: #e6e0f0 !important; }
+  .grade-pontos td.marcada { background: #9b9b9b !important; }
+  .volei-equipes { display: flex !important; }
+  .volei-equipe, .volei-sets, .volei-resultado { break-inside: avoid; page-break-inside: avoid; }
+  .grade-set td { background: #e6e0f0 !important; }
+  .grade-set td.marcada { background: #9b9b9b !important; }
+}
+
+.painel-wo {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--sge-accent);
+  border-radius: var(--sge-radius);
+  background: var(--sge-accent-soft);
+}
+
+/* Inscrições já feitas na tela de cadastro de atleta */
+.lista-inscricoes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.lista-inscricoes li {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid rgba(46, 204, 113, 0.35);
+  border-radius: var(--sge-radius-sm);
+  background: rgba(46, 204, 113, 0.08);
+  font-size: 14px;
+}
+
+/* ---------- Elencos dentro da competição ---------- */
+.elenco-grupo { margin-bottom: 20px; }
+
+.elenco {
+  border: 1px solid var(--sge-border);
+  border-radius: var(--sge-radius-sm);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.elenco-cabecalho {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--sge-surface-2);
+  border: none;
+  color: var(--sge-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.elenco-cabecalho:hover { background: var(--sge-accent-soft); }
+.elenco-escola { flex: 1; font-weight: 700; }
+.elenco-contador { font-size: 13px; color: var(--sge-text-muted); font-variant-numeric: tabular-nums; }
+
+.elenco-corpo { padding: 14px; display: grid; gap: 12px; }
+
+.elenco-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.elenco-lista li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--sge-radius-sm);
+  background: var(--sge-surface-2);
+}
+.elenco-camisa {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--sge-accent);
+}
+.elenco-nome { flex: 1; }
+.elenco-meta { font-size: 13px; color: var(--sge-text-muted); }
+
+.elenco-form { border-top: 1px solid var(--sge-border); padding-top: 12px; }
+
+/* ---------- Pontos lançados (mesa: atletismo, xadrez, dama e dominó) ---------- */
+.abas-pontos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.aba-pontos {
+  flex: 1 1 140px; min-height: 48px; padding: 10px 16px;
+  font: inherit; font-size: 16px; font-weight: 700; color: var(--sge-text-soft);
+  background: var(--sge-surface-2); border: 1px solid var(--sge-border-strong);
+  border-radius: var(--sge-radius-sm); cursor: pointer;
+  transition: background var(--sge-transition), color var(--sge-transition);
+}
+.aba-pontos:hover { color: var(--sge-text-strong); background: rgba(255, 255, 255, 0.08); }
+.aba-pontos.ativa { color: #0d131b; background: var(--sge-accent); border-color: var(--sge-accent); }
+.aba-pontos:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+
+/* Seletor compacto de categoria e gênero (21/10/2026): uma linha só */
+.seletor-pontos { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 20px; }
+.seletor-pontos-categoria { display: flex; flex-direction: column; gap: 6px; flex: 1 1 180px; }
+.seletor-pontos-categoria .form-control { min-height: 48px; font-size: 16px; }
+.seletor-pontos-genero { display: flex; gap: 8px; flex: 1 1 220px; }
+.seletor-pontos-genero .btn { flex: 1; min-height: 48px; }
+
+.grade-pontos { display: flex; flex-direction: column; border-top: 1px solid var(--sge-border); }
+.grade-pontos-cabecalho,
+.grade-pontos-linha {
+  display: grid; grid-template-columns: 1fr 110px 130px; gap: 12px; align-items: center;
+  padding: 10px 20px; border-bottom: 1px solid var(--sge-border);
+}
+.grade-pontos-cabecalho {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--sge-text-muted);
+}
+.grade-pontos-linha.acima { background: rgba(241, 196, 15, 0.10); box-shadow: inset 4px 0 0 var(--sge-accent); }
+.grade-pontos-linha.com-erro { background: rgba(231, 76, 60, 0.12); box-shadow: inset 4px 0 0 var(--sge-danger); }
+.grade-pontos-escola { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.grade-pontos-nome { font-size: 16px; font-weight: 700; color: var(--sge-text-strong); }
+.grade-pontos-rastro { font-size: 12px; color: var(--sge-text-muted); }
+.grade-pontos-alerta { font-size: 13px; font-weight: 700; color: var(--sge-accent); }
+.grade-pontos-alerta.erro { color: var(--sge-danger-text); }
+
+.campo-ponto {
+  height: 52px; padding: 8px 10px; text-align: center;
+  font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.campo-colocacao { font-size: 18px; font-weight: 600; }
+.grade-pontos-linha.com-erro .campo-ponto { border-color: var(--sge-danger); }
+.grade-pontos-linha.acima .campo-ponto { border-color: var(--sge-accent); }
+.resumo-pontos { font-size: 17px; color: var(--sge-text-strong); margin: 0 0 10px; }
+
+/* Celular: a escola em cima, os dois campos lado a lado embaixo */
+@media (max-width: 600px) {
+  .grade-pontos-cabecalho { display: none; }
+  .grade-pontos-linha { grid-template-columns: 1fr 1fr; padding: 12px 16px; }
+  .grade-pontos-escola { grid-column: 1 / -1; }
+  .grade-pontos-linha > [role='cell']:nth-child(2)::before { content: 'Pontos'; }
+  .grade-pontos-linha > [role='cell']:nth-child(3)::before { content: 'Colocação'; }
+  .grade-pontos-linha > [role='cell']:not(:first-child)::before {
+    display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; color: var(--sge-text-muted);
+  }
+}
+
+/* ---------- Agenda de Jogos (pública, celular primeiro) ---------- */
+.agenda-filtros { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+/* Os dias rolam de lado dentro da própria faixa, sem alargar a página */
+.agenda-dias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.agenda-dia-botao {
+  flex-shrink: 0; min-height: 44px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--sge-border-strong); background: transparent; color: var(--sge-text);
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.agenda-dia-botao.ativo { background: var(--sge-accent); border-color: var(--sge-accent); color: #1a1a1a; }
+.agenda-dia-botao:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
+.agenda-campos { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.agenda-campos .form-control { min-height: 44px; font-size: 16px; } /* 16px evita o zoom do iPhone */
+.agenda-limpar { align-self: flex-start; }
+.agenda-contagem { margin: 4px 0 12px; font-size: 13px; color: var(--sge-text-muted); min-height: 18px; }
+
+.agenda-dia { margin-bottom: 28px; }
+.agenda-dia-titulo {
+  position: sticky; top: 60px; z-index: 5; margin: 0 0 12px; padding: 8px 0;
+  font-size: 18px; color: var(--sge-text-strong); background: var(--sge-bg);
+}
+.agenda-local { margin-bottom: 16px; }
+.agenda-local-titulo { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--sge-accent); }
+.agenda-jogos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.agenda-jogo {
+  display: grid; grid-template-columns: 52px 1fr; grid-template-areas: "hora corpo" "hora status";
+  gap: 4px 12px; align-items: start; padding: 12px; min-height: 44px;
+  background: var(--sge-surface); border: 1px solid var(--sge-border); border-radius: var(--sge-radius);
+  color: var(--sge-text); text-decoration: none;
+}
+.agenda-jogo:hover, .agenda-jogo:focus-visible { border-color: var(--sge-accent); outline: none; }
+.agenda-hora { grid-area: hora; font-size: 18px; font-weight: 800; color: var(--sge-text-strong); }
+.agenda-corpo { grid-area: corpo; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.agenda-competicao { font-size: 12px; color: var(--sge-text-muted); }
+.agenda-confronto { font-size: 15px; font-weight: 700; color: var(--sge-text-strong); overflow-wrap: anywhere; }
+.agenda-x { color: var(--sge-text-muted); font-weight: 400; }
+.agenda-placar { color: var(--sge-accent); }
+.agenda-status {
+  grid-area: status; justify-self: start; padding: 2px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.agenda-status-agendado { background: rgba(52, 152, 219, 0.15); color: #7cc4f5; }
+.agenda-status-andamento { background: rgba(241, 196, 15, 0.18); color: var(--sge-accent); }
+.agenda-status-encerrado { background: rgba(46, 204, 113, 0.15); color: var(--sge-success); }
+
+/* Detalhe do jogo */
+.agenda-titulo-jogo { overflow-wrap: anywhere; }
+.agenda-placar-grande {
+  display: flex; justify-content: center; align-items: baseline; gap: 16px; margin-bottom: 4px;
+  font-size: 44px; font-weight: 800; color: var(--sge-text-strong);
+}
+.agenda-resultado { margin: 0 0 16px; text-align: center; font-weight: 700; color: var(--sge-accent); }
+.agenda-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 0; }
+.agenda-info dt { font-size: 12px; color: var(--sge-text-muted); }
+.agenda-info dd { margin: 2px 0 0; font-weight: 600; color: var(--sge-text-strong); }
+.agenda-info dd::first-letter { text-transform: uppercase; }
+.agenda-elencos { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.agenda-atletas { list-style: none; margin: 0; padding: 0; }
+.agenda-atletas li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--sge-border); }
+.agenda-atletas li:last-child { border-bottom: 0; }
+.agenda-camisa {
+  flex-shrink: 0; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--sge-accent-soft); color: var(--sge-accent); font-weight: 800; font-size: 14px;
+}
+.agenda-sem-atletas { text-align: left; margin: 0; }
+
+/* Esqueleto de carregamento (o Render free leva ~50 s para acordar) */
+.agenda-esqueleto { display: flex; flex-direction: column; gap: 12px; }
+.agenda-esqueleto .state-text { text-align: left; margin: 0; }
+.agenda-esqueleto-bloco { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.esqueleto {
+  border-radius: var(--sge-radius-sm);
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%; animation: esqueleto-brilho 1.4s ease-in-out infinite;
+}
+.esqueleto-titulo { height: 22px; width: 60%; }
+.esqueleto-linha { height: 64px; }
+.esqueleto-bloco { height: 140px; }
+@keyframes esqueleto-brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .esqueleto { animation: none; } }
+
+@media (min-width: 700px) {
+  .agenda-campos { grid-template-columns: 2fr 1fr 1fr; }
+  .agenda-jogo { grid-template-columns: 64px 1fr auto; grid-template-areas: "hora corpo status"; align-items: center; }
+  .agenda-status { justify-self: end; }
+  .agenda-elencos { grid-template-columns: 1fr 1fr; }
+  .agenda-info { grid-template-columns: repeat(3, 1fr); }
+}
+.agenda-mais-filtros summary {
+  display: inline-flex; align-items: center; min-height: 44px; cursor: pointer;
+  font-weight: 700; font-size: 14px; color: var(--sge-accent); list-style: none;
+}
+.agenda-mais-filtros summary::-webkit-details-marker { display: none; }
+.agenda-mais-filtros summary::before { content: '▸'; margin-right: 8px; transition: transform var(--sge-transition); }
+.agenda-mais-filtros[open] summary::before { transform: rotate(90deg); }
+.agenda-campos-extra { margin-top: 4px; }
+@media (min-width: 700px) {
+  .agenda-campos { grid-template-columns: 1fr; }
+  .agenda-campos-extra { grid-template-columns: repeat(4, 1fr); }
+}
+/* Número do jogo na tabela oficial do chefe (db/15): pequeno e cinza */
+.agenda-numero-tabela { font-size: 12px; font-weight: 400; color: var(--sge-text-muted); white-space: nowrap; }
+
+/* Pontos lançados: botões da prova do atletismo (db/16) */
+.provas-pontos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -12px 0 20px; }
+.provas-pontos .btn { min-height: 44px; }
+.provas-pontos-rotulo { font-weight: 700; color: var(--sge-text-soft); }
+.provas-pontos .form-hint { flex-basis: 100%; margin: 0; }
+/* Revisão: valores já gravados que vão ser substituídos */
+.substituicoes-pontos { margin: 8px 0 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+/* Pontos lançados: busca da escola da folha (21/10/2026) */
+.busca-escola-pontos { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 0 24px 16px; }
+.busca-escola-pontos .form-control { min-height: 48px; font-size: 16px; }
+.sugestoes-escola { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sugestoes-escola button {
+  width: 100%; min-height: 44px; padding: 10px 14px; text-align: left; cursor: pointer;
+  background: var(--sge-surface); color: var(--sge-text-strong); font: inherit; font-weight: 700;
+  border: 1px solid var(--sge-border-strong); border-radius: var(--sge-radius-sm);
+}
+.sugestoes-escola button:hover, .sugestoes-escola button:focus-visible { border-color: var(--sge-accent); outline: none; }
+.grade-pontos-vazia { padding: 0 24px 16px; }
+.remover-escola-pontos {
+  margin-left: 8px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--sge-text-muted); border: 1px solid var(--sge-border-strong); font-size: 18px; line-height: 1;
+}
+/* Pontos lançados: histórico das correções (ADMIN, db/17) */
+.historico-pontos { margin-top: 20px; }
+.historico-pontos summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--sge-accent); }
+.historico-pontos-lista { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+/* Celular: texto do topo mais curto, abas da modalidade mais baixas */
+@media (max-width: 768px) {
+  .so-tela-larga { display: none; }
+  .aba-pontos { min-height: 44px; padding: 8px 12px; }
 }
