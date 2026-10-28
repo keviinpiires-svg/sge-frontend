@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { obterEstatisticas } from '../services/dashboard';
 import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
+import { buscarSaude } from '../services/auth';
 import { listarEscolas } from '../services/escolas';
 import Artilheiros from '../components/Artilheiros';
 import { dataPorExtenso, soAHora } from '../services/datas';
@@ -12,6 +13,9 @@ const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Mi
 // Botão "Reiniciar Campeonato" desativado a pedido do usuário (07/10/2026):
 // a Zona de Perigo não aparece nem para o ADMIN. A rota DELETE
 // /api/campeonato/reset continua no backend; para reativar, troque para true.
+// Mesmo ativo aqui, ele só aparece onde o servidor permite (/saude
+// reiniciar_permitido: em produção, só com PERMITIR_REINICIAR=true). Quem
+// protege é o backend, que recusa com 403.
 const REINICIAR_CAMPEONATO_ATIVO = false;
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString('pt-BR');
@@ -36,6 +40,17 @@ function Inicio() {
 
   // Incrementar este valor dispara uma nova busca (botão "Tentar novamente")
   const [tentativa, setTentativa] = useState(0);
+
+  // O servidor permite reiniciar? Na dúvida (sem resposta), não mostra
+  const [reiniciarPermitido, setReiniciarPermitido] = useState(false);
+  useEffect(() => {
+    if (!REINICIAR_CAMPEONATO_ATIVO || !isAdmin) return undefined;
+    let ativo = true;
+    buscarSaude()
+      .then((saude) => { if (ativo) setReiniciarPermitido(saude.reiniciar_permitido === true); })
+      .catch(() => {});
+    return () => { ativo = false; };
+  }, [isAdmin]);
 
   useEffect(() => {
     let ativo = true;
@@ -337,7 +352,7 @@ function Inicio() {
 
         {renderConteudo()}
 
-        {REINICIAR_CAMPEONATO_ATIVO && isAdmin && !carregando && !erro && (
+        {REINICIAR_CAMPEONATO_ATIVO && reiniciarPermitido && isAdmin && !carregando && !erro && (
           <section className="card danger-zone mt-lg">
             <div className="card-body">
               <h3 className="card-title">⚠️ Zona de Perigo</h3>
