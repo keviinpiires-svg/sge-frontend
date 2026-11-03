@@ -11,8 +11,8 @@ import {
 // Uma chamada só traz todos os jogos (GET /api/agenda); os filtros rodam aqui,
 // e ficam na URL para o link poder ser compartilhado.
 
-const PRIMEIRO_DIA = '2026-11-23';
-const ULTIMO_DIA = '2026-11-28';
+const PRIMEIRO_DIA = '2026-11-18';
+const ULTIMO_DIA = '2026-11-21';
 const SEM_DATA = 'sem-data';
 const TODOS = '';
 
@@ -31,7 +31,7 @@ const rotuloCurtoDoDia = (dia) => {
   return `${semana.charAt(0).toUpperCase()}${semana.slice(1)} ${d}/${mes}`;
 };
 
-// Dia padrão: hoje, se estiver entre 23 e 28/11/2026; senão o primeiro dia
+// Dia padrão: hoje, se estiver entre 18 e 21/11/2026; senão o primeiro dia
 // que tem jogo
 const diaPadrao = (dias) => {
   const hoje = hojeNoEvento();

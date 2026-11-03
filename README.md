@@ -1,6 +1,6 @@
 # web-jogos — frontend do SGE
 
-Frontend do **Sistema de Gestão Esportiva** dos Jogos Estudantis 2026 (Barra do Choça, 23 a 28 de novembro).
+Frontend do **Sistema de Gestão Esportiva** dos Jogos Estudantis 2026 (Barra do Choça, 18 a 21 de novembro).
 Gerencia escolas, atletas, grupos, jogos, súmulas, classificação e a tabela geral.
 
 A API fica no repositório separado **`System_jogos`** (Node + Express + MySQL).
