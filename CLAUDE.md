@@ -21,7 +21,7 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   `react-to-print`; botão "Súmulas em branco" por local na **Agenda**, só para quem está logado
   (`podeLancar`); handebol e baleado com folha de 12 linhas e as folhas medidas para caberem em uma A4;
   `ImportarAtletas` mostra a **exceção autorizada** ("Aviso: exceção autorizada"; coluna opcional
-  "Exceção" com `SIM`). O `db/20` (datas 18 a 21/11 e ajustes), o `db/21` (números 27/29) e o `db/22` (Davi Gomes,
+  "Exceção" com `SIM`). O `db/23` (Basquete F Sub 17 com 2 equipes e 2 jogos: CEJA x CEBC no nº 102 e CEBC x CEJA no nº 209; jogo 217 e equipe CETI removidos) também foi rodado; a regra de disputa dessa competição segue "grupo único, 2 classificados, final" e falta o chefe decidir se vira "melhor de dois jogos". O `db/20` (datas 18 a 21/11 e ajustes), o `db/21` (números 27/29) e o `db/22` (Davi Gomes,
   3ª modalidade) foram **rodados e conferidos no `jogos_2026`**. Também em 04/11/2026 foram **importados os atletas de 7 escolas** (ACM, Francisco Amorim, Lucia Rocha, Manoel Ramos, Marlene Santana, Portal do Saber e Teodulo Leite); os **28 alunos do ACM sem RG** usam o **código provisório `ACM-SRG-001` a `ACM-SRG-028`** (guardado normalizado como `ACMSRG001` etc.), a trocar pelo RG real em **Listar Atletas** (`/lista-atletas`, edição do ADMIN).
 
 - **A produção JÁ RODA O SISTEMA NOVO desde 01/10/2026.** A Vercel publica a branch
