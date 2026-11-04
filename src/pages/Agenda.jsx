@@ -62,7 +62,7 @@ function Agenda() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   // Mesa com local (db/18): o local dela vem primeiro e marcado; os outros
   // continuam na lista
-  const { localDaMesa } = useAuth();
+  const { localDaMesa, podeLancar } = useAuth();
   const idDaMesa = localDaMesa ? String(localDaMesa.id) : null;
 
   useEffect(() => {
@@ -150,7 +150,7 @@ function Agenda() {
     const nomeLocal = jogo.local?.nome || 'Local a definir';
     let grupoLocal = grupoDia.locais.find((g) => g.nome === nomeLocal);
     if (!grupoLocal) {
-      grupoLocal = { nome: nomeLocal, daMesa: idDaMesa !== null && String(jogo.local?.id) === idDaMesa, jogos: [] };
+      grupoLocal = { nome: nomeLocal, localId: jogo.local?.id ?? null, daMesa: idDaMesa !== null && String(jogo.local?.id) === idDaMesa, jogos: [] };
       grupoDia.locais.push(grupoLocal);
     }
     grupoLocal.jogos.push(jogo);
@@ -210,6 +210,13 @@ function Agenda() {
             <h3 className="agenda-local-titulo">
               📍 {grupoLocal.nome}
               {grupoLocal.daMesa && <span className="badge badge-accent" style={{ marginLeft: '8px' }}>sua mesa</span>}
+              {/* Só a mesa e o ADMIN: a Agenda é pública */}
+              {podeLancar && grupoLocal.localId && grupoDia.dia !== SEM_DATA && (
+                <Link className="btn btn-outline btn-sm agenda-imprimir"
+                  to={`/imprimir-sumulas?dia=${grupoDia.dia}&local=${grupoLocal.localId}`}>
+                  🖨️ Súmulas em branco
+                </Link>
+              )}
             </h3>
             <ul className="agenda-jogos">
               {grupoLocal.jogos.map((jogo) => (

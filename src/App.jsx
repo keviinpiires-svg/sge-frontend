@@ -8,6 +8,7 @@ import CadastroAtleta from './pages/CadastroAtleta';
 import ListaAtletas from './pages/ListaAtletas';
 import PreencherSumula from './pages/PreencherSumula';
 import DetalhesSumula from './pages/DetalhesSumula';
+import ImprimirSumulas from './pages/ImprimirSumulas';
 import Artilharia from './pages/Artilharia';
 import TabelaGeral from './pages/TabelaGeral';
 import Usuarios from './pages/Usuarios';
@@ -33,6 +34,7 @@ function App() {
           <Route path="/lista-atletas" element={<ListaAtletas />} />
           <Route path="/preencher-sumula/:id" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PreencherSumula /></RotaPrivada>} />
           <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
+          <Route path="/imprimir-sumulas" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><ImprimirSumulas /></RotaPrivada>} />
           <Route path="/artilharia" element={<Artilharia />} />
           <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />

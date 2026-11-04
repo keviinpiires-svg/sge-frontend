@@ -151,7 +151,7 @@ src/context/              AuthContext, useAuth (isAdmin, isPlacar, podeLancar, p
 - Datas: sempre por `services/datas.js`; nunca `new Date(string)` direto em data de jogo (o jogo das
   10:30 é 10:30 em Barra do Choça, em qualquer fuso).
 - Placar, classificação, suspensões e tabela geral **vêm calculados do backend**: a tela não recalcula.
-- Súmula: toda folha impressa tem **14 linhas por equipe**; o desenho de cada modalidade vem de
+- Súmula: toda folha impressa tem **14 linhas por equipe**, menos handebol e baleado (**12**, elenco de 12: o regulamento escrito diz 14, mas vale a resposta do chefe de 07/10/2026); o desenho de cada modalidade vem de
   `folhasSumula.js` no backend; há versão **em branco** e **preenchida**.
 
 ## Como depurar
