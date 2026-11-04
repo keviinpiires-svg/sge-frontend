@@ -13,7 +13,16 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
 
 ---
 
-## Estado atual (atualizado em 12/10/2026)
+## Estado atual (atualizado em 04/11/2026)
+
+- **04/11/2026, publicado** (frontend `39fa1c5`, `49cfaab`, `b80fdc3`; backend `31d3ad9`, `cfc975e`, `c75364c`):
+  tela **`/imprimir-sumulas`** (ADMIN e PLACAR, "Imprimir Súmulas" no menu): dia + local, caixa de
+  seleção por jogo ("Marcar todos", "Desmarcar todos", contador), uma folha A4 em branco por jogo via
+  `react-to-print`; botão "Súmulas em branco" por local na **Agenda**, só para quem está logado
+  (`podeLancar`); handebol e baleado com folha de 12 linhas e as folhas medidas para caberem em uma A4;
+  `ImportarAtletas` mostra a **exceção autorizada** ("Aviso: exceção autorizada"; coluna opcional
+  "Exceção" com `SIM`). O `db/22` (Davi Gomes, 3ª modalidade) foi rodado no `jogos_2026`; o `db/20` e o
+  `db/21` (datas 18 a 21/11 e números 27/29) **ainda não confirmados** na produção.
 
 - **A produção JÁ RODA O SISTEMA NOVO desde 01/10/2026.** A Vercel publica a branch
   **`feat/novo-escopo`** (Branch Tracking de produção trocado de `main`, que segue com o frontend
@@ -121,6 +130,7 @@ src/context/              AuthContext, useAuth (isAdmin, isPlacar, podeLancar, p
 | `/competicoes/:id` | jogos, classificação, mata-mata, suspensões, artilharia | público (ações por perfil) |
 | `/preencher-sumula/:id` | lançar súmula | ADMIN ou PLACAR |
 | `/detalhes-sumula/:id` | ver/imprimir súmula | público |
+| `/imprimir-sumulas` | imprimir súmulas em branco em lote (dia + local, seleção por jogo) | ADMIN ou PLACAR |
 | `/artilharia`, `/tabela-geral`, `/lista-atletas` | consultas | público (RG nunca aparece; sexo e nascimento só para o ADMIN — a API não os manda ao público, pendência 19) |
 | `/cadastro`, `/editar-escola/:id`, `/cadastro-atleta` | cadastros | ADMIN |
 | `/usuarios` | contas (cria, edita, desativa, troca senha) | ADMIN |
