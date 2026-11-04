@@ -145,7 +145,7 @@ function ImportarAtletas() {
     [analise, filtro]
   );
   const contagem = (situacao) => (analise?.linhas || []).filter((l) => situacao === 'TODOS' || l.situacao === situacao).length;
-  const podeConfirmar = resumo && resumo.ok > 0 && (resumo.erros === 0 || apenasOk) && !carregando;
+  const podeConfirmar = resumo && resumo.inscricoes > 0 && (resumo.erros === 0 || apenasOk) && !carregando;
 
   return (
     <div className="page">
@@ -169,7 +169,10 @@ function ImportarAtletas() {
               Colunas, com o cabeçalho na primeira linha: <strong>{COLUNAS.join('; ')}</strong>.
               Separador ponto e vírgula, UTF-8 ou o CSV do Excel. <strong>Escola</strong> é opcional:
               sem ela, escolha a escola abaixo (planilha de uma escola só). <strong>Categoria</strong> é
-              opcional: em branco, vale a categoria do atleta pela idade. Nascimento em DD/MM/AAAA e
+              opcional: em branco, vale a categoria do atleta pela idade. <strong>Exceção</strong> é
+              opcional e só para casos autorizados pela organização: com <strong>SIM</strong> na linha,
+              ficam dispensados só a idade da categoria e o máximo de 2 competições coletivas (a linha
+              aparece como aviso e entra; as demais regras continuam). Nascimento em DD/MM/AAAA e
               gênero M ou F. Escola pelo nome ou por um apelido cadastrado, sem diferença de acento ou
               maiúscula.
             </p>
@@ -210,7 +213,8 @@ function ImportarAtletas() {
                 <p>
                   <strong>{plural(analise.final.criados, 'atleta criado', 'atletas criados')}</strong>
                   {' '}({plural(analise.final.inscricoes, 'inscrição', 'inscrições')}),{' '}
-                  {plural(analise.final.pulados, 'linha pulada', 'linhas puladas')} e{' '}
+                  {plural(analise.final.pulados, 'linha pulada', 'linhas puladas')}
+                  {analise.final.com_excecao > 0 && <>, <strong>{plural(analise.final.com_excecao, 'inscrição por exceção autorizada', 'inscrições por exceção autorizada')}</strong></>} e{' '}
                   <span className={analise.final.com_erro ? 'text-danger' : ''}>
                     {plural(analise.final.com_erro, 'linha com erro', 'linhas com erro')}
                   </span>.
@@ -220,14 +224,15 @@ function ImportarAtletas() {
                   {plural(resumo.linhas, 'linha', 'linhas')}:{' '}
                   <strong>{resumo.ok} OK</strong> ({plural(resumo.atletas_novos, 'atleta novo', 'atletas novos')},{' '}
                   {plural(resumo.inscricoes, 'inscrição', 'inscrições')}),{' '}
-                  {plural(resumo.avisos, 'aviso (pulada)', 'avisos (puladas)')} e{' '}
+                  {plural(resumo.puladas, 'aviso (pulada)', 'avisos (puladas)')}
+                  {resumo.excecoes > 0 && <>, <strong>{plural(resumo.excecoes, 'exceção autorizada', 'exceções autorizadas')}</strong> (entram)</>} e{' '}
                   <span className={resumo.erros ? 'text-danger' : ''}>{plural(resumo.erros, 'erro', 'erros')}</span>.
                 </p>
               )}
 
               {!importado && (
                 <>
-                  {resumo.erros > 0 && resumo.ok > 0 && (
+                  {resumo.erros > 0 && resumo.inscricoes > 0 && (
                     <label className="linha-checks">
                       <input type="checkbox" checked={apenasOk} onChange={(e) => setApenasOk(e.target.checked)} />
                       {' '}Importar só as linhas OK ({plural(resumo.erros, 'linha com erro fica', 'linhas com erro ficam')} de fora)
@@ -235,7 +240,7 @@ function ImportarAtletas() {
                   )}
                   <div className="btn-row">
                     <button type="button" className="btn btn-primary" onClick={confirmar} disabled={!podeConfirmar}>
-                      {resumo.ok === 0
+                      {resumo.inscricoes === 0
                         ? 'Nada para importar'
                         : `Confirmar: ${plural(resumo.atletas_novos, 'atleta', 'atletas')}, ${plural(resumo.inscricoes, 'inscrição', 'inscrições')}`}
                     </button>
@@ -243,7 +248,7 @@ function ImportarAtletas() {
                       Cancelar
                     </button>
                   </div>
-                  {resumo.erros > 0 && resumo.ok > 0 && !apenasOk && (
+                  {resumo.erros > 0 && resumo.inscricoes > 0 && !apenasOk && (
                     <p className="form-hint">
                       Há linhas com erro: corrija o arquivo e carregue de novo, ou marque
                       &quot;importar só as linhas OK&quot;.
@@ -285,7 +290,9 @@ function ImportarAtletas() {
                     <tr><td colSpan={6} className="text-soft">Nenhuma linha neste filtro.</td></tr>
                   )}
                   {linhas.map((linha) => {
-                    const situacao = SITUACAO[linha.situacao] || { rotulo: linha.situacao, classe: '' };
+                    const situacao = linha.excecao_autorizada
+                      ? { rotulo: importado ? 'Importado (exceção)' : 'Aviso: exceção autorizada', classe: 'badge-accent' }
+                      : SITUACAO[linha.situacao] || { rotulo: linha.situacao, classe: '' };
                     return (
                       <tr key={linha.linha} className={linha.situacao === 'ERRO' ? 'row-suspenso' : ''}>
                         <td>{linha.linha}</td>
