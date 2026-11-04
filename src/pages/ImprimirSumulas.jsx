@@ -38,6 +38,9 @@ function ImprimirSumulas() {
   const [tentativa, setTentativa] = useState(0);
   const [comEncerrados, setComEncerrados] = useState(false);
   const [carga, setCarga] = useState(null);
+  // Jogos DESMARCADOS, presos ao dia e ao local em que foram desmarcados: ao
+  // trocar um dos dois a chave muda e todos voltam marcados
+  const [desmarcadosDe, setDesmarcadosDe] = useState({ contexto: '', ids: [] });
   const loteRef = useRef(null);
 
   useEffect(() => {
@@ -83,6 +86,13 @@ function ImprimirSumulas() {
 
   const chave = doLote.map((j) => j.id).join(',');
 
+  const contexto = `${dia}|${local}`;
+  const desmarcados = desmarcadosDe.contexto === contexto ? desmarcadosDe.ids : [];
+  const marcado = (j) => !desmarcados.includes(j.id);
+  const marcados = doLote.filter(marcado);
+  const guardar = (ids) => setDesmarcadosDe({ contexto, ids });
+  const alternar = (j) => guardar(marcado(j) ? [...desmarcados, j.id] : desmarcados.filter((id) => id !== j.id));
+
   // Busca as súmulas (em branco = o elenco inscrito) do lote, poucas por vez
   useEffect(() => {
     if (!chave) return undefined;
@@ -112,7 +122,7 @@ function ImprimirSumulas() {
 
   const atual = carga?.chave === chave ? carga : null;
   const carregando = Boolean(chave) && (!atual || atual.feitos < atual.total);
-  const folhasProntas = doLote.filter((j) => atual?.itens[j.id] && FOLHAS[atual.itens[j.id].folha?.tipo]);
+  const folhasProntas = marcados.filter((j) => atual?.itens[j.id] && FOLHAS[atual.itens[j.id].folha?.tipo]);
 
   const imprimir = useReactToPrint({
     contentRef: loteRef,
@@ -216,6 +226,18 @@ function ImprimirSumulas() {
                     {carregando && !atual && ' Carregando súmulas…'}
                   </p>
 
+                  <div className="lote-selecao">
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => guardar([])}>
+                      Marcar todos
+                    </button>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => guardar(doLote.map((j) => j.id))}>
+                      Desmarcar todos
+                    </button>
+                    <span className="text-soft" aria-live="polite">
+                      {marcados.length} de {doLote.length} {doLote.length === 1 ? 'jogo selecionado' : 'jogos selecionados'}
+                    </span>
+                  </div>
+
                   <ul className="lote-lista">
                     {doLote.map((j) => {
                       const falha = atual?.falhas[j.id];
@@ -224,6 +246,10 @@ function ImprimirSumulas() {
                       const contagens = semAtletas(j);
                       return (
                         <li key={j.id}>
+                          <label className="lote-marca">
+                            <input type="checkbox" checked={marcado(j)} onChange={() => alternar(j)}
+                              aria-label={`Imprimir ${j.equipe_1.escola} x ${j.equipe_2.escola}`} />
+                          </label>
                           <span className="lote-hora">{j.hora || '--:--'}</span>
                           <span className="lote-jogo">
                             <strong>{j.equipe_1.escola} x {j.equipe_2.escola}</strong>
@@ -254,9 +280,9 @@ function ImprimirSumulas() {
                       type="button"
                       className="btn btn-primary"
                       onClick={imprimir}
-                      disabled={carregando || folhasProntas.length === 0}
+                      disabled={carregando || marcados.length === 0 || folhasProntas.length === 0}
                     >
-                      🖨️ Imprimir {folhasProntas.length} {folhasProntas.length === 1 ? 'súmula' : 'súmulas'} em branco
+                      🖨️ Imprimir {marcados.length} {marcados.length === 1 ? 'súmula' : 'súmulas'} em branco
                     </button>
                   </div>
                 </div>
