@@ -19,7 +19,7 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   tela **`/imprimir-sumulas`** (ADMIN e PLACAR, "Imprimir Súmulas" no menu): dia + local, caixa de
   seleção por jogo ("Marcar todos", "Desmarcar todos", contador), uma folha A4 em branco por jogo via
   `react-to-print`; botão "Súmulas em branco" por local na **Agenda**, só para quem está logado
-  (`podeLancar`); handebol e baleado com folha de 12 linhas e as folhas medidas para caberem em uma A4;
+  (`podeLancar`); as folhas medidas para caberem em uma A4 (handebol e baleado com 12 linhas até 06/11/2026; agora 14, ver abaixo);
   `ImportarAtletas` mostra a **exceção autorizada** ("Aviso: exceção autorizada"; coluna opcional
   "Exceção" com `SIM`). O `db/23` (Basquete F Sub 17 com 2 equipes e 2 jogos: CEJA x CEBC no nº 102 e CEBC x CEJA no nº 209; jogo 217 e equipe CETI removidos) também foi rodado; a regra de disputa dessa competição segue "grupo único, 2 classificados, final" e falta o chefe decidir se vira "melhor de dois jogos". O `db/20` (datas 18 a 21/11 e ajustes), o `db/21` (números 27/29) e o `db/22` (Davi Gomes,
   3ª modalidade) foram **rodados e conferidos no `jogos_2026`**. Em **05/11/2026** o `db/24` tirou o **CEBN** do Futebol Society Sub 17 M e do Basquete Sub 15 M (jogos nº 127, 195, 103 e 112 e as duas equipes; banco com **232 jogos**); o Basquete Sub 15 M ficou com 3 equipes e 2 jogos (sem CEBC x Conveniada) e o `numero_jogo` das duas competições ficou com buraco, por decisão do usuário. Também em 04/11/2026 foram **importados os atletas de 7 escolas** (ACM, Francisco Amorim, Lucia Rocha, Manoel Ramos, Marlene Santana, Portal do Saber e Teodulo Leite); os **28 alunos do ACM sem RG** usam o **código provisório `ACM-SRG-001` a `ACM-SRG-028`** (guardado normalizado como `ACMSRG001` etc.), a trocar pelo RG real em **Listar Atletas** (`/lista-atletas`, edição do ADMIN). Em **05/11/2026** foram importados os **atletas do CEBN** (122 alunos, 188 inscrições), com dump antes; **3 alunos sem documento válido** usam o **código provisório `CEBN-SRG-001` a `CEBN-SRG-003`** (guardado normalizado como `CEBNSRG001` etc.), a trocar pelo RG ou CPF real em **Listar Atletas**.
@@ -56,7 +56,7 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
 - **Respostas do chefe de 07/10/2026:** 4º e 5º lugar e a revanche na semifinal viraram definitivos
   (os avisos saíram da tabela geral e do card do mata-mata); a tabela geral mostra o critério de
   desempate (mais 1ºs, depois 2ºs e 3ºs); a súmula do baleado tem o quadro "Acréscimo de 4 minutos"
-  na final empatada; handebol e baleado com folhas de 12 linhas sempre; grade do vôlei de 1 a 30.
+  na final empatada; handebol e baleado com folhas de 12 linhas sempre (voltaram a 14 em 06/11/2026); grade do vôlei de 1 a 30.
 - **Respostas do chefe de 12/10/2026 (commits locais, sem push):** o quadro "Acréscimo de 4 minutos"
   aparece também na **semifinal** do baleado empatada (as fases vêm do backend, em
   `desempate.acrescimo.fases`); o **contador de baleados** de cada equipe conta as **adversárias que
@@ -161,7 +161,7 @@ src/context/              AuthContext, useAuth (isAdmin, isPlacar, podeLancar, p
 - Datas: sempre por `services/datas.js`; nunca `new Date(string)` direto em data de jogo (o jogo das
   10:30 é 10:30 em Barra do Choça, em qualquer fuso).
 - Placar, classificação, suspensões e tabela geral **vêm calculados do backend**: a tela não recalcula.
-- Súmula: toda folha impressa tem **14 linhas por equipe**, menos handebol e baleado (**12**, elenco de 12: o regulamento escrito diz 14, mas vale a resposta do chefe de 07/10/2026); o desenho de cada modalidade vem de
+- Súmula: toda folha impressa tem **14 linhas por equipe**, inclusive handebol e baleado (teto de 14 desde o `db/25`, decisão do usuário em 06/11/2026; de 07/10 a 06/11 eram 12; no CSS, a linha dessas duas folhas tem 4,9 mm); o desenho de cada modalidade vem de
   `folhasSumula.js` no backend; há versão **em branco** e **preenchida**.
 
 ## Como depurar
