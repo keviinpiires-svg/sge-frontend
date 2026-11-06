@@ -262,6 +262,16 @@ function PreencherSumula() {
           </div>
         ))}
 
+        {equipes.some((e) => e.a_definir) && (
+          <div className="alert alert-aviso mb-lg">
+            <p className="alert-titulo">Equipes ainda não definidas</p>
+            <p className="alert-texto">
+              Este jogo de mata-mata espera o resultado que define {equipes.filter((e) => e.a_definir).map((e) => e.escola_nome).join(' e ')}.
+              A súmula só pode ser salva quando as duas equipes estiverem definidas; dá para imprimi-la em branco.
+            </p>
+          </div>
+        )}
+
         {listaSuspensos.length > 0 && (
           <div className="alert alert-error mb-lg">
             <p className="alert-titulo">🚫 Atleta suspenso nesta partida</p>
