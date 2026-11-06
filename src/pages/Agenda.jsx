@@ -4,7 +4,7 @@ import { listarAgenda } from '../services/agenda';
 import { useAuth } from '../context/useAuth';
 import { dataPorExtenso, hojeNoEvento } from '../services/datas';
 import {
-  CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaCompeticao, nomeDaFase, normalizar
+  CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaCompeticao, nomeDaFase, normalizar, nomeDaVaga, vagaEmAberto
 } from '../components/agendaTextos';
 
 // Agenda de Jogos — pública e só de leitura, pensada para o celular.
@@ -91,7 +91,7 @@ function Agenda() {
         valor: `${j.competicao.categoria}|${j.competicao.genero}`,
         rotulo: `${j.competicao.categoria} ${ROTULO_GENERO[j.competicao.genero] || j.competicao.genero}`
       }))),
-      escolas: unicos(jogos.flatMap((j) => [j.equipe_1.escola, j.equipe_2.escola]).map((e) => ({ valor: e, rotulo: e })))
+      escolas: unicos(jogos.flatMap((j) => [j.equipe_1.escola, j.equipe_2.escola]).filter(Boolean).map((e) => ({ valor: e, rotulo: e })))
     };
   }, [jogos]);
 
@@ -231,11 +231,11 @@ function Agenda() {
                         )}
                       </span>
                       <span className="agenda-confronto">
-                        {jogo.equipe_1.escola}
+                        <span className={vagaEmAberto(jogo.equipe_1) ? 'agenda-a-definir' : undefined}>{nomeDaVaga(jogo.equipe_1)}</span>
                         {jogo.placar
                           ? <strong className="agenda-placar"> {jogo.placar.equipe_1} × {jogo.placar.equipe_2} </strong>
                           : <span className="agenda-x"> x </span>}
-                        {jogo.equipe_2.escola}
+                        <span className={vagaEmAberto(jogo.equipe_2) ? 'agenda-a-definir' : undefined}>{nomeDaVaga(jogo.equipe_2)}</span>
                       </span>
                     </span>
                     <span className={`agenda-status ${CLASSE_STATUS[jogo.status] || ''}`}>

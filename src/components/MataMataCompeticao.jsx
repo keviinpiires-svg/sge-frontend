@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { chaveDaCompeticao, gerarProximaFase, desfazerFase } from '../services/matamata';
+import { chaveDaCompeticao, gerarProximaFase, desfazerFase, recalcularVagas } from '../services/matamata';
 import { dataEHora } from '../services/datas';
 import FormAgendaJogo from './FormAgendaJogo';
 
@@ -342,7 +342,24 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
             {renderFase('SEMIFINAL', chave.semifinal)}
             {renderFase('FINAL', chave.final)}
 
-            {isAdmin && (
+            {isAdmin && dados.vagas_cadastradas && (
+              <div className="btn-row" style={{ justifyContent: 'flex-start' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={trabalhando}
+                  onClick={() => executar(() => recalcularVagas(competicao.id), 'Vagas recalculadas.')}
+                >
+                  🔄 Recalcular vagas
+                </button>
+                <p className="legenda-desempate" style={{ margin: 0 }}>
+                  Os jogos desta chave vêm da tabela do chefe e as equipes entram sozinhas conforme os jogos terminam.
+                  Vagas trocadas à mão (em Jogos, botão Equipes) não são desfeitas.
+                </p>
+              </div>
+            )}
+
+            {isAdmin && !dados.vagas_cadastradas && (
               <div className="btn-row" style={{ justifyContent: 'flex-start' }}>
                 {podeGerar.fase ? (
                   <button

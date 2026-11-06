@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { listarJogos, agendarJogo, excluirJogo, iniciarJogo, declararWO } from '../services/jogos';
+import { listarJogos, agendarJogo, excluirJogo, iniciarJogo, declararWO, trocarVagaDoJogo } from '../services/jogos';
 import { listarLocais } from '../services/locais';
 import { dataEHora } from '../services/datas';
 import FormAgendaJogo from './FormAgendaJogo';
@@ -24,6 +24,10 @@ const FORM_VAZIO = {
 
 const A_DEFINIR = 'A definir';
 
+// Mata-mata cadastrado de antemão: sem equipe, mostra de onde ela virá
+const equipeOuOrigem = (jogo, lado) => jogo[`equipe_${lado}_nome`] || jogo[`origem_${lado}`] || A_DEFINIR;
+const semEquipes = (jogo) => !jogo.equipe_1_id || !jogo.equipe_2_id;
+
 const formatarQuando = (valor) => dataEHora(valor, A_DEFINIR);
 
 // versao e aoMudarJogos ligam esta tabela ao card do mata-mata: o que muda num
@@ -43,6 +47,8 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
   const [wo, setWo] = useState(null);
   // Formulário de data, hora e local: abre sob a tabela, como o de W.O.
   const [agenda, setAgenda] = useState(null);
+  // Painel de troca de vaga do mata-mata (ADMIN)
+  const [vagas, setVagas] = useState(null);
 
   const chave = `${competicao.id}:${recarga}:${versao}`;
   const pronto = resultado?.chave === chave;
@@ -122,7 +128,7 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
 
   const remover = async (jogo) => {
     const confirmado = window.confirm(
-      `Excluir o jogo nº ${jogo.numero_jogo} (${jogo.equipe_1_nome} x ${jogo.equipe_2_nome})?\n\n` +
+      `Excluir o jogo nº ${jogo.numero_jogo} (${equipeOuOrigem(jogo, 1)} x ${equipeOuOrigem(jogo, 2)})?\n\n` +
       'Os jogos seguintes serão renumerados para não deixar buraco na sequência.'
     );
     if (!confirmado) return;
@@ -142,6 +148,7 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
   };
 
   const abrirWO = (jogo) => {
+    setVagas(null);
     setAgenda(null);
     setWo({
       jogo,
@@ -152,7 +159,42 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
     });
   };
 
+  const abrirVagas = (jogo) => {
+    setWo(null);
+    setAgenda(null);
+    setAviso(null);
+    setVagas({
+      jogo,
+      lado1: jogo.vaga_1_manual ? String(jogo.equipe_1_id || '') : 'auto',
+      lado2: jogo.vaga_2_manual ? String(jogo.equipe_2_id || '') : 'auto'
+    });
+  };
+
+  // Aplica as vagas; jogo iniciado ou encerrado pede confirmação explícita
+  const salvarVagas = async () => {
+    const { jogo } = vagas;
+    const iniciado = jogo.status !== 'AGENDADO';
+    if (iniciado && !window.confirm('Este jogo já começou ou terminou. Trocar a equipe mesmo assim?')) return;
+
+    try {
+      for (const lado of [1, 2]) {
+        const escolha = vagas['lado' + lado];
+        const atual = jogo['vaga_' + lado + '_manual'] ? String(jogo['equipe_' + lado + '_id'] || '') : 'auto';
+        if (escolha === atual) continue;
+        await trocarVagaDoJogo(jogo.id, escolha === 'auto'
+          ? { lado, automatico: true, confirmar: iniciado }
+          : { lado, equipe_id: Number(escolha), confirmar: iniciado });
+      }
+      setAviso({ tipo: 'success', texto: 'Vagas do jogo nº ' + jogo.numero_jogo + ' atualizadas.' });
+      setVagas(null);
+      recarregar();
+    } catch (falha) {
+      setAviso({ tipo: 'error', texto: falha.mensagem });
+    }
+  };
+
   const abrirAgenda = (jogo) => {
+    setVagas(null);
     setWo(null);
     setAviso(null);
     setAgenda(jogo);
@@ -235,7 +277,9 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                     <td className="strong">{jogo.numero_jogo}</td>
                     <td className="text-left">{formatarQuando(jogo.data_hora)}</td>
                     <td className="text-left">
-                      {jogo.equipe_1_nome} <span className="versus">x</span> {jogo.equipe_2_nome}
+                      <span className={jogo.equipe_1_nome ? undefined : 'agenda-a-definir'}>{equipeOuOrigem(jogo, 1)}</span>
+                      {' '}<span className="versus">x</span>{' '}
+                      <span className={jogo.equipe_2_nome ? undefined : 'agenda-a-definir'}>{equipeOuOrigem(jogo, 2)}</span>
                     </td>
                     <td>{jogo.grupo_nome || '—'}</td>
                     <td className="text-left">{jogo.local_nome || A_DEFINIR}</td>
@@ -247,12 +291,12 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                     </td>
                     {autenticado && (
                       <td className="acoes">
-                        {jogo.status === 'AGENDADO' && (
+                        {jogo.status === 'AGENDADO' && !semEquipes(jogo) && (
                           <button type="button" className="btn btn-outline btn-sm" onClick={() => iniciar(jogo)}>
                             Iniciar
                           </button>
                         )}
-                        {jogo.status !== 'WO' && (
+                        {jogo.status !== 'WO' && !semEquipes(jogo) && (
                           <Link className="btn btn-outline btn-sm" to={`/preencher-sumula/${jogo.id}`}>
                             Súmula
                           </Link>
@@ -266,7 +310,12 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                             🕒 Horário
                           </button>
                         )}
-                        {isAdmin && ['AGENDADO', 'EM_ANDAMENTO'].includes(jogo.status) && (
+                        {isAdmin && (jogo.origem_1 || jogo.origem_2) && (
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirVagas(jogo)}>
+                            👥 Equipes
+                          </button>
+                        )}
+                        {isAdmin && !semEquipes(jogo) && ['AGENDADO', 'EM_ANDAMENTO'].includes(jogo.status) && (
                           <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirWO(jogo)}>
                             W.O.
                           </button>
@@ -289,10 +338,43 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
           <FormAgendaJogo
             key={agenda.id}
             jogo={agenda}
-            confronto={`${agenda.equipe_1_nome} x ${agenda.equipe_2_nome}`}
+            confronto={`${equipeOuOrigem(agenda, 1)} x ${equipeOuOrigem(agenda, 2)}`}
             aoSalvar={agendaSalva}
             aoCancelar={() => setAgenda(null)}
           />
+        )}
+
+        {vagas && (
+          <div className="painel-wo">
+            <h3 className="secao-titulo">Equipes do jogo nº {vagas.jogo.numero_jogo}</h3>
+            <div className="form-linha">
+              {[1, 2].map((lado) => (
+                <div className="form-group" key={lado}>
+                  <label className="form-label" htmlFor={'vaga-' + lado}>
+                    Vaga {lado} ({vagas.jogo['origem_' + lado] || 'sem origem'})
+                  </label>
+                  <select
+                    id={'vaga-' + lado}
+                    className="form-control"
+                    value={vagas['lado' + lado]}
+                    onChange={(e) => setVagas((v) => ({ ...v, ['lado' + lado]: e.target.value }))}
+                  >
+                    <option value="auto">Automático (pela regra)</option>
+                    {equipes.map((equipe) => (
+                      <option key={equipe.id} value={equipe.id}>{equipe.escola_nome}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <div className="acoes" style={{ justifyContent: 'flex-start' }}>
+              <button type="button" className="btn btn-primary btn-sm" onClick={salvarVagas}>Salvar</button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => setVagas(null)}>Cancelar</button>
+            </div>
+            <p className="form-hint">
+              Uma equipe escolhida aqui fica travada: o preenchimento automático não a desfaz. "Automático" devolve a vaga à regra.
+            </p>
+          </div>
         )}
 
         {wo && (

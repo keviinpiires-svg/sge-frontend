@@ -5,7 +5,7 @@ import { listarAgenda } from '../services/agenda';
 import { buscarSumulaPorJogo } from '../services/sumulas';
 import { hojeNoEvento, dataPorExtenso } from '../services/datas';
 import { useAuth } from '../context/useAuth';
-import { nomeDaCompeticao, nomeDaFase, ROTULO_STATUS } from '../components/agendaTextos';
+import { nomeDaCompeticao, nomeDaFase, nomeDaVaga, ROTULO_STATUS } from '../components/agendaTextos';
 import FolhaFutsal from '../components/folhas/FolhaFutsal';
 import FolhaBasquete from '../components/folhas/FolhaBasquete';
 import FolhaVolei from '../components/folhas/FolhaVolei';
@@ -248,11 +248,11 @@ function ImprimirSumulas() {
                         <li key={j.id}>
                           <label className="lote-marca">
                             <input type="checkbox" checked={marcado(j)} onChange={() => alternar(j)}
-                              aria-label={`Imprimir ${j.equipe_1.escola} x ${j.equipe_2.escola}`} />
+                              aria-label={`Imprimir ${nomeDaVaga(j.equipe_1)} x ${nomeDaVaga(j.equipe_2)}`} />
                           </label>
                           <span className="lote-hora">{j.hora || '--:--'}</span>
                           <span className="lote-jogo">
-                            <strong>{j.equipe_1.escola} x {j.equipe_2.escola}</strong>
+                            <strong>{nomeDaVaga(j.equipe_1)} x {nomeDaVaga(j.equipe_2)}</strong>
                             <span className="text-soft">
                               {nomeDaCompeticao(j.competicao)} · {nomeDaFase(j)}
                               {j.numero_tabela ? ` · Tabela nº ${j.numero_tabela}` : ''}
@@ -262,7 +262,7 @@ function ImprimirSumulas() {
                             {sem && <span className="lote-alerta">Sem folha desenhada para esta modalidade.</span>}
                             {sumula && !sem && contagens.some((n) => n === 0) && (
                               <span className="lote-alerta">
-                                Atenção: {contagens[0]} atletas em {j.equipe_1.escola} e {contagens[1]} em {j.equipe_2.escola}
+                                Atenção: {contagens[0]} atletas em {nomeDaVaga(j.equipe_1)} e {contagens[1]} em {nomeDaVaga(j.equipe_2)}
                                 {' '}(a folha sai com linhas vazias onde faltar).
                               </span>
                             )}

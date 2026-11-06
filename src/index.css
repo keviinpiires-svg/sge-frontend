@@ -1264,6 +1264,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .agenda-competicao { font-size: 12px; color: var(--sge-text-muted); }
 .agenda-confronto { font-size: 15px; font-weight: 700; color: var(--sge-text-strong); overflow-wrap: anywhere; }
 .agenda-x { color: var(--sge-text-muted); font-weight: 400; }
+/* Vaga do mata-mata ainda sem equipe: mostra de onde ela virá */
+.agenda-a-definir { color: var(--sge-text-muted); font-style: italic; }
 .agenda-placar { color: var(--sge-accent); }
 .agenda-status {
   grid-area: status; justify-self: start; padding: 2px 10px; border-radius: 999px;

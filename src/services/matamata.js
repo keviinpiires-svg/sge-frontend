@@ -15,3 +15,8 @@ export const gerarProximaFase = (competicaoId) =>
 // Só desfaz enquanto nada foi jogado naquela fase.
 export const desfazerFase = (competicaoId, fase) =>
   api.delete(`/matamata/competicao/${encodeURIComponent(competicaoId)}/${fase}`).then((r) => r.data);
+
+// POST /api/matamata/competicao/:id/recalcular-vagas (ADMIN)
+// Preenche de novo as vagas dos jogos de mata-mata cadastrados (vagas escolhidas à mão ficam).
+export const recalcularVagas = (competicaoId) =>
+  api.post(`/matamata/competicao/${encodeURIComponent(competicaoId)}/recalcular-vagas`).then((r) => r.data);

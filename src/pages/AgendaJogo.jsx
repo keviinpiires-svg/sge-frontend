@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { buscarJogoDaAgenda } from '../services/agenda';
 import { dataPorExtenso } from '../services/datas';
 import {
-  CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaFase, textoDoResultado
+  CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaFase, textoDoResultado, nomeDaVaga, vagaEmAberto
 } from '../components/agendaTextos';
 
 // Detalhe de um jogo da Agenda — público. Os atletas chegam só com nome e
@@ -13,8 +13,10 @@ function Elenco({ equipe }) {
   return (
     <section className="card agenda-elenco">
       <div className="card-body">
-        <h2 className="card-title">{equipe.escola}</h2>
-        {equipe.atletas.length === 0 ? (
+        <h2 className="card-title">{nomeDaVaga(equipe)}</h2>
+        {vagaEmAberto(equipe) ? (
+          <p className="state-text agenda-sem-atletas">Equipe ainda não definida: ela entra quando o resultado que a define sair.</p>
+        ) : equipe.atletas.length === 0 ? (
           <p className="state-text agenda-sem-atletas">Atletas ainda não inscritos</p>
         ) : (
           <ul className="agenda-atletas">
@@ -78,7 +80,7 @@ function AgendaJogo() {
         <header className="page-header">
           <p className="eyebrow">{c.modalidade} · {c.categoria} · {ROTULO_GENERO[c.genero] || c.genero}</p>
           <h1 className="page-title agenda-titulo-jogo">
-            {jogo.equipe_1.escola} <span className="agenda-x">x</span> {jogo.equipe_2.escola}
+            {nomeDaVaga(jogo.equipe_1)} <span className="agenda-x">x</span> {nomeDaVaga(jogo.equipe_2)}
           </h1>
         </header>
 

@@ -27,3 +27,8 @@ export const excluirJogo = (id) =>
 // PUT /api/jogos/:id/wo (ADMIN) — { vencedor_equipe_id, placar_1, placar_2, motivo }
 export const declararWO = (id, dados) =>
   api.put(`/jogos/${encodeURIComponent(id)}/wo`, dados).then((r) => r.data);
+
+// PUT /api/jogos/:id/vagas (ADMIN) — troca à mão a equipe de uma vaga do mata-mata:
+// { lado: 1|2, equipe_id } ou { lado, automatico: true }; { confirmar: true } para jogo já iniciado
+export const trocarVagaDoJogo = (id, dados) =>
+  api.put(`/jogos/${encodeURIComponent(id)}/vagas`, dados).then((r) => r.data);

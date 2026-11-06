@@ -42,6 +42,11 @@ export const textoDoResultado = (jogo) => {
   return `${vencedor} venceu${r.prorrogacao ? ' na prorrogação' : ''}`;
 };
 
+// Mata-mata cadastrado de antemão (db/28): enquanto a equipe não existe, a vaga mostra de onde ela
+// virá ("1º do Grupo A", "Melhor 2º colocado", "Vencedor do jogo 263")
+export const nomeDaVaga = (equipe) => equipe?.escola || equipe?.origem || 'A definir';
+export const vagaEmAberto = (equipe) => !equipe?.escola;
+
 // Comparação de nomes sem acento nem maiúscula, para a busca por escola
 export const normalizar = (texto) => String(texto || '')
   .normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
