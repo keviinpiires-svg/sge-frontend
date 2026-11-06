@@ -1,181 +1,163 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { buscarSumulaPorJogo } from '../services/sumulas';
+import FolhaFutsal from '../components/folhas/FolhaFutsal';
+import FolhaBasquete from '../components/folhas/FolhaBasquete';
+import FolhaVolei from '../components/folhas/FolhaVolei';
+import FolhaHandebol from '../components/folhas/FolhaHandebol';
+import FolhaBaleado from '../components/folhas/FolhaBaleado';
+
+// A folha impressa segue os modelos em papel (docs/referencias/sumulas_modelos.md).
+// Qual folha cada modalidade usa vem do backend, de src/config/folhasSumula.js:
+// esta tela só escolhe o componente correspondente.
+const FOLHAS = {
+  FUTSAL: FolhaFutsal,
+  BASQUETE: FolhaBasquete,
+  VOLEI: FolhaVolei,
+  HANDEBOL: FolhaHandebol,
+  BALEADO: FolhaBaleado
+};
 
 function DetalhesSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [jogo, setJogo] = useState(null);
-  const [eventos, setEventos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState('');
+  const [carga, setCarga] = useState(null);
+  // Em branco: mesma folha, sem os lançamentos — para levar à quadra.
+  // ?em-branco=1 abre direto assim, para imprimir sem passar pela tela.
+  const [busca, setBusca] = useSearchParams();
+  const emBranco = busca.get('em-branco') === '1';
+  const setEmBranco = (valor) => {
+    const proximo = typeof valor === 'function' ? valor(emBranco) : valor;
+    setBusca(proximo ? { 'em-branco': '1' } : {}, { replace: true });
+  };
 
-  // Área impressa no PDF: placar + tabela de eventos
-  const sumulaRef = useRef(null);
-  const exportarPdf = useReactToPrint({
-    contentRef: sumulaRef,
-    documentTitle: () => `Sumula_Jogo_${jogo?.numero_jogo || id}`,
-    pageStyle: '@page { size: A4; margin: 12mm; } html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
+  const pronto = carga?.id === id;
+  const sumula = pronto ? carga.dados : null;
+  const erro = pronto ? carga.erro : '';
+
+  const folhaRef = useRef(null);
+  const imprimir = useReactToPrint({
+    contentRef: folhaRef,
+    documentTitle: `Sumula_Jogo_${sumula?.jogo?.numero_jogo || id}${emBranco ? '_em_branco' : ''}`,
+    // margem 0 na página + margem própria na folha: é o que tira o cabeçalho
+    // e o rodapé que o navegador imprime por conta própria.
+    pageStyle: `
+      @page { size: A4 portrait; margin: 0; }
+      html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    `
   });
 
   useEffect(() => {
-    async function carregarRelatorio() {
-      try {
-        const data = await buscarSumulaPorJogo(id);
-        setJogo(data.jogo);
-        setEventos(data.eventos);
-      } catch (err) {
-        console.error(err);
-        setErro(err.mensagem);
-      } finally {
-        setCarregando(false);
-      }
-    }
+    let ativo = true;
 
-    if (id) {
-      carregarRelatorio();
-    }
+    buscarSumulaPorJogo(id)
+      .then((dados) => {
+        if (ativo) setCarga({ id, dados, erro: '' });
+      })
+      .catch((falha) => {
+        if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
+      });
+
+    return () => {
+      ativo = false;
+    };
   }, [id]);
 
-  const botaoVoltar = (
-    <div className="text-center mt-lg">
-      <button className="btn btn-secondary btn-pill btn-lg" onClick={() => navigate('/lista-jogos')}>
-        ← Voltar para a Tabela de Jogos
-      </button>
-    </div>
-  );
-
-  if (carregando) {
+  if (!pronto) {
     return (
-      <div className="page">
-        <div className="container card">
-          <div className="state">
-            <div className="spinner" />
-            <p className="state-text">Buscando relatório da súmula...</p>
-          </div>
-        </div>
-      </div>
+      <div className="page"><div className="container-lg">
+        <div className="card"><div className="state">
+          <div className="spinner" />
+          <p className="state-text">Carregando súmula...</p>
+        </div></div>
+      </div></div>
     );
   }
 
   if (erro) {
     return (
-      <div className="page">
-        <div className="container">
-          <div className="card">
-            <div className="state state-error">
-              <div className="state-icon">⚠️</div>
-              <p className="state-title">Não foi possível carregar a súmula</p>
-              <p className="state-text">{erro}</p>
-            </div>
-          </div>
-          {botaoVoltar}
-        </div>
-      </div>
+      <div className="page"><div className="container-lg">
+        <div className="card"><div className="state state-error">
+          <div className="state-icon">⚠️</div>
+          <p className="state-title">Não foi possível carregar a súmula</p>
+          <p className="state-text">{erro}</p>
+        </div></div>
+      </div></div>
     );
   }
 
-  const vazio = <span className="text-muted" style={{ fontWeight: 400 }}>-</span>;
-  const finalizado = jogo.status === 'FINALIZADO';
+  const { evento, jogo, equipes, folha, sets } = sumula;
+  const Folha = FOLHAS[folha.tipo];
 
   return (
     <div className="page">
-      <div className="container stack">
+      <div className="container-lg">
+        <div className="page-toolbar no-print">
+          <button className="btn btn-outline" onClick={() => navigate(-1)}>← Voltar</button>
 
-        <div className="page-toolbar">
-          <button className="btn btn-secondary" onClick={() => navigate('/lista-jogos')}>← Voltar</button>
-          <button className="btn btn-outline" onClick={exportarPdf}>📄 Exportar PDF</button>
+          <div className="acoes">
+            <button
+              type="button"
+              className={`btn btn-sm ${emBranco ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setEmBranco((v) => !v)}
+            >
+              {emBranco ? 'Vendo: em branco' : 'Vendo: preenchida'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={imprimir}
+              disabled={!Folha}
+            >
+              🖨️ Imprimir {emBranco ? 'em branco' : 'preenchida'}
+            </button>
+          </div>
         </div>
 
-        <div ref={sumulaRef} className="stack print-area">
-        {/* Cabeçalho exibido apenas no documento impresso/PDF */}
-        <header className="print-only print-header">
-          <p className="eyebrow">Jogos Estudantis — Sistema de Gestão Esportiva</p>
-          <h1 className="page-title">Súmula Oficial da Partida</h1>
-          <p className="page-subtitle">Documento gerado em {new Date().toLocaleString('pt-BR')}</p>
-        </header>
-
-        {/* Placar estilo Esportivo (Stadium View) */}
-        <section className="scoreboard">
-          <p className="eyebrow">Relatório Final Oficial</p>
-          <p className="scoreboard-meta">
-            JOGO #{jogo.numero_jogo} — {jogo.fase}
-            {jogo.local_nome && ` — ${jogo.local_nome}`}
-          </p>
-
-          <div className="scoreboard-row">
-            <h2 className="scoreboard-team home">{jogo.escola_1_nome}</h2>
-            <div className="scoreboard-scores">
-              <div className="score-box">{jogo.placar_escola_1}</div>
-              <span className="scoreboard-x">X</span>
-              <div className="score-box">{jogo.placar_escola_2}</div>
-            </div>
-            <h2 className="scoreboard-team away">{jogo.escola_2_nome}</h2>
+        {folha.provisoria && (
+          <div className="alert alert-aviso mb-lg no-print">
+            <p className="alert-titulo">⚠️ Folha provisória</p>
+            <p className="alert-texto">
+              {jogo.modalidade_nome} não tem folha oficial entre os modelos recebidos.
+              Esta segue o desenho da do futsal, com a coluna de {folha.rotuloEstatistica?.toLowerCase()}
+              {' '}no lugar dos gols — decisão de {folha.decididoEm}, a confirmar.
+            </p>
           </div>
+        )}
 
-          <p style={{ marginTop: '20px', marginBottom: 0 }}>
-            <span className={`badge ${finalizado ? 'badge-success' : 'badge-accent'}`}>{jogo.status}</span>
-          </p>
-        </section>
-
-        {/* Listagem de Eventos da Súmula */}
-        <section className="card">
-          <div className="card-body" style={{ paddingBottom: eventos.length ? 0 : undefined }}>
-            <h3 className="card-title" style={{ marginBottom: eventos.length ? 0 : undefined, borderBottom: eventos.length ? 'none' : undefined }}>
-              Atletas com Registro na Súmula
-            </h3>
-          </div>
-
-          {eventos.length === 0 ? (
+        {!Folha ? (
+          <div className="card">
             <div className="state state-compact">
-              <div className="state-icon">📋</div>
-              <p className="state-text">Nenhum evento (gols ou cartões) foi registrado nesta súmula.</p>
+              <div className="state-icon">📄</div>
+              <p className="state-title">A folha de {jogo.modalidade_nome} ainda não foi desenhada</p>
+              <p className="state-text">
+                Ela tem modelo próprio em papel e entra na fatia 6 — demais modalidades coletivas.
+              </p>
             </div>
-          ) : (
-            <div className="table-wrap">
-              <table className="table-sge" style={{ minWidth: '560px' }}>
-                <thead>
-                  <tr>
-                    <th className="text-left">Atleta</th>
-                    <th className="text-left">Escola</th>
-                    <th>⚽ Gols</th>
-                    <th>🟨 Amarelos</th>
-                    <th>🟥 Vermelhos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {eventos.map((evento, index) => (
-                    <tr key={index}>
-                      <td className="text-left strong">{evento.atleta_nome}</td>
-                      <td className="text-left text-soft">{evento.escola_nome}</td>
-                      <td className="text-success num-lg">
-                        {evento.gols > 0 ? evento.gols : vazio}
-                      </td>
-                      <td className="text-accent num-lg">
-                        {evento.cartoes_amarelos > 0 ? evento.cartoes_amarelos : vazio}
-                      </td>
-                      <td className="text-danger num-lg">
-                        {evento.cartao_vermelho > 0 ? evento.cartao_vermelho : vazio}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </div>
+        ) : (
+          <>
+            {/* A folha tem o tamanho do papel (A4). Em tela estreita ela rola de
+                lado dentro deste quadro, sem alargar a página */}
+            <p className="folha-dica no-print">
+              A folha está no tamanho do papel (A4). Arraste para o lado para ver a folha inteira.
+            </p>
+            <div className="folha-rolagem">
+              <div ref={folhaRef} className={`folha-sumula print-area folha-tipo-${folha.tipo.toLowerCase()}`}>
+                <Folha
+                  evento={evento}
+                  jogo={jogo}
+                  equipes={equipes}
+                  sets={sets}
+                  folha={folha}
+                  emBranco={emBranco}
+                />
+              </div>
             </div>
-          )}
-        </section>
-
-        {/* Campos de assinatura para o registro físico */}
-        <footer className="print-only print-signatures">
-          <div><span />Árbitro</div>
-          <div><span />Representante — {jogo.escola_1_nome}</div>
-          <div><span />Representante — {jogo.escola_2_nome}</div>
-        </footer>
-        </div>
-
-        {botaoVoltar}
+          </>
+        )}
       </div>
     </div>
   );

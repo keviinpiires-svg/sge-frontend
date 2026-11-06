@@ -1,28 +1,26 @@
 import { useState, useEffect } from 'react';
-import { listarArtilharia } from '../services/artilharia';
+import { useNavigate } from 'react-router-dom';
+import { listarLideres } from '../services/artilharia';
 
+const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
+
+// Esta tela mostra o artilheiro de CADA competição. O ranking completo de uma
+// competição fica na página dela: somar gols de futsal com pontos de basquete
+// num "artilheiro dos Jogos" não significaria nada.
 function Artilharia() {
-  const [artilheiros, setArtilheiros] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState('');
-
-  // Incrementar este valor dispara uma nova busca (botão "Tentar novamente")
+  const navigate = useNavigate();
+  const [resultado, setResultado] = useState(null);
   const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
     let ativo = true;
 
-    listarArtilharia()
-      .then((data) => {
-        if (!ativo) return;
-        setArtilheiros(data);
-        setErro('');
+    listarLideres()
+      .then((lideres) => {
+        if (ativo) setResultado({ tentativa, lideres, erro: '' });
       })
-      .catch((error) => {
-        if (ativo) setErro(error.mensagem);
-      })
-      .finally(() => {
-        if (ativo) setCarregando(false);
+      .catch((falha) => {
+        if (ativo) setResultado({ tentativa, lideres: [], erro: falha.mensagem });
       });
 
     return () => {
@@ -30,90 +28,95 @@ function Artilharia() {
     };
   }, [tentativa]);
 
-  const tentarNovamente = () => {
-    setCarregando(true);
-    setErro('');
-    setTentativa((t) => t + 1);
-  };
+  const pronto = resultado?.tentativa === tentativa;
+  const lideres = pronto ? resultado.lideres : [];
+  const erro = pronto ? resultado.erro : '';
+
+  // Agrupa por modalidade, mantendo a ordem que o backend já devolveu
+  const porModalidade = lideres.reduce((mapa, lider) => {
+    if (!mapa[lider.modalidade_nome]) mapa[lider.modalidade_nome] = [];
+    mapa[lider.modalidade_nome].push(lider);
+    return mapa;
+  }, {});
 
   const renderConteudo = () => {
-    if (carregando) {
+    if (!pronto) {
       return (
-        <div className="state">
-          <div className="spinner" />
-          <p className="state-text">Carregando artilharia...</p>
+        <div className="card">
+          <div className="state">
+            <div className="spinner" />
+            <p className="state-text">Carregando artilheiros...</p>
+          </div>
         </div>
       );
     }
 
     if (erro) {
       return (
-        <div className="state state-error">
-          <div className="state-icon">⚠️</div>
-          <p className="state-title">Não foi possível carregar a artilharia</p>
-          <p className="state-text">{erro}</p>
-          <button className="btn btn-primary" onClick={tentarNovamente}>Tentar novamente</button>
+        <div className="card">
+          <div className="state state-error">
+            <div className="state-icon">⚠️</div>
+            <p className="state-title">Não foi possível carregar</p>
+            <p className="state-text">{erro}</p>
+            <button className="btn btn-primary" onClick={() => setTentativa((t) => t + 1)}>
+              Tentar novamente
+            </button>
+          </div>
         </div>
       );
     }
 
-    if (artilheiros.length === 0) {
+    if (lideres.length === 0) {
       return (
-        <div className="state">
-          <div className="state-icon">⚽</div>
-          <p className="state-title">Nenhum gol registrado ainda.</p>
-          <p className="state-text">A artilharia será atualizada assim que as súmulas forem preenchidas.</p>
+        <div className="card">
+          <div className="state state-compact">
+            <div className="state-icon">⚽</div>
+            <p className="state-text">
+              Nenhum gol lançado ainda. A artilharia é somada das súmulas.
+            </p>
+          </div>
         </div>
       );
     }
 
-    return (
-      <div className="table-wrap">
-        <table className="table-sge" style={{ minWidth: '480px' }}>
-          <thead>
-            <tr>
-              <th title="Posição">Posição</th>
-              <th className="text-left">Atleta</th>
-              <th className="text-left">Escola</th>
-              <th>Gols</th>
-            </tr>
-          </thead>
-          <tbody>
-            {artilheiros.map((artilheiro, index) => {
-              const posicao = index + 1;
-              const lider = posicao === 1;
-              return (
-                <tr key={artilheiro.atleta_id ?? index} className={lider ? 'row-leader' : ''}>
-                  <td>
-                    <span className={`rank ${posicao <= 3 ? `rank-${posicao}` : ''}`}>{posicao}</span>
-                  </td>
-                  <td className="text-left strong">
-                    {artilheiro.atleta_nome}
-                    {lider && (
-                      <span className="golden-boot" title="Chuteira de Ouro">👟 Chuteira de Ouro</span>
-                    )}
-                  </td>
-                  <td className="text-left text-soft">{artilheiro.escola_nome}</td>
-                  <td className="text-accent num-lg">{artilheiro.total_gols}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
+    return Object.entries(porModalidade).map(([modalidade, doGrupo]) => (
+      <section key={modalidade} className="mb-lg">
+        <h2 className="secao-titulo">{modalidade}</h2>
+
+        <div className="grid-cards">
+          {doGrupo.map((lider) => (
+            <button
+              key={`${lider.competicao_id}-${lider.atleta_id}`}
+              type="button"
+              className="tile tile-clicavel"
+              onClick={() => navigate(`/competicoes/${lider.competicao_id}`)}
+            >
+              <p className="tile-meta">
+                {lider.categoria_nome} {ROTULO_GENERO[lider.genero] || lider.genero}
+              </p>
+              <p className="tile-title">{lider.atleta_nome}</p>
+              <p className="tile-meta">
+                {lider.escola_nome} — <strong>{lider.gols}</strong> {lider.rotulo}
+              </p>
+            </button>
+          ))}
+        </div>
+      </section>
+    ));
   };
 
   return (
     <div className="page">
-      <div className="container">
+      <div className="container-lg">
         <header className="page-header">
-          <p className="eyebrow">Estatísticas</p>
-          <h1 className="page-title">Artilharia ⚽</h1>
-          <p className="page-subtitle">Os maiores goleadores do campeonato.</p>
+          <p className="eyebrow">Artilharia</p>
+          <h1 className="page-title">Artilheiros por competição</h1>
+          <p className="page-subtitle">
+            Quem mais marcou em cada competição. Clique para ver o ranking completo.
+          </p>
         </header>
 
-        <div className="card">{renderConteudo()}</div>
+        {renderConteudo()}
       </div>
     </div>
   );
