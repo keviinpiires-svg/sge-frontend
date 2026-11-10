@@ -23,3 +23,7 @@ export const atualizarAtleta = (id, atleta) =>
 // DELETE /api/atletas/:id (protegida)
 export const excluirAtleta = (id) =>
   api.delete(`/atletas/${id}`).then((r) => r.data);
+
+// GET /api/atletas/:id/inscricoes — competições do atleta (pública; a marca "excecao" só vem para o ADMIN)
+export const listarInscricoesDoAtleta = (id) =>
+  api.get(`/atletas/${encodeURIComponent(id)}/inscricoes`).then((r) => r.data);

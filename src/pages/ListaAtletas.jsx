@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
 import { listarEscolas } from '../services/escolas';
 import {
   listarAtletasPorEquipe, buscarAtletaPorId, atualizarAtleta, excluirAtleta
 } from '../services/atletas';
 import { soAData, paraCampoData } from '../services/datas';
+import PainelAtleta from '../components/PainelAtleta';
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
@@ -12,6 +13,9 @@ function ListaAtletas() {
   const [buscou, setBuscou] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [atletaEmEdicao, setAtletaEmEdicao] = useState(null);
+  // Atleta cujas competições estão abertas no painel (clique no nome ou na linha)
+  const [atletaAberto, setAtletaAberto] = useState(null);
+  const fecharPainel = useCallback(() => setAtletaAberto(null), []);
   const { isAdmin } = useAuth();
   const [escolas, setEscolas] = useState([]);
   const [carregandoEscolas, setCarregandoEscolas] = useState(true);
@@ -151,12 +155,21 @@ function ListaAtletas() {
                   </thead>
                   <tbody>
                     {atletas.map((atleta, index) => (
-                      <tr key={index}>
-                        <td className="text-left strong">{atleta.nome}</td>
+                      <tr key={index} className="linha-atleta" onClick={() => setAtletaAberto(atleta)}>
+                        <td className="text-left strong">
+                          <button
+                            type="button"
+                            style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}
+                            onClick={(e) => { e.stopPropagation(); setAtletaAberto(atleta); }}
+                            aria-label={`Ver competições de ${atleta.nome}`}
+                          >
+                            {atleta.nome}
+                          </button>
+                        </td>
                         {/* O RG não aparece aqui: a lista é pública */}
                         {isAdmin && <td className="text-soft">{atleta.sexo === 'F' ? 'Feminino' : 'Masculino'}</td>}
                         {isAdmin && <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>}
-                        <td>
+                        <td onClick={(e) => e.stopPropagation()}>
                           {isAdmin ? (
                             <div className="btn-group">
                               <button className="btn btn-outline btn-sm" onClick={() => handleEditar(atleta)}>Editar</button>
@@ -179,6 +192,15 @@ function ListaAtletas() {
               </div>
             )}
           </div>
+        )}
+
+        {atletaAberto && (
+          <PainelAtleta
+            atleta={atletaAberto}
+            escolaNome={escolas.find((e) => String(e.id) === String(escolaId))?.nome}
+            isAdmin={isAdmin}
+            aoFechar={fecharPainel}
+          />
         )}
 
         {atletaEmEdicao && (

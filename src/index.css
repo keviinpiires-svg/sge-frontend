@@ -1386,3 +1386,20 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .lote-fora-da-tela { position: static; width: auto; }
 }
 .agenda-imprimir { margin-left: 8px; }
+
+/* Painel das inscrições do atleta (Listar Atletas): por cima da lista, fecha por X, Esc ou fora */
+.painel-fundo {
+  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(0, 0, 0, 0.5);
+}
+.painel-atleta { width: 100%; max-width: 560px; max-height: calc(100vh - 32px); overflow-y: auto; margin: 0; }
+.painel-atleta-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.linha-atleta { cursor: pointer; }
+.linha-atleta:hover { background: rgba(241, 196, 15, 0.07); }
+/* No celular a tabela do painel cabe sem rolar: células justas e quebra de linha */
+.painel-atleta .table-sge { min-width: 0; width: 100%; }
+.painel-atleta .table-sge th, .painel-atleta .table-sge td { padding: 8px 6px; font-size: 0.85rem; white-space: normal; letter-spacing: normal; }
+.painel-atleta .card-body { padding: 16px 12px; }
+.painel-atleta .table-sge thead th { font-size: 0.7rem; padding: 10px 4px; }
+.painel-atleta .table-sge tbody td { padding: 8px 4px; }
+.painel-atleta { background: #16202d; }
