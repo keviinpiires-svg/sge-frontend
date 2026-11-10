@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Contador from '../components/Contador';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 import { suspensosNoJogo } from '../services/suspensoes';
+import { protegerSessao } from '../services/token';
+import { FUSO_DO_EVENTO } from '../services/datas';
+import { fotografarSumula, lerRascunho, gravarRascunho, apagarRascunho } from '../services/rascunhoSumula';
 
 const TEXTO_DO_PLACAR = {
   Gols: 'a soma dos gols lançados',
@@ -28,6 +31,12 @@ function PreencherSumula() {
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
   const [suspensao, setSuspensao] = useState(null);
+  // A sessão (o token) venceu com a súmula aberta: a tela avisa e mantém o que foi digitado
+  const [sessaoVencida, setSessaoVencida] = useState(false);
+  // Rascunho achado no navegador ao abrir, à espera de a mesa decidir se restaura
+  const [rascunho, setRascunho] = useState(null);
+  // Como a súmula estava quando foi carregada ou salva: só o que difere disso vira rascunho
+  const inicial = useRef('');
 
   const pronto = carga?.id === id;
   const erro = pronto ? carga.erro : '';
@@ -47,6 +56,15 @@ function PreencherSumula() {
           penaltis_2: dados.jogo.penaltis_2 ?? 0
         });
         setBaleouPrimeiro(dados.jogo.baleou_primeiro_equipe_id ?? null);
+        inicial.current = JSON.stringify(fotografarSumula({
+          equipes: dados.equipes,
+          penaltis: { penaltis_1: dados.jogo.penaltis_1 ?? 0, penaltis_2: dados.jogo.penaltis_2 ?? 0 },
+          sets: dados.sets,
+          prorrogacao: false,
+          baleouPrimeiro: dados.jogo.baleou_primeiro_equipe_id ?? null
+        }));
+        const guardado = lerRascunho(id);
+        setRascunho(guardado && JSON.stringify(guardado.dados) !== inicial.current ? guardado : null);
       })
       .catch((falha) => {
         if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
@@ -74,6 +92,49 @@ function PreencherSumula() {
       ativo = false;
     };
   }, [id]);
+
+  // Token vencido durante a súmula: em vez de mandar para o login (o que recarrega a página e
+  // apaga a folha), a tela mostra o aviso e segue com os dados na tela
+  useEffect(() => protegerSessao(() => {
+    setSessaoVencida(true);
+    return true;
+  }), []);
+
+  // Rascunho no navegador: a cada mudança (com uma pequena espera), até a súmula ser salva
+  useEffect(() => {
+    if (carga?.id !== id || !equipes || !inicial.current || rascunho) return undefined;
+    const agora = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro }));
+    if (agora === inicial.current) return undefined;
+    const espera = setTimeout(() => gravarRascunho(id, JSON.parse(agora)), 600);
+    return () => clearTimeout(espera);
+  }, [id, carga, equipes, penaltis, sets, prorrogacao, baleouPrimeiro, rascunho]);
+
+  const restaurarRascunho = () => {
+    const guardado = rascunho.dados;
+    setEquipes((atual) => atual.map((equipe) => {
+      const salva = guardado.equipes.find((e) => e.equipe_id === equipe.equipe_id);
+      if (!salva) return equipe;
+      const { atletas: atletasSalvos, ...resto } = salva;
+      return {
+        ...equipe,
+        ...resto,
+        atletas: equipe.atletas.map((atleta) => {
+          const daMesa = atletasSalvos.find((a) => a.atleta_id === atleta.atleta_id);
+          return daMesa ? { ...atleta, ...daMesa } : atleta;
+        })
+      };
+    }));
+    setPenaltis(guardado.penaltis);
+    setSets(guardado.sets);
+    setProrrogacao(guardado.prorrogacao);
+    setBaleouPrimeiro(guardado.baleouPrimeiro);
+    setRascunho(null);
+  };
+
+  const descartarRascunho = () => {
+    apagarRascunho(id);
+    setRascunho(null);
+  };
 
   const mudarAtleta = (indiceEquipe, atletaId, campo, valor) => {
     setEquipes((atual) => atual.map((equipe, i) => (
@@ -143,6 +204,11 @@ function PreencherSumula() {
         }))
       });
 
+      // Salva no servidor: o rascunho do navegador não é mais necessário
+      apagarRascunho(id);
+      inicial.current = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro }));
+      setSessaoVencida(false);
+
       setAviso({
         tipo: 'success',
         texto: `${resposta.mensagem} Placar ${resposta.placar_1} x ${resposta.placar_2}.`
@@ -150,7 +216,12 @@ function PreencherSumula() {
 
       if (finalizar) navigate(`/detalhes-sumula/${id}`);
     } catch (falha) {
-      setAviso({ tipo: 'error', texto: falha.mensagem });
+      setAviso({
+        tipo: 'error',
+        texto: falha.response?.status === 401
+          ? 'Sua sessão expirou, entre de novo. Nada foi salvo: o que você digitou continua na tela.'
+          : falha.mensagem
+      });
     } finally {
       setSalvando(false);
     }
@@ -252,6 +323,33 @@ function PreencherSumula() {
               && `O placar é ${TEXTO_DO_PLACAR[folha.rotuloEstatistica]}: não existe campo de placar para digitar.`}
           </p>
         </header>
+
+        {sessaoVencida && (
+          <div className="alert alert-error mb-lg" role="alert">
+            <p className="alert-titulo">🔒 Sua sessão expirou, entre de novo</p>
+            <p className="alert-texto">
+              O que você digitou continua nesta tela e também fica guardado como rascunho neste navegador.
+              Entre de novo <a href="/login" target="_blank" rel="noopener noreferrer">em outra aba</a>,
+              volte para esta e toque em Salvar. Não feche nem recarregue esta aba antes de salvar.
+            </p>
+          </div>
+        )}
+
+        {rascunho && (
+          <div className="alert alert-aviso mb-lg">
+            <p className="alert-titulo">📝 Há um rascunho não salvo deste jogo</p>
+            <p className="alert-texto">
+              Guardado neste navegador em{' '}
+              {new Date(rascunho.salvoEm).toLocaleString('pt-BR', {
+                timeZone: FUSO_DO_EVENTO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+              })}. Quer continuar de onde parou?
+            </p>
+            <div className="acoes">
+              <button type="button" className="btn btn-primary btn-sm" onClick={restaurarRascunho}>Restaurar</button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={descartarRascunho}>Descartar</button>
+            </div>
+          </div>
+        )}
 
         {aviso && <p className={`alert alert-${aviso.tipo}`}>{aviso.texto}</p>}
 
