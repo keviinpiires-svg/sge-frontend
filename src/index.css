@@ -1332,6 +1332,11 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 /* Número do jogo na tabela oficial do chefe (db/15): pequeno e cinza */
 .agenda-numero-tabela { font-size: 12px; font-weight: 400; color: var(--sge-text-muted); white-space: nowrap; }
+/* Botão de abrir a súmula no detalhe do jogo (só quem lança súmula): largura cheia no celular */
+.agenda-acao-sumula { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.agenda-acao-sumula .btn { text-align: center; }
+.agenda-acao-aviso { margin: 0; text-align: center; }
+@media (min-width: 640px) { .agenda-acao-sumula { flex-direction: row; align-items: center; gap: 12px; } .agenda-acao-aviso { text-align: left; } }
 
 /* Pontos lançados: botões da prova do atletismo (db/16) */
 .provas-pontos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -12px 0 20px; }

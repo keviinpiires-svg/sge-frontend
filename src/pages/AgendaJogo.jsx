@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 import { buscarJogoDaAgenda } from '../services/agenda';
 import { dataPorExtenso } from '../services/datas';
 import {
@@ -30,6 +31,37 @@ function Elenco({ equipe }) {
         )}
       </div>
     </section>
+  );
+}
+
+// Botão para a mesa e o ADMIN começarem a súmula daqui. Só aparece para quem pode lançar súmula
+// (a rota /preencher-sumula/:id continua protegida pela RotaPrivada). Jogo encerrado leva à tela
+// de leitura da súmula; mata-mata com equipe em aberto fica desativado.
+function AcaoDaSumula({ jogo }) {
+  const { podeLancar } = useAuth();
+  if (!podeLancar || jogo.status === 'WO') return null;
+
+  if (jogo.status === 'FINALIZADO') {
+    return (
+      <div className="agenda-acao-sumula">
+        <Link className="btn btn-outline" to={`/detalhes-sumula/${jogo.id}`}>Ver súmula</Link>
+      </div>
+    );
+  }
+
+  const rotulo = jogo.status === 'EM_ANDAMENTO' ? 'Continuar súmula' : 'Abrir súmula';
+  if (vagaEmAberto(jogo.equipe_1) || vagaEmAberto(jogo.equipe_2)) {
+    return (
+      <div className="agenda-acao-sumula">
+        <button type="button" className="btn btn-primary" disabled>{rotulo}</button>
+        <p className="state-text agenda-acao-aviso">Equipes ainda não definidas</p>
+      </div>
+    );
+  }
+  return (
+    <div className="agenda-acao-sumula">
+      <Link className="btn btn-primary" to={`/preencher-sumula/${jogo.id}`}>{rotulo}</Link>
+    </div>
   );
 }
 
@@ -111,6 +143,7 @@ function AgendaJogo() {
                 <dd><span className={`agenda-status ${CLASSE_STATUS[jogo.status] || ''}`}>{ROTULO_STATUS[jogo.status] || jogo.status}</span></dd>
               </div>
             </dl>
+            <AcaoDaSumula jogo={jogo} />
           </div>
         </section>
 
