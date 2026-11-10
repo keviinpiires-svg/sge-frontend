@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Contador from '../components/Contador';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 import { suspensosNoJogo } from '../services/suspensoes';
+import { salvarCamisas } from '../services/equipes';
 import { protegerSessao } from '../services/token';
 import { FUSO_DO_EVENTO } from '../services/datas';
 import { fotografarSumula, lerRascunho, gravarRascunho, apagarRascunho } from '../services/rascunhoSumula';
@@ -17,6 +18,14 @@ const TEXTO_DO_PLACAR = {
 // Quais colunas existem (cartões, faltas, quanto cabe em cada uma) vem do
 // backend, de src/config/folhasSumula.js: o basquete não tem cartão e o
 // futsal não tem falta por atleta.
+// Número da camisa em texto comparável ("07" = "7", vazio = sem número)
+const normalizarCamisa = (texto) => (texto === '' || texto === undefined ? '' : String(Number(texto)));
+
+// Só as camisas digitadas que diferem do que está gravado na inscrição (atleta_id -> texto)
+const camisasAlteradas = (atuais, salvas) => Object.fromEntries(
+  Object.entries(atuais).filter(([atleta, texto]) => normalizarCamisa(texto) !== normalizarCamisa(salvas[atleta] ?? ''))
+);
+
 function PreencherSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,6 +46,15 @@ function PreencherSumula() {
   const [rascunho, setRascunho] = useState(null);
   // Como a súmula estava quando foi carregada ou salva: só o que difere disso vira rascunho
   const inicial = useRef('');
+  // Espera de 600 ms do rascunho: cancelada ao salvar a súmula, para não gravar rascunho depois de salvar
+  const esperaRascunho = useRef(null);
+  // Número da camisa: digitado aqui e gravado na INSCRIÇÃO (PUT /equipes/:id/camisas). Fica fora do
+  // rascunho da súmula, porque não é lançamento do jogo e sim cadastro da equipe.
+  const [camisas, setCamisas] = useState({});             // atleta_id -> texto digitado
+  const [camisasSalvas, setCamisasSalvas] = useState({}); // atleta_id -> texto que está gravado
+  const [msgCamisa, setMsgCamisa] = useState({});         // equipe_id -> { tipo, texto }
+  const [salvandoCamisa, setSalvandoCamisa] = useState(null);
+  const campos = useRef({});                              // "equipe:posição" -> campo, para o Enter
 
   const pronto = carga?.id === id;
   const erro = pronto ? carga.erro : '';
@@ -56,15 +74,26 @@ function PreencherSumula() {
           penaltis_2: dados.jogo.penaltis_2 ?? 0
         });
         setBaleouPrimeiro(dados.jogo.baleou_primeiro_equipe_id ?? null);
+        const camisasDoBanco = {};
+        dados.equipes.forEach((e) => e.atletas.forEach((a) => {
+          camisasDoBanco[a.atleta_id] = a.numero_camisa === null || a.numero_camisa === undefined ? '' : String(a.numero_camisa);
+        }));
+        setCamisas(camisasDoBanco);
+        setCamisasSalvas(camisasDoBanco);
+        setMsgCamisa({});
         inicial.current = JSON.stringify(fotografarSumula({
           equipes: dados.equipes,
           penaltis: { penaltis_1: dados.jogo.penaltis_1 ?? 0, penaltis_2: dados.jogo.penaltis_2 ?? 0 },
           sets: dados.sets,
           prorrogacao: false,
-          baleouPrimeiro: dados.jogo.baleou_primeiro_equipe_id ?? null
+          baleouPrimeiro: dados.jogo.baleou_primeiro_equipe_id ?? null,
+          camisas: {}
         }));
         const guardado = lerRascunho(id);
-        setRascunho(guardado && JSON.stringify(guardado.dados) !== inicial.current ? guardado : null);
+        // Rascunho antigo, sem o campo das camisas, é lido como "nenhuma camisa digitada"
+        const igualAoBanco = guardado
+          && JSON.stringify({ ...guardado.dados, camisas: guardado.dados.camisas || {} }) === inicial.current;
+        setRascunho(guardado && !igualAoBanco ? guardado : null);
       })
       .catch((falha) => {
         if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
@@ -103,11 +132,20 @@ function PreencherSumula() {
   // Rascunho no navegador: a cada mudança (com uma pequena espera), até a súmula ser salva
   useEffect(() => {
     if (carga?.id !== id || !equipes || !inicial.current || rascunho) return undefined;
-    const agora = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro }));
-    if (agora === inicial.current) return undefined;
-    const espera = setTimeout(() => gravarRascunho(id, JSON.parse(agora)), 600);
-    return () => clearTimeout(espera);
-  }, [id, carga, equipes, penaltis, sets, prorrogacao, baleouPrimeiro, rascunho]);
+    const agora = JSON.stringify(fotografarSumula({
+      equipes, penaltis, sets, prorrogacao, baleouPrimeiro, camisas: camisasAlteradas(camisas, camisasSalvas)
+    }));
+    // Nada difere do que está no servidor (por exemplo, depois de salvar): não sobra rascunho
+    if (agora === inicial.current) {
+      apagarRascunho(id);
+      return undefined;
+    }
+    esperaRascunho.current = setTimeout(() => {
+      // Conferido de novo na hora: se a súmula foi salva nesse meio tempo, não há o que guardar
+      if (agora !== inicial.current) gravarRascunho(id, JSON.parse(agora));
+    }, 600);
+    return () => clearTimeout(esperaRascunho.current);
+  }, [id, carga, equipes, penaltis, sets, prorrogacao, baleouPrimeiro, camisas, camisasSalvas, rascunho]);
 
   const restaurarRascunho = () => {
     const guardado = rascunho.dados;
@@ -128,6 +166,8 @@ function PreencherSumula() {
     setSets(guardado.sets);
     setProrrogacao(guardado.prorrogacao);
     setBaleouPrimeiro(guardado.baleouPrimeiro);
+    // Camisas digitadas e não salvas voltam para o campo (continuam por salvar)
+    setCamisas((atual) => ({ ...atual, ...(guardado.camisas || {}) }));
     setRascunho(null);
   };
 
@@ -179,6 +219,12 @@ function PreencherSumula() {
     setAviso(null);
     setSalvando(true);
 
+    // Camisas digitadas e ainda não salvas vão ANTES da súmula; com erro, a súmula não é salva
+    if (!(await salvarCamisasPendentes())) {
+      setSalvando(false);
+      return;
+    }
+
     try {
       const resposta = await registrarSumula({
         jogo_id: Number(id),
@@ -205,8 +251,9 @@ function PreencherSumula() {
       });
 
       // Salva no servidor: o rascunho do navegador não é mais necessário
+      clearTimeout(esperaRascunho.current);
       apagarRascunho(id);
-      inicial.current = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro }));
+      inicial.current = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro, camisas: {} }));
       setSessaoVencida(false);
 
       setAviso({
@@ -225,6 +272,103 @@ function PreencherSumula() {
     } finally {
       setSalvando(false);
     }
+  };
+
+  // ---- Camisas (número 1 a 99, vazio = sem número, único dentro da equipe) ----
+  const mudarCamisa = (equipeId, atletaId, texto) => {
+    setCamisas((atual) => ({ ...atual, [atletaId]: texto.replace(/\D/g, '').slice(0, 2) }));
+    setMsgCamisa((atual) => ({ ...atual, [equipeId]: null }));
+  };
+
+  // Enter vai para o próximo atleta; no último, para o botão "Salvar camisas"
+  const proximoCampo = (equipeId, posicao) => {
+    const proximo = campos.current[`${equipeId}:${posicao + 1}`] || campos.current[`${equipeId}:salvar`];
+    if (proximo) {
+      proximo.focus();
+      if (proximo.select) proximo.select();
+    }
+  };
+
+  // Repetidos e inválidos na hora, antes de qualquer envio (o backend confere de novo)
+  const conferirCamisas = (equipe) => {
+    const porNumero = new Map();
+    const invalidos = new Set();
+    equipe.atletas.forEach((a) => {
+      const texto = camisas[a.atleta_id] ?? '';
+      if (texto === '') return;
+      const numero = Number(texto);
+      if (!(numero >= 1 && numero <= 99)) { invalidos.add(a.atleta_id); return; }
+      porNumero.set(numero, [...(porNumero.get(numero) || []), a]);
+    });
+    const repetidos = [...porNumero].filter(([, lista]) => lista.length > 1);
+    const marcados = new Set([...invalidos, ...repetidos.flatMap(([, lista]) => lista.map((a) => a.atleta_id))]);
+    const alterados = equipe.atletas.filter(
+      (a) => normalizarCamisa(camisas[a.atleta_id] ?? '') !== normalizarCamisa(camisasSalvas[a.atleta_id] ?? '')
+    );
+    return { repetidos, invalidos, marcados, alterados };
+  };
+
+  // Devolve true quando não há o que salvar ou salvou; false quando algo impediu (mostra o erro na equipe)
+  const salvarCamisasDaEquipe = async (equipe) => {
+    const { alterados, repetidos, invalidos } = conferirCamisas(equipe);
+    if (!alterados.length) return true;
+
+    // Repetido ou fora de 1 a 99: nem tenta (o backend confere de novo)
+    if (repetidos.length || invalidos.size) {
+      const textos = repetidos.map(([numero, lista]) => `Número ${numero} repetido: ${lista.map((a) => a.nome).join(' e ')}.`);
+      if (invalidos.size) textos.push('O número vai de 1 a 99.');
+      setMsgCamisa((atual) => ({ ...atual, [equipe.equipe_id]: { tipo: 'error', texto: textos.join(' ') } }));
+      return false;
+    }
+
+    setSalvandoCamisa(equipe.equipe_id);
+    setMsgCamisa((atual) => ({ ...atual, [equipe.equipe_id]: null }));
+    try {
+      await salvarCamisas(equipe.equipe_id, Number(id), alterados.map((a) => ({
+        inscricaoId: a.inscricao_id,
+        numero: normalizarCamisa(camisas[a.atleta_id]) === '' ? null : Number(camisas[a.atleta_id])
+      })));
+      const gravados = Object.fromEntries(alterados.map((a) => [a.atleta_id, normalizarCamisa(camisas[a.atleta_id])]));
+      setCamisasSalvas((atual) => ({ ...atual, ...gravados }));
+      setCamisas((atual) => ({ ...atual, ...gravados }));
+      setMsgCamisa((atual) => ({ ...atual, [equipe.equipe_id]: { tipo: 'success', texto: 'Camisas salvas.' } }));
+      return true;
+    } catch (falha) {
+      setMsgCamisa((atual) => ({
+        ...atual,
+        [equipe.equipe_id]: {
+          tipo: 'error',
+          texto: falha.response?.status === 401
+            ? 'Sua sessão expirou, entre de novo. As camisas não foram salvas.'
+            : falha.mensagem
+        }
+      }));
+      return false;
+    } finally {
+      setSalvandoCamisa(null);
+    }
+  };
+
+  // Salvar a súmula (parcial ou final) grava antes as camisas pendentes das duas equipes
+  const salvarCamisasPendentes = async () => {
+    for (const equipe of equipes) {
+      if (equipe.a_definir) continue;
+      const { alterados, marcados } = conferirCamisas(equipe);
+      if (!alterados.length) continue;
+      if (!(await salvarCamisasDaEquipe(equipe))) {
+        setAviso({
+          tipo: 'error',
+          texto: `A súmula NÃO foi salva: o número da camisa de ${equipe.escola_nome} deu erro (veja o aviso na equipe). Corrija e salve de novo.`
+        });
+        // Leva o foco ao campo com problema (ou ao primeiro alterado)
+        let posicao = equipe.atletas.findIndex((a) => marcados.has(a.atleta_id));
+        if (posicao < 0) posicao = equipe.atletas.findIndex((a) => alterados.includes(a));
+        const campo = campos.current[`${equipe.equipe_id}:${posicao}`];
+        if (campo) campo.focus();
+        return false;
+      }
+    }
+    return true;
   };
 
   if (!pronto || (!erro && !equipes)) {
@@ -251,6 +395,8 @@ function PreencherSumula() {
   }
 
   const { jogo, folha } = sumula;
+  // Jogo encerrado (finalizado ou W.O.): o número da camisa é só leitura
+  const editaCamisas = !['FINALIZADO', 'WO'].includes(jogo.status);
   const listaSuspensos = suspensao?.id === id && suspensao.dados ? suspensao.dados.suspensos : [];
   const avisosSuspensao = suspensao?.id === id && suspensao.dados ? suspensao.dados.avisos : [];
   const suspensoPorAtleta = new Map(listaSuspensos.map((s) => [s.atleta_id, s]));
@@ -455,7 +601,10 @@ function PreencherSumula() {
           </section>
         )}
 
-        {equipes.map((equipe, indice) => (
+        {equipes.map((equipe, indice) => {
+          const conferencia = conferirCamisas(equipe);
+          const msg = msgCamisa[equipe.equipe_id];
+          return (
           <section key={equipe.equipe_id} className="card mb-lg">
             <div className="card-body">
               <h2 className="card-title">{equipe.escola_nome}</h2>
@@ -475,12 +624,31 @@ function PreencherSumula() {
                     </tr>
                   </thead>
                   <tbody>
-                    {equipe.atletas.map((atleta) => (
+                    {equipe.atletas.map((atleta, posicao) => (
                       <tr
                         key={atleta.atleta_id}
                         className={suspensoPorAtleta.has(atleta.atleta_id) ? 'row-suspenso' : ''}
                       >
-                        <td className="strong">{atleta.numero_camisa ?? '—'}</td>
+                        <td className="strong">
+                          {editaCamisas && !equipe.a_definir ? (
+                            <input
+                              ref={(el) => { campos.current[`${equipe.equipe_id}:${posicao}`] = el; }}
+                              className={`form-control camisa-campo${conferencia.marcados.has(atleta.atleta_id) ? ' camisa-invalida' : ''}`}
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={2}
+                              autoComplete="off"
+                              value={camisas[atleta.atleta_id] ?? ''}
+                              aria-label={`Camisa de ${atleta.nome}`}
+                              aria-invalid={conferencia.marcados.has(atleta.atleta_id)}
+                              onChange={(e) => mudarCamisa(equipe.equipe_id, atleta.atleta_id, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { e.preventDefault(); proximoCampo(equipe.equipe_id, posicao); }
+                              }}
+                            />
+                          ) : (atleta.numero_camisa ?? '—')}
+                        </td>
                         <td className="text-left">
                           {atleta.nome}
                           {suspensoPorAtleta.has(atleta.atleta_id) && (
@@ -563,6 +731,31 @@ function PreencherSumula() {
                   </tbody>
                 </table>
               </div>
+
+              {editaCamisas && !equipe.a_definir && equipe.atletas.length > 0 && (
+                <div className="camisas-acoes">
+                  <button
+                    type="button"
+                    ref={(el) => { campos.current[`${equipe.equipe_id}:salvar`] = el; }}
+                    className="btn btn-outline btn-sm"
+                    disabled={salvandoCamisa !== null || !conferencia.alterados.length
+                      || conferencia.repetidos.length > 0 || conferencia.invalidos.size > 0}
+                    onClick={() => salvarCamisasDaEquipe(equipe)}
+                  >
+                    {salvandoCamisa === equipe.equipe_id ? 'Salvando...' : 'Salvar camisas'}
+                  </button>
+                  {msg && <span className={`camisa-msg camisa-msg-${msg.tipo}`} role="status">{msg.tipo === 'success' ? '✓ ' : ''}{msg.texto}</span>}
+                  {conferencia.repetidos.map(([numero, lista]) => (
+                    <span key={numero} className="camisa-msg camisa-msg-error" role="alert">
+                      Número {numero} repetido: {lista.map((a) => a.nome).join(' e ')}.
+                    </span>
+                  ))}
+                  {conferencia.invalidos.size > 0 && (
+                    <span className="camisa-msg camisa-msg-error" role="alert">O número vai de 1 a 99.</span>
+                  )}
+                  <span className="form-hint">Campo vazio = sem número. Vale para os próximos jogos da equipe.</span>
+                </div>
+              )}
 
               {folha.faltasIndividuais > 0 && (
                 <p className="form-hint">
@@ -649,7 +842,8 @@ function PreencherSumula() {
               </div>
             </div>
           </section>
-        ))}
+          );
+        })}
 
         {empatado && exigeProrrogacao && (
           <div className="card mb-lg">

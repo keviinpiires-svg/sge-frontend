@@ -1337,6 +1337,13 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .agenda-acao-sumula .btn { text-align: center; }
 .agenda-acao-aviso { margin: 0; text-align: center; }
 @media (min-width: 640px) { .agenda-acao-sumula { flex-direction: row; align-items: center; gap: 12px; } .agenda-acao-aviso { text-align: left; } }
+/* Número da camisa na tela de súmula: campo curto, teclado numérico, aviso de repetido */
+.camisa-campo { width: 56px; min-width: 56px; padding: 6px 4px; text-align: center; font-weight: 700; }
+.camisa-campo.camisa-invalida { border-color: var(--sge-danger, #e5484d); box-shadow: 0 0 0 2px rgba(229, 72, 77, 0.35); }
+.camisas-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0 4px; }
+.camisa-msg { font-size: 13px; font-weight: 600; }
+.camisa-msg-success { color: var(--sge-success, #3ecf8e); }
+.camisa-msg-error { color: var(--sge-danger, #ff8a8a); }
 
 /* Pontos lançados: botões da prova do atletismo (db/16) */
 .provas-pontos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -12px 0 20px; }
