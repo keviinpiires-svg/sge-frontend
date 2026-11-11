@@ -4,6 +4,12 @@ import api from './api';
 export const listarAtletasPorEscola = (escolaId) =>
   api.get(`/atletas/escola/${encodeURIComponent(escolaId)}`).then((r) => r.data);
 
+// GET /api/atletas/busca?nome= — busca pelo nome em TODAS as escolas (pública; mín. 3 letras, até 50).
+// Devolve { limite, mais_resultados, atletas: [{ id, nome, escola_id, escola_nome }] }; o ADMIN recebe
+// também sexo e nascimento, o visitante não.
+export const buscarAtletasPorNome = (nome) =>
+  api.get('/atletas/busca', { params: { nome } }).then((r) => r.data);
+
 // Nome antigo, mantido enquanto as telas não migram: "equipe" aqui sempre
 // significou escola, e o backend mantém o caminho antigo apontando ao mesmo lugar.
 export const listarAtletasPorEquipe = listarAtletasPorEscola;

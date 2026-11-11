@@ -2,14 +2,38 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
 import { listarEscolas } from '../services/escolas';
 import {
-  listarAtletasPorEquipe, buscarAtletaPorId, atualizarAtleta, excluirAtleta
+  listarAtletasPorEquipe, buscarAtletasPorNome, buscarAtletaPorId, atualizarAtleta, excluirAtleta
 } from '../services/atletas';
+import { normalizar } from '../components/agendaTextos';
 import { soAData, paraCampoData } from '../services/datas';
 import PainelAtleta from '../components/PainelAtleta';
+
+// Busca por nome: sem maiúscula, sem acento, com os espaços repetidos juntos ("joao" acha "JOÃO")
+const paraBusca = (texto) => normalizar(texto).replace(/\s+/g, ' ');
+const MINIMO_EM_TODAS_AS_ESCOLAS = 3; // letras, quando não há escola escolhida
+const ESPERA_DA_BUSCA = 300; // ms depois da última tecla
+
+function IconeLupa() {
+  return (
+    <svg className="busca-nome-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.5" y1="16.5" x2="21" y2="21" />
+    </svg>
+  );
+}
 
 function ListaAtletas() {
   const [escolaId, setEscolaId] = useState('');
   const [atletas, setAtletas] = useState([]);
+  // Busca por nome: o que está digitado e o que vale (300 ms depois da última tecla)
+  const [nome, setNome] = useState('');
+  const [nomeValido, setNomeValido] = useState('');
+  // Resultado da busca em todas as escolas (sem escola escolhida), com o termo a que pertence
+  const [resultadoGlobal, setResultadoGlobal] = useState({ termo: '', atletas: [], mais: false, erro: '' });
+  // De que escola é a lista carregada em "atletas" (a seleção pode mudar sem clicar em Buscar)
+  const [escolaDaLista, setEscolaDaLista] = useState('');
+  const [versaoGlobal, setVersaoGlobal] = useState(0); // sobe para buscar de novo (depois de editar ou excluir)
   const [buscou, setBuscou] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [atletaEmEdicao, setAtletaEmEdicao] = useState(null);
@@ -39,6 +63,60 @@ function ListaAtletas() {
     };
   }, []);
 
+  // Filtra enquanto digita: o texto só vale 300 ms depois da última tecla
+  useEffect(() => {
+    const espera = setTimeout(() => setNomeValido(nome), ESPERA_DA_BUSCA);
+    return () => clearTimeout(espera);
+  }, [nome]);
+
+  const termo = paraBusca(nomeValido);
+  const termoBruto = nomeValido.replace(/\s+/g, ' ').trim();
+  // Sem escola escolhida, a busca vai ao servidor (a partir de 3 letras)
+  const buscaEmTodas = !escolaId && termo.length >= MINIMO_EM_TODAS_AS_ESCOLAS;
+
+  useEffect(() => {
+    if (!buscaEmTodas) return undefined;
+    let ativo = true;
+
+    buscarAtletasPorNome(termoBruto)
+      .then((dados) => {
+        if (ativo) setResultadoGlobal({ termo: termoBruto, atletas: dados.atletas, mais: dados.mais_resultados, erro: '' });
+      })
+      .catch((falha) => {
+        if (ativo) {
+          setResultadoGlobal({ termo: termoBruto, atletas: [], mais: false, erro: falha.mensagem || 'Não foi possível buscar os atletas.' });
+        }
+      });
+
+    return () => { ativo = false; };
+  }, [buscaEmTodas, termoBruto, versaoGlobal]);
+
+  // Escola escolhida e nome digitado sem a lista dela carregada: carrega sozinha (sem clicar em Buscar)
+  useEffect(() => {
+    if (!escolaId || !termo || escolaDaLista === escolaId) return undefined;
+    let ativo = true;
+
+    listarAtletasPorEquipe(escolaId)
+      .then((dados) => { if (ativo) setAtletas(dados); })
+      .catch((error) => {
+        console.error('Erro ao buscar atletas:', error);
+        if (ativo) setAtletas([]);
+      })
+      .finally(() => {
+        if (ativo) {
+          setEscolaDaLista(escolaId);
+          setBuscou(true);
+        }
+      });
+
+    return () => { ativo = false; };
+  }, [escolaId, termo, escolaDaLista]);
+
+  const limparBusca = () => {
+    setNome('');
+    setNomeValido('');
+  };
+
   const buscarAtletas = async () => {
     if (!escolaId) {
       alert('Por favor, selecione a escola.');
@@ -52,6 +130,7 @@ function ListaAtletas() {
       console.error('Erro ao buscar atletas:', error);
       setAtletas([]);
     } finally {
+      setEscolaDaLista(escolaId);
       setBuscou(true);
       setCarregando(false);
     }
@@ -82,7 +161,8 @@ function ListaAtletas() {
       await atualizarAtleta(atletaEmEdicao.id, atletaEmEdicao);
       alert('Atleta atualizado com sucesso!');
       setAtletaEmEdicao(null);
-      buscarAtletas(); // Atualiza a tabela chamando a API de novo
+      if (escolaId) buscarAtletas(); // Atualiza a tabela chamando a API de novo
+      setVersaoGlobal((v) => v + 1); // e a busca por nome, se for ela que está na tela
     } catch (error) {
       console.error('Erro ao salvar edicao:', error);
       alert(error.mensagem);
@@ -95,6 +175,7 @@ function ListaAtletas() {
         await excluirAtleta(id);
         alert('Atleta excluído com sucesso!');
         setAtletas(atletas.filter((atleta) => atleta.id !== id));
+        setResultadoGlobal((atual) => ({ ...atual, atletas: atual.atletas.filter((atleta) => atleta.id !== id) }));
       } catch (error) {
         console.error('Erro ao excluir atleta:', error);
         alert(error.mensagem);
@@ -102,13 +183,30 @@ function ListaAtletas() {
     }
   };
 
+  // ---- O que aparece na tabela ----
+  // Com escola: a lista dela, filtrada pelo nome digitado. Sem escola e com 3 letras ou mais: o que
+  // o servidor achou em todas as escolas (com a coluna Escola).
+  const globalPronto = buscaEmTodas && resultadoGlobal.termo === termoBruto;
+  const carregandoDaEscola = Boolean(escolaId) && Boolean(termo) && escolaDaLista !== escolaId;
+  const buscandoEmTodas = (buscaEmTodas && !globalPronto) || carregandoDaEscola;
+  const poucasLetras = !escolaId && termo.length > 0 && termo.length < MINIMO_EM_TODAS_AS_ESCOLAS;
+  let atletasDaTabela = atletas;
+  if (buscaEmTodas) {
+    atletasDaTabela = globalPronto ? resultadoGlobal.atletas : [];
+  } else if (escolaId && termo && !carregandoDaEscola) {
+    atletasDaTabela = atletas.filter((atleta) => paraBusca(atleta.nome).includes(termo));
+  }
+  const mostrarTabela = !atletaEmEdicao && !poucasLetras && (buscaEmTodas || buscou || carregandoDaEscola);
+  const comColunaEscola = buscaEmTodas;
+  const rotuloQuantidade = (n) => `${n} ${n === 1 ? 'atleta encontrado' : 'atletas encontrados'}`;
+
   return (
     <div className="page">
       <div className="container">
         <header className="page-header">
           <p className="eyebrow">Atletas</p>
           <h1 className="page-title">Buscar Atletas por Equipe</h1>
-          <p className="page-subtitle">Selecione a escola para listar os atletas cadastrados.</p>
+          <p className="page-subtitle">Selecione a escola para listar os atletas cadastrados ou busque pelo nome do atleta.</p>
         </header>
 
         <div className="card" style={{ marginBottom: '24px' }}>
@@ -132,20 +230,64 @@ function ListaAtletas() {
                 <option key={escola.id} value={escola.id}>{escola.nome}</option>
               ))}
             </select>
-            <button className="btn btn-primary" onClick={buscarAtletas} disabled={carregando || !escolaId}>
+            <button className="btn btn-primary busca-botao" onClick={buscarAtletas} disabled={carregando || !escolaId}>
               {carregando ? 'Buscando...' : '🔍 Buscar Atletas'}
             </button>
+
+            <div className="busca-nome">
+              <IconeLupa />
+              <input
+                type="text"
+                inputMode="search"
+                className="form-control busca-nome-campo"
+                placeholder={escolaId ? 'Buscar por nome nesta escola' : 'Buscar por nome em todas as escolas'}
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                aria-label="Buscar por nome"
+                autoComplete="off"
+                maxLength={80}
+              />
+              {nome && (
+                <button type="button" className="busca-nome-limpar" onClick={limparBusca} aria-label="Limpar a busca">
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {buscou && !atletaEmEdicao && (
+        {poucasLetras && !atletaEmEdicao && (
+          <p className="text-soft" role="status">
+            Digite pelo menos {MINIMO_EM_TODAS_AS_ESCOLAS} letras para buscar em todas as escolas, ou escolha uma escola.
+          </p>
+        )}
+
+        {mostrarTabela && (
           <div className="card">
-            {atletas.length > 0 ? (
+            {buscandoEmTodas ? (
+              <div className="state state-compact" aria-busy="true">
+                <div className="spinner" />
+                <p className="state-text">Buscando...</p>
+              </div>
+            ) : buscaEmTodas && resultadoGlobal.erro ? (
+              <div className="state state-error">
+                <p className="state-title">Não foi possível buscar</p>
+                <p className="state-text">{resultadoGlobal.erro}</p>
+              </div>
+            ) : atletasDaTabela.length > 0 ? (
+              <>
+              <p className="busca-resumo card-body" role="status" style={{ paddingBottom: 0 }}>
+                {rotuloQuantidade(atletasDaTabela.length)}
+                {buscaEmTodas && resultadoGlobal.mais && (
+                  <span className="text-soft"> — mostrando só os primeiros {atletasDaTabela.length}: digite mais letras para refinar.</span>
+                )}
+              </p>
               <div className="table-wrap">
-                <table className="table-sge" style={{ minWidth: '600px' }}>
+                <table className="table-sge" style={{ minWidth: comColunaEscola ? '720px' : '600px' }}>
                   <thead>
                     <tr>
                       <th className="text-left">Nome</th>
+                      {comColunaEscola && <th className="text-left">Escola</th>}
                       {/* Sexo e nascimento só chegam para o ADMIN (pendência 19): o
                           público vê só o nome — são menores de idade */}
                       {isAdmin && <th>Sexo</th>}
@@ -154,8 +296,8 @@ function ListaAtletas() {
                     </tr>
                   </thead>
                   <tbody>
-                    {atletas.map((atleta, index) => (
-                      <tr key={index} className="linha-atleta" onClick={() => setAtletaAberto(atleta)}>
+                    {atletasDaTabela.map((atleta) => (
+                      <tr key={atleta.id} className="linha-atleta" onClick={() => setAtletaAberto(atleta)}>
                         <td className="text-left strong">
                           <button
                             type="button"
@@ -166,6 +308,7 @@ function ListaAtletas() {
                             {atleta.nome}
                           </button>
                         </td>
+                        {comColunaEscola && <td className="text-left text-soft">{atleta.escola_nome}</td>}
                         {/* O RG não aparece aqui: a lista é pública */}
                         {isAdmin && <td className="text-soft">{atleta.sexo === 'F' ? 'Feminino' : 'Masculino'}</td>}
                         {isAdmin && <td className="text-soft">{formatarData(atleta.data_nascimento)}</td>}
@@ -184,11 +327,16 @@ function ListaAtletas() {
                   </tbody>
                 </table>
               </div>
+              </>
             ) : (
               <div className="state">
                 <div className="state-icon">🏃</div>
                 <p className="state-title">Nenhum atleta encontrado</p>
-                <p className="state-text">Não há atletas cadastrados para esta equipe.</p>
+                <p className="state-text">
+                  {termo
+                    ? `Nenhum atleta com "${termoBruto}" no nome${escolaId ? ' nesta escola' : ''}.`
+                    : 'Não há atletas cadastrados para esta equipe.'}
+                </p>
               </div>
             )}
           </div>
@@ -197,7 +345,7 @@ function ListaAtletas() {
         {atletaAberto && (
           <PainelAtleta
             atleta={atletaAberto}
-            escolaNome={escolas.find((e) => String(e.id) === String(escolaId))?.nome}
+            escolaNome={atletaAberto.escola_nome || escolas.find((e) => String(e.id) === String(escolaId))?.nome}
             isAdmin={isAdmin}
             aoFechar={fecharPainel}
           />
