@@ -504,6 +504,9 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   color: var(--sge-accent); text-decoration: none;
   font-size: 18px; font-weight: 800; letter-spacing: 0.02em;
 }
+/* Logo da prefeitura ao lado do título: altura fixa, largura automática (1537x370, sem distorcer). O PNG
+   tem texto branco, feito para o fundo escuro da barra */
+.navbar-logo { display: block; height: 36px; width: auto; flex-shrink: 0; }
 /* Os links quebram para uma segunda linha quando não cabem. Antes a faixa
    rolava de lado com a barra escondida, e o último item aparecia cortado —
    sem nada dizendo que havia mais. */
@@ -532,6 +535,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 @media (max-width: 768px) {
   .navbar { flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 6px 8px 6px 16px; min-height: 60px; }
   .navbar-brand { min-width: 0; white-space: nowrap; }
+  .navbar-logo { height: 26px; }
   .navbar-toggle {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     width: 48px; height: 48px; padding: 0;
@@ -540,6 +544,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
     cursor: pointer;
   }
   .navbar-toggle:hover, .navbar-toggle[aria-expanded="true"] { background: rgba(241, 196, 15, 0.12); }
+  /* Telefone estreito (até 389 px): título + logo inteiro + botão de menu não cabem; mostra só o "B" */
+  @media (max-width: 389px) { .navbar-logo { width: 20px; object-fit: cover; object-position: left center; } }
   .navbar-toggle:focus-visible { outline: 2px solid var(--sge-accent); outline-offset: 2px; }
   .navbar-toggle svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 

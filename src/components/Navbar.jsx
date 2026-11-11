@@ -55,7 +55,10 @@ function Navbar() {
 
   return (
     <nav className="navbar" ref={barraRef}>
-      <Link to="/" className="navbar-brand" onClick={fechar}>🏆 Jogos Estudantis</Link>
+      <Link to="/" className="navbar-brand" onClick={fechar}>
+        🏆 Jogos Estudantis
+        <img className="navbar-logo" src="/logo-barra-do-choca.png" alt="Prefeitura de Barra do Choça" />
+      </Link>
 
       <button
         type="button"

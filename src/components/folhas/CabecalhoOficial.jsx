@@ -29,7 +29,7 @@ function CabecalhoOficial({ jogo, folha, emBranco, placar }) {
             <div className="oficial-titulo">
               <img src="/logo-jogos-estudantis.png" alt="" />
               <span>{folha.titulo}</span>
-              <img src="/logo-barra-do-choca.png" alt="" />
+              <img src="/logo-barra-do-choca-impressao.png" alt="" />
             </div>
           </td>
         </tr>
