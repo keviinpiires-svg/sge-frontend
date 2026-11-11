@@ -13,7 +13,7 @@ const links = [
   { to: '/artilharia', label: 'Artilharia' },
   { to: '/tabela-geral', label: 'Tabela Geral' },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
-  { to: '/lista-atletas', label: 'Listar Atletas' },
+  { to: '/lista-atletas', label: 'Listar Atletas', mesa: true },
   { to: '/importar-atletas', label: 'Importar Atletas', admin: true },
   { to: '/importar-jogos', label: 'Importar Jogos', admin: true },
   { to: '/imprimir-sumulas', label: 'Imprimir Súmulas', mesa: true },

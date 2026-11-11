@@ -31,7 +31,7 @@ function App() {
           <Route path="/cadastro" element={<RotaPrivada perfis={['ADMIN']}><Cadastro /></RotaPrivada>} />
           <Route path="/editar-escola/:id" element={<RotaPrivada perfis={['ADMIN']}><Cadastro /></RotaPrivada>} />
           <Route path="/cadastro-atleta" element={<RotaPrivada perfis={['ADMIN']}><CadastroAtleta /></RotaPrivada>} />
-          <Route path="/lista-atletas" element={<ListaAtletas />} />
+          <Route path="/lista-atletas" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><ListaAtletas /></RotaPrivada>} />
           <Route path="/preencher-sumula/:id" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PreencherSumula /></RotaPrivada>} />
           <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
           <Route path="/imprimir-sumulas" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><ImprimirSumulas /></RotaPrivada>} />
