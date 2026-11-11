@@ -20,7 +20,7 @@ function CabecalhoFolha({ evento, jogo, equipes, folha, emBranco, placar }) {
           {/* O título vem da folha, não do nome da modalidade: o papel do
               basquete diz BASQUETEBOL (src/config/folhasSumula.js). */}
           <td className="titulo" colSpan={2}>{folha.titulo}</td>
-          <td className="logo"><img src="/logo-barra-do-choca-impressao.png" alt="" /></td>
+          <td className="logo"><img src="/logo-barra-do-choca.png" alt="" /></td>
         </tr>
         <tr>
           <td colSpan={4}>Campeonato:&nbsp;&nbsp;&nbsp;{evento.nome_evento}</td>

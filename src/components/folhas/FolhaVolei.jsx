@@ -108,7 +108,7 @@ function FolhaVolei({ evento, jogo, equipes, sets, folha, emBranco }) {
           <tr className="linha-titulo">
             <td className="logo"><img src="/logo-jogos-estudantis.png" alt="" /></td>
             <td className="titulo" colSpan={2}>{folha.titulo}</td>
-            <td className="logo"><img src="/logo-barra-do-choca-impressao.png" alt="" /></td>
+            <td className="logo"><img src="/logo-barra-do-choca.png" alt="" /></td>
           </tr>
           <tr>
             <td colSpan={2}>CAMPEONATO: {evento.nome_evento}</td>
