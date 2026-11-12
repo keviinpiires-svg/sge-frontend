@@ -35,8 +35,11 @@ function Login() {
       <div className="container-sm">
         <header className="page-header center">
           <p className="eyebrow">Área Restrita</p>
-          <h1 className="page-title">Acesso do Administrador 🔐</h1>
-          <p className="page-subtitle">Entre para gerenciar times, atletas, jogos e súmulas.</p>
+          <h1 className="page-title">Entrar no sistema 🔐</h1>
+          <p className="page-subtitle">
+            Para a comissão e para a mesa. Quem fica na mesa lança placar e súmula;
+            o restante do sistema é do administrador.
+          </p>
         </header>
 
         <div className="card">
@@ -78,7 +81,7 @@ function Login() {
         </div>
 
         <p className="page-subtitle text-center" style={{ marginTop: '18px' }}>
-          Sem login você continua vendo classificação, artilharia, jogos e súmulas.
+          Sem login você continua vendo classificação, artilharia, jogos, súmulas e a tabela geral.
         </p>
       </div>
     </div>
