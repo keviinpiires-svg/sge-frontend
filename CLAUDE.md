@@ -37,6 +37,7 @@ das súmulas). Roteiro da virada (já executada, com desvios): `F:\System_jogos\
   produção (backup, senha, contas de mesa): veja `F:\System_jogos\CLAUDE.md`.
 - **Publicado em 20/10/2026** (até `5368f07`): súmula do "melhor de dois jogos", textos do jogo único e a **Agenda de
   Jogos**.
+- **12/11/2026 — atletismo por colocação (`db/37` do backend, rodado no `jogos_2026` em 12/11/2026):** a rota **`/atletismo` virou pública** e usa a página nova `src/pages/Atletismo.jsx` (serviço `src/services/atletismo.js`): todos veem os pódios (1º, 2º e 3º, com escola e atleta), agrupados por prova e categoria; **só o ADMIN** vê o formulário (categoria de Sub 7 a Aberto, gênero, prova em texto com sugestões e três linhas com escola e atleta), o Editar e o Apagar; a mesa só vê. Na navbar, "Atletismo" aparece para todos (o resto não mudou). O atletismo saiu de `PontosLancados.jsx`, que ficou só com o Tabuleiro (xadrez, dama e dominó). A Tabela Geral mostra os pontos do atletismo (10, 8 e 6, com medalha) na abertura de cada escola. API: `/api/atletismo-colocacoes`.
 - **Commits locais ainda NÃO publicados (21/10/2026):** menu "Tabuleiro"/"Atletismo" e o lote dos pontos lançados —
   atletismo **por prova** (botões Salto/50 m/100 m, total da escola somando as provas), atletismo sem Aberto, aviso
   na revisão ao **substituir** valor gravado ("já tinha X, digitado por Y às HH:MM — substituir?"), grade **só com

@@ -16,19 +16,14 @@ import {
 
 const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino' };
 
-// A tela aparece no menu em duas entradas: Tabuleiro (xadrez, dama e dominó)
-// e Atletismo. É a mesma tela e a mesma API; cada entrada mostra só as suas
-// modalidades (os slugs vêm de regrasProvisorias.pontosLancados).
+// A tela aparece no menu como Tabuleiro (xadrez, dama e dominó; os slugs vêm
+// de regrasProvisorias.pontosLancados). O atletismo saiu daqui em 12/11/2026:
+// é lançado por colocação, na página Atletismo (pages/Atletismo.jsx).
 const GRUPOS = {
   tabuleiro: {
     modalidades: ['xadrez', 'dama', 'domino'],
     titulo: 'Tabuleiro',
     descricao: 'Xadrez, dama e dominó acontecem fora do sistema'
-  },
-  atletismo: {
-    modalidades: ['atletismo'],
-    titulo: 'Atletismo',
-    descricao: 'O atletismo acontece fora do sistema'
   }
 };
 

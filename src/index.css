@@ -1431,3 +1431,25 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .busca-resumo { margin: 0 0 12px; font-weight: 600; }
 /* Celular: o campo de busca sobe para logo abaixo da escola, e o botão Buscar Atletas vai para depois dele */
 @media (max-width: 640px) { .busca-nome { order: 1; } .busca-botao { order: 2; } }
+
+/* Atletismo por colocação (12/11/2026): formulário do ADMIN e pódios públicos */
+.atletismo-linha { display: grid; grid-template-columns: 64px minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; align-items: end; }
+.atletismo-posicao { align-self: end; padding-bottom: 12px; font-weight: 800; color: var(--sge-text-strong); white-space: nowrap; }
+.atletismo-acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+.atletismo-podios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.atletismo-podio { border: 1px solid var(--sge-border-strong); border-radius: 10px; padding: 14px; min-width: 0; }
+.atletismo-podio-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.atletismo-genero { margin: 0; font-size: 14px; font-weight: 800; color: var(--sge-accent); text-transform: uppercase; letter-spacing: 0.04em; }
+.atletismo-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.atletismo-lista li { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.atletismo-medalha { font-size: 22px; line-height: 1; flex: none; }
+.atletismo-quem { display: flex; flex-direction: column; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.atletismo-quem strong { color: var(--sge-text-strong); }
+.atletismo-quem .text-soft { font-size: 13px; }
+.atletismo-pontos { flex: none; font-weight: 800; color: var(--sge-success); }
+/* Celular: a linha do formulário empilha (posição, escola, atleta) e os botões ocupam a largura */
+@media (max-width: 640px) {
+  .atletismo-linha { grid-template-columns: 1fr; gap: 6px; padding-top: 10px; border-top: 1px solid var(--sge-border-strong); }
+  .atletismo-posicao { padding-bottom: 0; }
+  .atletismo-acoes .btn { flex: 1; }
+}

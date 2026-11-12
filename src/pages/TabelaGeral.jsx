@@ -152,6 +152,7 @@ function TabelaGeral() {
                   <span className="abertura-competicao">
                     {origem.modalidade_nome} {origem.categoria_nome} {ROTULO_GENERO[origem.genero] || origem.genero}
                     {origem.prova && ` · ${origem.prova}`}
+                    {origem.atletismo && origem.atleta_nome && <span className="text-soft"> — {origem.atleta_nome}</span>}
                     {origem.lancado && (
                       <span className="text-soft">
                         {' '}— lançado pela mesa{origem.colocacao ? `, ${origem.colocacao}º lugar` : ''}
@@ -243,7 +244,8 @@ function TabelaGeral() {
               .map((p) => p.pontos).join(', ')} pontos às {quantasPontuam === 3 ? 'três' : quantasPontuam} primeiras colocadas.{' '}
             {regras.desempate?.descricao || 'Escolas com a mesma soma dividem a posição.'}{' '}
             {regras.pontos_lancados && !regras.pontos_lancados.conta_no_desempate
-              && 'Atletismo, xadrez, dama e dominó somam os pontos lançados pela mesa, sem entrar no desempate. '}
+              && 'Xadrez, dama e dominó somam os pontos lançados pela mesa, sem entrar no desempate. '}
+            {regras.atletismo && 'No atletismo, o 1º, o 2º e o 3º de cada prova valem a mesma pontuação e contam medalha. '}
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>
