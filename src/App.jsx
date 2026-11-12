@@ -14,7 +14,9 @@ import TabelaGeral from './pages/TabelaGeral';
 import Usuarios from './pages/Usuarios';
 import ImportarJogos from './pages/ImportarJogos';
 import ImportarAtletas from './pages/ImportarAtletas';
-import PontosLancados from './pages/PontosLancados';
+// PontosLancados (pages/PontosLancados.jsx) ficou sem uso em 12/11/2026: o
+// atletismo e o tabuleiro passaram a ser lançados por colocação
+import Tabuleiro from './pages/Tabuleiro';
 import Atletismo from './pages/Atletismo';
 import Login from './pages/Login';
 import Competicoes from './pages/Competicoes';
@@ -41,8 +43,8 @@ function App() {
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />
           <Route path="/importar-jogos" element={<RotaPrivada perfis={['ADMIN']}><ImportarJogos /></RotaPrivada>} />
           <Route path="/importar-atletas" element={<RotaPrivada perfis={['ADMIN']}><ImportarAtletas /></RotaPrivada>} />
-          {/* Pontos lançados (xadrez, dama e dominó): a mesa digita os pontos */}
-          <Route path="/tabuleiro" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PontosLancados key="tabuleiro" grupo="tabuleiro" /></RotaPrivada>} />
+          {/* Tabuleiro por colocação (12/11/2026): pública para leitura; o formulário é só do ADMIN */}
+          <Route path="/tabuleiro" element={<Tabuleiro />} />
           {/* Atletismo por colocação (12/11/2026): pública para leitura; o formulário é só do ADMIN */}
           <Route path="/atletismo" element={<Atletismo />} />
           {/* Endereço antigo: continua funcionando */}

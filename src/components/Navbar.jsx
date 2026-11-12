@@ -17,7 +17,8 @@ const links = [
   { to: '/importar-atletas', label: 'Importar Atletas', admin: true },
   { to: '/importar-jogos', label: 'Importar Jogos', admin: true },
   { to: '/imprimir-sumulas', label: 'Imprimir Súmulas', mesa: true },
-  { to: '/tabuleiro', label: 'Tabuleiro', mesa: true },
+  // Pública desde 12/11/2026: todos veem os resultados; só o ADMIN lança
+  { to: '/tabuleiro', label: 'Tabuleiro' },
   // Pública desde 12/11/2026: todos veem os resultados; só o ADMIN lança
   { to: '/atletismo', label: 'Atletismo' },
   { to: '/usuarios', label: 'Usuários', admin: true },
