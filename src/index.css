@@ -923,7 +923,6 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .folha-basquete .c-numero { width: 6.4% }
 .folha-basquete .c-atleta { width: 23% }
 .folha-basquete .c-pts { width: 5.3% }
-.folha-basquete .c-pontos { width: 32.2% }
 .folha-basquete .c-capitao { width: 6.8% }
 
 .folha-basquete .falta-individual {
@@ -931,16 +930,15 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 }
 .folha-basquete .falta-individual.marcada { background: #9b9b9b; color: #000; font-weight: 700; }
 .folha-basquete .pts { text-align: center; font-weight: 600; }
-.folha-basquete .celula-pontos { padding: 0; vertical-align: top; }
 
-/* Pontuação corrida da equipe: 8 colunas de 12 números (2 a 97), como no
-   papel. Não acompanha as linhas de atleta — é o placar da equipe.        */
-.grade-pontos { table-layout: fixed; height: 100%; }
-.grade-pontos td {
-  border: 0.4pt solid #000; padding: 0;
-  text-align: center; font-size: 6.5pt; background: #e6e0f0;
+/* Pontuação corrida da equipe: 9 colunas de 14 números (1 a 126), uma célula
+   por número, com a altura da linha do atleta. A largura da área "Pontos" é
+   repartida em partes iguais pelo colgroup (FolhaBasquete.jsx).            */
+.folha-basquete .ponto-corrida {
+  padding: 0; text-align: center; font-size: 9pt; line-height: 1;
+  background: #e6e0f0; overflow: hidden;
 }
-.grade-pontos td.marcada { background: #9b9b9b; font-weight: 700; }
+.folha-basquete .ponto-corrida.marcada { background: #9b9b9b; font-weight: 700; }
 
 /* ---------- Folha do vôlei (docs/referencias/SUMULA_VOLEI_MODELO.pdf) ----------
    Desenho próprio: cabeçalho sem caixa de placar, as duas equipes lado a lado,
@@ -1098,8 +1096,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .folha-tempo .caixa { background: #d9d9d9 !important; }
   .folha-basquete .falta-individual { background: #e6e0f0 !important; }
   .folha-basquete .falta-individual.marcada { background: #9b9b9b !important; }
-  .grade-pontos td { background: #e6e0f0 !important; }
-  .grade-pontos td.marcada { background: #9b9b9b !important; }
+  .folha-basquete .ponto-corrida { background: #e6e0f0 !important; }
+  .folha-basquete .ponto-corrida.marcada { background: #9b9b9b !important; }
   .volei-equipes { display: flex !important; }
   .volei-equipe, .volei-sets, .volei-resultado { break-inside: avoid; page-break-inside: avoid; }
   .grade-set td { background: #e6e0f0 !important; }

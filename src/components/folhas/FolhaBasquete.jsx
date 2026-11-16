@@ -6,11 +6,14 @@ import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 // Capitão na faixa da direita. Rodapé: FALTAS ACUMULATIVAS 1ºT e 2ºT (1 a 7),
 // TEMPO TÉCNICO e TÉCNICO. Não há cartões.
 //
-// A grade de PONTOS do papel é a **pontuação corrida da equipe** — 2 a 97, em
-// 8 colunas de 12 —, não o placar de cada atleta: o anotador risca o número
-// conforme a equipe pontua. Por isso ela é um bloco só, ao lado das linhas.
-// O papel tem 12 linhas de atleta e aqui são 14 (decisão de 29/09/2026), então
-// a grade mantém os seus 12 degraus e as linhas correm ao lado.
+// A grade de PONTOS é a **pontuação corrida da equipe** — 1 a 126, em 9
+// colunas de 14 —, não o placar de cada atleta: o anotador risca o número
+// conforme a equipe pontua. Cada número é uma célula da MESMA tabela das
+// linhas de atleta (uma coluna do colgroup por coluna da grade), então ocupa
+// toda a largura da área "Pontos" e cada linha da grade tem exatamente a
+// altura da linha do atleta. A sequência desce coluna por coluna: 1, 2, 3...
+// até o fim da coluna (14 linhas) e continua no topo da próxima.
+// (Antes: 2 a 97 numa tabela aninhada de 8 colunas de 12, espremida.)
 //
 // A coluna "Pts" é acréscimo nosso: o sistema guarda os pontos por atleta
 // (é o que alimenta o cestinha) e a folha preenchida mostra isso. No papel
@@ -18,8 +21,14 @@ import { completarLinhas, sequencia, letraDaEquipe } from './comum';
 
 const marcada = (valor, emBranco) => (!emBranco && valor ? 'marcada' : '');
 
+// Largura da área "Pontos" na tabela (% da folha), repartida em partes iguais
+// entre as colunas da grade. É a mesma largura que a coluna única tinha.
+const LARGURA_DA_AREA_PONTOS = 32.2;
+
 function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
-  const { de, colunas, porColuna } = folha.pontuacaoCorrida;
+  // Cada coluna da grade tem uma linha de atleta de altura: porColuna = linhas
+  const { de, colunas } = folha.pontuacaoCorrida;
+  const porColuna = folha.linhas;
   const faltasPorTempo = folha.faltasAcumuladas;
   const maxFaltas = folha.faltasIndividuais;
   const pontosDaEquipe = emBranco ? 0 : Number(equipe.gols || 0);
@@ -37,7 +46,9 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
           <col className="c-numero" />
           <col className="c-atleta" />
           <col className="c-pts" />
-          <col className="c-pontos" />
+          {sequencia(colunas).map((j) => (
+            <col key={`p-${j}`} style={{ width: `${LARGURA_DA_AREA_PONTOS / colunas}%` }} />
+          ))}
           <col className="c-capitao" />
         </colgroup>
 
@@ -47,7 +58,7 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
             <th className="rotulo">Nº</th>
             <th className="rotulo">Atletas</th>
             <th className="rotulo">Pts</th>
-            <th className="rotulo">Pontos</th>
+            <th className="rotulo" colSpan={colunas}>Pontos</th>
             <th className="celula-capitao-topo" />
           </tr>
         </thead>
@@ -66,29 +77,18 @@ function BlocoDaEquipe({ equipe, indice, folha, emBranco }) {
                 <td className="atleta">{atleta ? atleta.nome : ''}</td>
                 <td className="pts">{lancado && atleta.gols ? atleta.gols : ''}</td>
 
-                {linha === 0 && (
-                  <td className="celula-pontos" rowSpan={folha.linhas}>
-                    <table className="grade-pontos">
-                      <tbody>
-                        {sequencia(porColuna).map((i) => (
-                          <tr key={i}>
-                            {sequencia(colunas).map((j) => {
-                              const numero = de + i + porColuna * j;
-                              return (
-                                <td
-                                  key={j}
-                                  className={numero <= pontosDaEquipe ? 'marcada' : ''}
-                                >
-                                  {numero}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </td>
-                )}
+                {/* Pontuação corrida: o número desta linha em cada coluna da grade */}
+                {sequencia(colunas).map((j) => {
+                  const numero = de + linha + porColuna * j;
+                  return (
+                    <td
+                      key={`p-${j}`}
+                      className={`ponto-corrida ${numero <= pontosDaEquipe ? 'marcada' : ''}`}
+                    >
+                      {numero}
+                    </td>
+                  );
+                })}
 
                 {linha === 0 && (
                   <td className="celula-capitao" rowSpan={folha.linhas}>
