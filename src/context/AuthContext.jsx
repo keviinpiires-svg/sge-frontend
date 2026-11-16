@@ -72,6 +72,10 @@ export function AuthProvider({ children }) {
       localDaMesa: autenticado && perfil === 'PLACAR' && usuario?.local_id
         ? { id: usuario.local_id, nome: usuario.local_nome }
         : null,
+      // Pode abrir/lançar súmula e iniciar jogo deste local? ADMIN sempre; mesa só no local dela
+      // (a regra que vale é a do backend; aqui só some o botão e a tela avisa)
+      podeLancarNoLocal: (localId) => autenticado && (perfil === 'ADMIN'
+        || (perfil === 'PLACAR' && Boolean(usuario?.local_id) && String(usuario.local_id) === String(localId))),
       login,
       logout,
     };

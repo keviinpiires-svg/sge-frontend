@@ -22,13 +22,14 @@ const links = [
   // Pública desde 12/11/2026: todos veem os resultados; só o ADMIN lança
   { to: '/atletismo', label: 'Atletismo' },
   { to: '/usuarios', label: 'Usuários', admin: true },
+  { to: '/atletas-das-mesas', label: 'Atletas das Mesas', admin: true },
 ];
 
 // Até 768 px os links ficam atrás do botão de menu (o CSS esconde o botão
 // acima disso, e o menu volta a ser a faixa horizontal de sempre)
 function Navbar() {
   const navigate = useNavigate();
-  const { isAdmin, podeLancar, perfil, usuario, logout } = useAuth();
+  const { isAdmin, podeLancar, perfil, usuario, localDaMesa, logout } = useAuth();
   const [aberto, setAberto] = useState(false);
   const barraRef = useRef(null);
 
@@ -98,6 +99,11 @@ function Navbar() {
                 👤 {usuario?.nome || usuario?.email || 'Usuário'}
                 <span className="navbar-perfil">{perfil === 'PLACAR' ? 'mesa' : 'admin'}</span>
               </span>
+              {perfil === 'PLACAR' && (
+                <span className="navbar-user" title="Local da mesa">
+                  📍 {localDaMesa ? `Mesa: ${localDaMesa.nome}` : 'Mesa sem local'}
+                </span>
+              )}
               <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Sair</button>
             </>
           ) : (

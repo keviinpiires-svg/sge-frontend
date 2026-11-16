@@ -12,6 +12,7 @@ import ImprimirSumulas from './pages/ImprimirSumulas';
 import Artilharia from './pages/Artilharia';
 import TabelaGeral from './pages/TabelaGeral';
 import Usuarios from './pages/Usuarios';
+import AtletasDasMesas from './pages/AtletasDasMesas';
 import ImportarJogos from './pages/ImportarJogos';
 import ImportarAtletas from './pages/ImportarAtletas';
 // PontosLancados (pages/PontosLancados.jsx) ficou sem uso em 12/11/2026: o
@@ -44,6 +45,7 @@ function App() {
           <Route path="/artilharia" element={<Artilharia />} />
           <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />
+          <Route path="/atletas-das-mesas" element={<RotaPrivada perfis={['ADMIN']}><AtletasDasMesas /></RotaPrivada>} />
           <Route path="/importar-jogos" element={<RotaPrivada perfis={['ADMIN']}><ImportarJogos /></RotaPrivada>} />
           <Route path="/importar-atletas" element={<RotaPrivada perfis={['ADMIN']}><ImportarAtletas /></RotaPrivada>} />
           {/* Tabuleiro por colocação (12/11/2026): pública para leitura; o formulário é só do ADMIN */}

@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Contador from '../components/Contador';
+import TelaRestrita from '../components/TelaRestrita';
+import AdicionarAtletaMesa from '../components/AdicionarAtletaMesa';
+import { retirarAtletaPelaMesa } from '../services/mesaAtletas';
+import { useAuth } from '../context/useAuth';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 import { suspensosNoJogo } from '../services/suspensoes';
 import { salvarCamisas } from '../services/equipes';
@@ -29,6 +33,7 @@ const camisasAlteradas = (atuais, salvas) => Object.fromEntries(
 function PreencherSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { podeLancarNoLocal, localDaMesa, isPlacar } = useAuth();
 
   const [carga, setCarga] = useState(null);      // { id, dados, erro }
   const [equipes, setEquipes] = useState(null);  // cópia editável da folha
@@ -174,6 +179,46 @@ function PreencherSumula() {
   const descartarRascunho = () => {
     apagarRascunho(id);
     setRascunho(null);
+  };
+
+  // Atleta que a mesa acabou de adicionar (db/45): entra na lista sem recarregar a súmula,
+  // para não perder o que já foi digitado (gols, cartões, presença)
+  const adicionouAtleta = (equipeId, dados) => {
+    setEquipes((atual) => atual.map((equipe) => (
+      equipe.equipe_id !== equipeId ? equipe : {
+        ...equipe,
+        atletas: [...equipe.atletas, {
+          inscricao_id: dados.inscricao_id,
+          atleta_id: dados.atleta.id,
+          nome: dados.atleta.nome,
+          numero_camisa: null,
+          presente: true,
+          capitao: false,
+          gols: 0,
+          amarelos: 0,
+          faltas: 0,
+          vermelho: false,
+          desqualificado: false,
+          adicionado_pela_mesa: true,
+          adicionado_por_mim: true
+        }]
+      }
+    )));
+  };
+
+  // Só o que esta mesa colocou pode sair (o backend confere: ficha e atleta de outra mesa dão 403)
+  const retirarAtleta = async (atleta) => {
+    if (!window.confirm(`Retirar ${atleta.nome} desta equipe?`)) return;
+    try {
+      await retirarAtletaPelaMesa(id, atleta.inscricao_id);
+      setEquipes((atual) => atual.map((equipe) => ({
+        ...equipe,
+        atletas: equipe.atletas.filter((a) => a.inscricao_id !== atleta.inscricao_id)
+      })));
+      setAviso({ tipo: 'success', texto: `${atleta.nome} saiu da equipe.` });
+    } catch (falha) {
+      setAviso({ tipo: 'error', texto: falha.mensagem });
+    }
   };
 
   const mudarAtleta = (indiceEquipe, atletaId, campo, valor) => {
@@ -395,6 +440,16 @@ function PreencherSumula() {
   }
 
   const { jogo, folha } = sumula;
+  // "Adicionar atleta" e "Remover": só a mesa do local do jogo, com o jogo agendado ou em andamento
+  const mesaMexeNoElenco = isPlacar && podeLancarNoLocal(jogo.local_id) && ['AGENDADO', 'EM_ANDAMENTO'].includes(jogo.status);
+  // Mesa de outro local (ou sem local): a tela não abre. O backend também barra (403)
+  if (!podeLancarNoLocal(jogo.local_id)) {
+    return (
+      <TelaRestrita texto={localDaMesa
+        ? `Esta súmula é de um jogo de ${jogo.local_nome || 'outro local'}. Sua mesa é do local ${localDaMesa.nome}.`
+        : 'Mesa sem local definido. Fale com o administrador.'} />
+    );
+  }
   // Jogo encerrado (finalizado ou W.O.): o número da camisa é só leitura
   const editaCamisas = !['FINALIZADO', 'WO'].includes(jogo.status);
   const listaSuspensos = suspensao?.id === id && suspensao.dados ? suspensao.dados.suspensos : [];
@@ -651,6 +706,15 @@ function PreencherSumula() {
                         </td>
                         <td className="text-left">
                           {atleta.nome}
+                          {atleta.adicionado_pela_mesa && (
+                            <span className="badge badge-accent" style={{ marginLeft: 8 }}>adicionado pela mesa</span>
+                          )}
+                          {mesaMexeNoElenco && atleta.adicionado_por_mim && (
+                            <button type="button" className="btn btn-outline btn-sm" style={{ marginLeft: 8 }}
+                              onClick={() => retirarAtleta(atleta)}>
+                              Remover
+                            </button>
+                          )}
                           {suspensoPorAtleta.has(atleta.atleta_id) && (
                             <span
                               className="tag-suspenso"
@@ -731,6 +795,10 @@ function PreencherSumula() {
                   </tbody>
                 </table>
               </div>
+
+              {mesaMexeNoElenco && !equipe.a_definir && (
+                <AdicionarAtletaMesa jogoId={id} equipe={equipe} aoAdicionar={adicionouAtleta} />
+              )}
 
               {editaCamisas && !equipe.a_definir && equipe.atletas.length > 0 && (
                 <div className="camisas-acoes">

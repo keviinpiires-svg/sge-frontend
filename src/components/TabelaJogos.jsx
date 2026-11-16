@@ -33,7 +33,9 @@ const formatarQuando = (valor) => dataEHora(valor, A_DEFINIR);
 // versao e aoMudarJogos ligam esta tabela ao card do mata-mata: o que muda num
 // lado (agenda, fase gerada) recarrega o outro.
 function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
-  const { isAdmin, autenticado } = useAuth();
+  const { isAdmin, autenticado, localDaMesa, podeLancarNoLocal } = useAuth();
+  // Mesa com local: por padrão só os jogos do local dela; "Ver todos os locais" é só leitura
+  const [verTodosOsLocais, setVerTodosOsLocais] = useState(false);
 
   // O resultado guarda de qual competição veio, e recarga força nova busca
   // depois de agendar ou excluir — sem setState no corpo do efeito.
@@ -232,10 +234,23 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
     }
   };
 
+  // A mesa (com local) vê por padrão só os jogos do local dela
+  const soOLocalDaMesa = Boolean(localDaMesa) && !verTodosOsLocais;
+  const jogosVisiveis = soOLocalDaMesa ? jogos.filter((j) => String(j.local_id) === String(localDaMesa.id)) : jogos;
+
   return (
     <section className="card mb-lg">
       <div className="card-body">
         <h2 className="card-title">🗓️ Jogos</h2>
+
+        {localDaMesa && (
+          <p className="alert alert-aviso" style={{ marginTop: 0 }}>
+            {soOLocalDaMesa ? 'Mostrando só os jogos do seu local' : 'Mostrando os jogos de todos os locais (só consulta fora do seu)'}: <b>{localDaMesa.nome}</b>.{' '}
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => setVerTodosOsLocais(!verTodosOsLocais)}>
+              {soOLocalDaMesa ? 'Ver todos os locais' : 'Só o meu local'}
+            </button>
+          </p>
+        )}
 
         {aviso && (
           <p className={`alert alert-${aviso.tipo}`} style={{ marginTop: 0 }}>{aviso.texto}</p>
@@ -256,7 +271,13 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
           </div>
         )}
 
-        {pronto && !erro && jogos.length > 0 && (
+        {pronto && !erro && jogos.length > 0 && jogosVisiveis.length === 0 && (
+          <div className="state state-compact">
+            <p className="state-text">Esta competição não tem jogo no local da sua mesa. Use "Ver todos os locais" para consultar.</p>
+          </div>
+        )}
+
+        {pronto && !erro && jogosVisiveis.length > 0 && (
           <div className="table-wrap">
             <table className="table-sge compact">
               <thead>
@@ -272,7 +293,7 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                 </tr>
               </thead>
               <tbody>
-                {jogos.map((jogo) => (
+                {jogosVisiveis.map((jogo) => (
                   <tr key={jogo.id}>
                     <td className="strong">{jogo.numero_jogo}</td>
                     <td className="text-left">{formatarQuando(jogo.data_hora)}</td>
@@ -291,12 +312,12 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                     </td>
                     {autenticado && (
                       <td className="acoes">
-                        {jogo.status === 'AGENDADO' && !semEquipes(jogo) && (
+                        {podeLancarNoLocal(jogo.local_id) && jogo.status === 'AGENDADO' && !semEquipes(jogo) && (
                           <button type="button" className="btn btn-outline btn-sm" onClick={() => iniciar(jogo)}>
                             Iniciar
                           </button>
                         )}
-                        {jogo.status !== 'WO' && !semEquipes(jogo) && (
+                        {podeLancarNoLocal(jogo.local_id) && jogo.status !== 'WO' && !semEquipes(jogo) && (
                           <Link className="btn btn-outline btn-sm" to={`/preencher-sumula/${jogo.id}`}>
                             Súmula
                           </Link>

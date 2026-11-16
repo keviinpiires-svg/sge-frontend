@@ -15,6 +15,7 @@ const PRIMEIRO_DIA = '2026-11-18';
 const ULTIMO_DIA = '2026-11-21';
 const SEM_DATA = 'sem-data';
 const TODOS = '';
+const VER_TODOS = 'todos'; // na URL: a mesa pediu os jogos de todos os locais
 
 // "Terça-feira, 24 de novembro"
 const rotuloDoDia = (dia) => {
@@ -97,7 +98,10 @@ function Agenda() {
 
   const filtro = {
     dia: parametros.has('dia') ? parametros.get('dia') : diaPadrao(opcoes.dias),
-    local: parametros.get('local') || TODOS,
+    // Mesa com local: por padrão só o local dela; `?local=todos` (botão "Ver todos os locais") mostra tudo
+    local: parametros.has('local')
+      ? (parametros.get('local') === VER_TODOS ? TODOS : parametros.get('local'))
+      : (idDaMesa ?? TODOS),
     modalidade: parametros.get('modalidade') || TODOS,
     categoria: parametros.get('categoria') || TODOS,
     escola: parametros.get('escola') || TODOS,
@@ -107,6 +111,8 @@ function Agenda() {
   const mudar = (chave, valor) => {
     const novos = new URLSearchParams(parametros);
     if (chave === 'dia') novos.set('dia', valor);
+    // mesa com local: "todos os locais" precisa ficar explícito na URL, senão volta ao padrão (o local dela)
+    else if (chave === 'local' && !valor && idDaMesa) novos.set('local', VER_TODOS);
     else if (valor) novos.set(chave, valor);
     else novos.delete(chave);
     setParametros(novos, { replace: true });
@@ -115,6 +121,7 @@ function Agenda() {
   const limpar = () => {
     const novos = new URLSearchParams();
     if (parametros.has('dia')) novos.set('dia', parametros.get('dia'));
+    if (idDaMesa && filtro.local === TODOS) novos.set('local', VER_TODOS); // mantém "ver todos" da mesa
     setParametros(novos, { replace: true });
   };
 
@@ -262,8 +269,8 @@ function Agenda() {
 
         {localDaMesa && (
           <div className="alert alert-aviso mb-lg">
-            Sua mesa é do local <b>{localDaMesa.nome}</b>: os jogos dele vêm primeiro em cada dia,
-            marcados como &quot;sua mesa&quot;. Você só inicia e lança súmula de jogo deste local.{' '}
+            Sua mesa é do local <b>{localDaMesa.nome}</b>: {soOMeuLocal ? 'você vê só os jogos dele' : 'os jogos dele vêm primeiro em cada dia, marcados como "sua mesa"'}.
+            Você só inicia e lança súmula de jogo deste local; os outros locais são só para consulta.{' '}
             <button type="button" className="btn btn-outline btn-sm"
               onClick={() => mudar('local', soOMeuLocal ? TODOS : idDaMesa)}>
               {soOMeuLocal ? 'Ver todos os locais' : 'Só o meu local'}

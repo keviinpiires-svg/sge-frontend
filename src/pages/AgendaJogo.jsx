@@ -38,8 +38,9 @@ function Elenco({ equipe }) {
 // (a rota /preencher-sumula/:id continua protegida pela RotaPrivada). Jogo encerrado leva à tela
 // de leitura da súmula; mata-mata com equipe em aberto fica desativado.
 function AcaoDaSumula({ jogo }) {
-  const { podeLancar } = useAuth();
-  if (!podeLancar || jogo.status === 'WO') return null;
+  const { podeLancarNoLocal } = useAuth();
+  // A mesa só vê os botões nos jogos do local dela (a trava de verdade é do backend)
+  if (!podeLancarNoLocal(jogo.local?.id) || jogo.status === 'WO') return null;
 
   if (jogo.status === 'FINALIZADO') {
     return (
