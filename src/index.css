@@ -1451,3 +1451,47 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .atletismo-posicao { padding-bottom: 0; }
   .atletismo-acoes .btn { flex: 1; }
 }
+
+/* Documento "Atletas (PDF)" da escola (pages/EscolaAtletasPdf.jsx). Usa a folha A4
+   das súmulas (.folha-sumula) e, na impressão, as mesmas regras dela. Cada equipe é
+   um bloco que não se divide entre páginas, e linha de tabela não se corta.     */
+.relatorio-escola { font-size: 9.5pt; }
+/* O espaçador (thead/tfoot) de cada página faz o papel da margem de cima e de baixo */
+.relatorio-escola.folha-sumula { padding-top: 0; padding-bottom: 0; }
+.relatorio-paginas { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.relatorio-escola .relatorio-paginas > thead > tr > td,
+.relatorio-escola .relatorio-paginas > tfoot > tr > td,
+.relatorio-escola .relatorio-paginas > tbody > tr > td { border: 0; padding: 0; vertical-align: top; }
+.relatorio-margem { height: 9mm; }
+.relatorio-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 6mm; border: 1.4pt solid #000; padding: 2mm 4mm; }
+.relatorio-cabecalho img { max-height: 15mm; max-width: 40mm; object-fit: contain; }
+.relatorio-titulo { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.2; }
+.relatorio-evento { font-size: 10pt; font-weight: 600; letter-spacing: 0.04em; }
+.relatorio-escola-nome { font-size: 15pt; font-weight: 700; }
+.relatorio-subtitulo { font-size: 9pt; color: #333; }
+.relatorio-gerado { margin: 1.5mm 0 3mm; text-align: right; font-size: 8.5pt; color: #333; }
+.relatorio-vazio { padding: 8mm 0; text-align: center; color: #333; }
+.relatorio-equipe { margin: 0 0 4mm; break-inside: avoid; page-break-inside: avoid; }
+.relatorio-equipe-titulo {
+  margin: 0; padding: 1.2mm 2mm; font-size: 10.5pt; font-weight: 700; color: #000;
+  background: #e6e0f0; border: 0.6pt solid #000; border-bottom: 0;
+}
+.relatorio-tabela { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.relatorio-tabela th, .relatorio-tabela td { border: 0.6pt solid #000; padding: 0 2pt; height: 5mm; font-size: 9pt; }
+.relatorio-tabela th { color: #d40000; font-weight: 600; text-align: center; font-size: 9pt; }
+.relatorio-tabela tr { break-inside: avoid; page-break-inside: avoid; }
+.relatorio-tabela .esquerda { text-align: left; padding-left: 3pt; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.relatorio-tabela .centro { text-align: center; }
+.relatorio-tabela .r-ordem { width: 9% }
+.relatorio-tabela .r-nascimento { width: 20% }
+.relatorio-tabela .r-camisa { width: 12% }
+.relatorio-sem-atletas { text-align: center; font-style: italic; color: #333; height: 7mm !important; }
+.relatorio-total { margin: 0; padding: 0.8mm 2mm; text-align: right; font-weight: 600; border: 0.6pt solid #000; border-top: 0; }
+.relatorio-total-geral {
+  margin: 3mm 0 0; padding: 2mm 3mm; font-size: 11pt; font-weight: 700;
+  border: 1.4pt solid #000; break-inside: avoid; page-break-inside: avoid;
+}
+@media print {
+  .relatorio-equipe-titulo { background: #e6e0f0 !important; }
+  .relatorio-escola.folha-sumula { padding-top: 0; padding-bottom: 0; }
+}

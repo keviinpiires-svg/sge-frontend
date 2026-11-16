@@ -17,6 +17,7 @@ import ImportarAtletas from './pages/ImportarAtletas';
 // PontosLancados (pages/PontosLancados.jsx) ficou sem uso em 12/11/2026: o
 // atletismo e o tabuleiro passaram a ser lançados por colocação
 import Tabuleiro from './pages/Tabuleiro';
+import EscolaAtletasPdf from './pages/EscolaAtletasPdf';
 import Atletismo from './pages/Atletismo';
 import Login from './pages/Login';
 import Competicoes from './pages/Competicoes';
@@ -37,6 +38,8 @@ function App() {
           <Route path="/lista-atletas" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><ListaAtletas /></RotaPrivada>} />
           <Route path="/preencher-sumula/:id" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><PreencherSumula /></RotaPrivada>} />
           <Route path="/detalhes-sumula/:id" element={<DetalhesSumula />} />
+          {/* Documento "Atletas (PDF)" da escola: só ADMIN */}
+          <Route path="/escola/:id/atletas" element={<RotaPrivada perfis={['ADMIN']}><EscolaAtletasPdf /></RotaPrivada>} />
           <Route path="/imprimir-sumulas" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><ImprimirSumulas /></RotaPrivada>} />
           <Route path="/artilharia" element={<Artilharia />} />
           <Route path="/tabela-geral" element={<TabelaGeral />} />

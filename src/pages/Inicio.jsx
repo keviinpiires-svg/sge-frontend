@@ -256,15 +256,16 @@ function Inicio() {
                         <p className="tile-title">{escola.nome}</p>
                         <p className="tile-meta">{escola.cnpj ? `CNPJ ${escola.cnpj}` : 'Sem CNPJ'}</p>
 
-                        {/* Sem id nao ha como montar a URL de edicao, entao o
-                            botao some em vez de levar a uma tela quebrada */}
+                        {/* "Atletas (PDF)" (no lugar do "Editar"): o documento da escola com os
+                            atletas por equipe. Só para o ADMIN (a mesa não vê nem acessa).
+                            Sem id nao ha como montar a URL, entao o botao some. A rota /editar-escola/:id e a tela continuam. */}
                         {isAdmin && escola.id != null && (
                           <button
                             className="btn btn-outline btn-sm"
                             style={{ marginTop: '12px' }}
-                            onClick={() => navigate(`/editar-escola/${escola.id}`)}
+                            onClick={() => navigate(`/escola/${escola.id}/atletas`)}
                           >
-                            ✏️ Editar
+                            📄 Atletas (PDF)
                           </button>
                         )}
                       </div>
