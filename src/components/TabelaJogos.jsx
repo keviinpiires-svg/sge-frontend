@@ -322,9 +322,11 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                             Súmula
                           </Link>
                         )}
-                        <Link className="btn btn-outline btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
-                          🖨️
-                        </Link>
+                        {podeLancarNoLocal(jogo.local_id) && (
+                          <Link className="btn btn-outline btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
+                            🖨️
+                          </Link>
+                        )}
                         {/* Jogo que já começou não muda de agenda (o backend recusa) */}
                         {isAdmin && jogo.status === 'AGENDADO' && (
                           <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirAgenda(jogo)}>

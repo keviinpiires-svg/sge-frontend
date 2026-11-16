@@ -5,6 +5,7 @@ import { listarAgenda } from '../services/agenda';
 import { buscarSumulaPorJogo } from '../services/sumulas';
 import { hojeNoEvento, dataPorExtenso } from '../services/datas';
 import { useAuth } from '../context/useAuth';
+import TelaRestrita from '../components/TelaRestrita';
 import { nomeDaCompeticao, nomeDaFase, nomeDaVaga, ROTULO_STATUS } from '../components/agendaTextos';
 import FolhaFutsal from '../components/folhas/FolhaFutsal';
 import FolhaBasquete from '../components/folhas/FolhaBasquete';
@@ -32,7 +33,7 @@ const rotuloDoDia = (dia) => {
 // Plano B em papel: todas as súmulas EM BRANCO de um dia e de um local, numa
 // impressão só, cada uma numa folha A4, já com os atletas inscritos de cada equipe.
 function ImprimirSumulas() {
-  const { localDaMesa } = useAuth();
+  const { localDaMesa, isPlacar } = useAuth();
   const [parametros, setParametros] = useSearchParams();
   const [agenda, setAgenda] = useState(null);
   const [tentativa, setTentativa] = useState(0);
@@ -62,14 +63,19 @@ function ImprimirSumulas() {
   const locais = useMemo(() => {
     const mapa = new Map();
     jogos.forEach((j) => { if (j.local) mapa.set(String(j.local.id), j.local.nome); });
-    return [...mapa.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
-  }, [jogos]);
+    // A mesa só vê o local dela
+    const todos = [...mapa.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
+    return isPlacar ? todos.filter(([id]) => localDaMesa && String(localDaMesa.id) === id) : todos;
+  }, [jogos, isPlacar, localDaMesa]);
 
   // Dia: o da URL; senão hoje (se tiver jogo) ou o primeiro dia. Local: o da URL
   // ou o da mesa; sem nenhum dos dois, a pessoa escolhe.
   const hoje = hojeNoEvento();
   const dia = parametros.get('dia') || (dias.includes(hoje) ? hoje : dias[0] || '');
-  const local = parametros.get('local') || (localDaMesa ? String(localDaMesa.id) : '');
+  // Mesa: sempre o local dela, mesmo que a URL peça outro. Os demais: o da URL ou o da conta.
+  const local = isPlacar
+    ? (localDaMesa ? String(localDaMesa.id) : '')
+    : (parametros.get('local') || (localDaMesa ? String(localDaMesa.id) : ''));
 
   const mudar = (chave, valor) => {
     const novos = new URLSearchParams(parametros);
@@ -138,6 +144,9 @@ function ImprimirSumulas() {
     const s = atual?.itens[j.id];
     return s ? s.equipes.map((e) => e.atletas.length) : [];
   };
+
+  // Mesa sem local não imprime nada (o backend também barra a escrita; aqui a tela avisa)
+  if (isPlacar && !localDaMesa) return <TelaRestrita texto="Mesa sem local definido. Fale com o administrador." />;
 
   return (
     <div className="page">

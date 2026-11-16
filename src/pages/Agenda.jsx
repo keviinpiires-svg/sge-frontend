@@ -15,7 +15,6 @@ const PRIMEIRO_DIA = '2026-11-18';
 const ULTIMO_DIA = '2026-11-21';
 const SEM_DATA = 'sem-data';
 const TODOS = '';
-const VER_TODOS = 'todos'; // na URL: a mesa pediu os jogos de todos os locais
 
 // "Terça-feira, 24 de novembro"
 const rotuloDoDia = (dia) => {
@@ -63,7 +62,10 @@ function Agenda() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   // Mesa com local (db/18): o local dela vem primeiro e marcado; os outros
   // continuam na lista
-  const { localDaMesa, podeLancar } = useAuth();
+  const { localDaMesa, podeLancarNoLocal } = useAuth();
+  // "Ver todos os locais" da mesa vive só neste estado (não na URL, nem no navegador): toda vez que a
+  // Agenda abre, a mesa começa vendo só o local dela
+  const [verTodosOsLocais, setVerTodosOsLocais] = useState(false);
   const idDaMesa = localDaMesa ? String(localDaMesa.id) : null;
 
   useEffect(() => {
@@ -98,10 +100,11 @@ function Agenda() {
 
   const filtro = {
     dia: parametros.has('dia') ? parametros.get('dia') : diaPadrao(opcoes.dias),
-    // Mesa com local: por padrão só o local dela; `?local=todos` (botão "Ver todos os locais") mostra tudo
-    local: parametros.has('local')
-      ? (parametros.get('local') === VER_TODOS ? TODOS : parametros.get('local'))
-      : (idDaMesa ?? TODOS),
+    // Mesa com local: por padrão só o local dela; o botão "Ver todos os locais" mostra tudo (só consulta).
+    // Um `local=` na URL só vale se for um id (link antigo com `local=todos` é ignorado).
+    local: /^[0-9]+$/.test(parametros.get('local') || '')
+      ? parametros.get('local')
+      : (idDaMesa && !verTodosOsLocais ? idDaMesa : TODOS),
     modalidade: parametros.get('modalidade') || TODOS,
     categoria: parametros.get('categoria') || TODOS,
     escola: parametros.get('escola') || TODOS,
@@ -111,8 +114,8 @@ function Agenda() {
   const mudar = (chave, valor) => {
     const novos = new URLSearchParams(parametros);
     if (chave === 'dia') novos.set('dia', valor);
-    // mesa com local: "todos os locais" precisa ficar explícito na URL, senão volta ao padrão (o local dela)
-    else if (chave === 'local' && !valor && idDaMesa) novos.set('local', VER_TODOS);
+    // mesa com local: escolher "todos" no filtro é ver todos os locais; escolher um local é só ele
+    else if (chave === 'local' && idDaMesa) { setVerTodosOsLocais(!valor); novos.delete('local'); if (valor && valor !== idDaMesa) novos.set('local', valor); }
     else if (valor) novos.set(chave, valor);
     else novos.delete(chave);
     setParametros(novos, { replace: true });
@@ -121,7 +124,7 @@ function Agenda() {
   const limpar = () => {
     const novos = new URLSearchParams();
     if (parametros.has('dia')) novos.set('dia', parametros.get('dia'));
-    if (idDaMesa && filtro.local === TODOS) novos.set('local', VER_TODOS); // mantém "ver todos" da mesa
+    setVerTodosOsLocais(false); // a mesa volta a ver só o local dela
     setParametros(novos, { replace: true });
   };
 
@@ -217,8 +220,8 @@ function Agenda() {
             <h3 className="agenda-local-titulo">
               📍 {grupoLocal.nome}
               {grupoLocal.daMesa && <span className="badge badge-accent" style={{ marginLeft: '8px' }}>sua mesa</span>}
-              {/* Só a mesa e o ADMIN: a Agenda é pública */}
-              {podeLancar && grupoLocal.localId && grupoDia.dia !== SEM_DATA && (
+              {/* Só o ADMIN e a mesa DESTE local: a Agenda é pública */}
+              {podeLancarNoLocal(grupoLocal.localId) && grupoDia.dia !== SEM_DATA && (
                 <Link className="btn btn-outline btn-sm agenda-imprimir"
                   to={`/imprimir-sumulas?dia=${grupoDia.dia}&local=${grupoLocal.localId}`}>
                   🖨️ Súmulas em branco

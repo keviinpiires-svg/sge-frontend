@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { buscarSumulaPorJogo } from '../services/sumulas';
+import { useAuth } from '../context/useAuth';
+import TelaRestrita from '../components/TelaRestrita';
 import FolhaFutsal from '../components/folhas/FolhaFutsal';
 import FolhaBasquete from '../components/folhas/FolhaBasquete';
 import FolhaVolei from '../components/folhas/FolhaVolei';
@@ -22,6 +24,7 @@ const FOLHAS = {
 function DetalhesSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isPlacar, podeLancarNoLocal, localDaMesa } = useAuth();
 
   const [carga, setCarga] = useState(null);
   // Em branco: mesma folha, sem os lançamentos — para levar à quadra.
@@ -89,6 +92,14 @@ function DetalhesSumula() {
   }
 
   const { evento, jogo, equipes, folha, sets } = sumula;
+  // A mesa só vê e imprime a súmula dos jogos do local dela (o visitante e o ADMIN seguem como estavam)
+  if (isPlacar && !podeLancarNoLocal(jogo.local_id)) {
+    return (
+      <TelaRestrita texto={localDaMesa
+        ? `Esta súmula é de um jogo de ${jogo.local_nome || 'outro local'}. Sua mesa é do local ${localDaMesa.nome}.`
+        : 'Mesa sem local definido. Fale com o administrador.'} />
+    );
+  }
   const Folha = FOLHAS[folha.tipo];
 
   return (

@@ -39,7 +39,7 @@ const descreverFormato = (formato) => {
 // versao e aoMudarJogos ligam este card à tabela de jogos: o que muda num
 // lado (agenda, fase gerada ou desfeita) recarrega o outro.
 function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isPlacar, podeLancarNoLocal } = useAuth();
 
   const [resultado, setResultado] = useState(null);
   const [recarga, setRecarga] = useState(0);
@@ -180,9 +180,11 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
               aoCancelar={() => setAgendaAberta(null)}
             />
           )}
-          <Link className="btn btn-primary btn-block btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
-            {encerrado ? '👁️ Ver súmula' : '📄 Abrir súmula'}
-          </Link>
+          {(!isPlacar || podeLancarNoLocal(jogo.local_id)) && (
+            <Link className="btn btn-primary btn-block btn-sm" to={`/detalhes-sumula/${jogo.id}`}>
+              {encerrado ? '👁️ Ver súmula' : '📄 Abrir súmula'}
+            </Link>
+          )}
         </footer>
       </article>
     );
