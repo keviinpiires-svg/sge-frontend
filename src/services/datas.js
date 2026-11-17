@@ -96,3 +96,8 @@ export const FUSO_DO_EVENTO = 'America/Bahia';
 export const hojeNoEvento = () => new Intl.DateTimeFormat('en-CA', {
   timeZone: FUSO_DO_EVENTO, year: 'numeric', month: '2-digit', day: '2-digit'
 }).format(new Date());
+
+// "17/11 às 15:42", no fuso do evento: carimbo de quando uma lista foi gerada
+export const agoraNoEventoLegivel = () => new Date().toLocaleString('pt-BR', {
+  timeZone: FUSO_DO_EVENTO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+}).replace(',', ' às');

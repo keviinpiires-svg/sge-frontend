@@ -27,7 +27,7 @@ function CabecalhoFolha({ evento, jogo, equipes, folha, emBranco, placar }) {
         </tr>
         <tr>
           <td colSpan={2}>LOCAL: {jogo.local_nome || ''}</td>
-          <td>Nº DO JOGO ( {jogo.numero_jogo} )</td>
+          <td>Nº DO JOGO ( {jogo.numero_tabela ?? jogo.numero_jogo} )</td>
           <td>Cidade: {evento.cidade}</td>
         </tr>
         <tr>

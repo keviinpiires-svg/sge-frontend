@@ -10,3 +10,10 @@ export const suspensoesDaCompeticao = (competicaoId) =>
 // Quem não pode entrar neste jogo, contando só o que veio antes dele.
 export const suspensosNoJogo = (jogoId) =>
   api.get(`/suspensoes/jogo/${encodeURIComponent(jogoId)}`).then((r) => r.data);
+
+// GET /api/suspensoes/dia/:data (ADMIN)
+// Atletas suspensos para os jogos de um dia, por local, na ordem da tabela, com o
+// jogo em que cada um cumpre. Devolve { dia, locais, total,
+// jogos_anteriores_sem_sumula, modalidades_sem_regra }.
+export const suspensosDoDia = (dia) =>
+  api.get(`/suspensoes/dia/${encodeURIComponent(dia)}`).then((r) => r.data);

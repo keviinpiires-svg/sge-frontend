@@ -112,7 +112,7 @@ function FolhaVolei({ evento, jogo, equipes, sets, folha, emBranco }) {
           </tr>
           <tr>
             <td colSpan={2}>CAMPEONATO: {evento.nome_evento}</td>
-            <td>Nº DO JOGO ( {jogo.numero_jogo} )</td>
+            <td>Nº DO JOGO ( {jogo.numero_tabela ?? jogo.numero_jogo} )</td>
             <td>CATEGORIA: {jogo.categoria_nome} {jogo.genero ? jogo.genero.toLowerCase() : ''}</td>
           </tr>
           <tr>

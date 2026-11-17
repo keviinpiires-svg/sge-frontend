@@ -151,9 +151,34 @@ function Agenda() {
     return true;
   });
 
-  // Dia -> local -> jogos (o backend já manda em ordem de dia, local e hora)
+  // Ordem da tabela do chefe (numero_tabela, nº 1 a 299): dia -> local -> jogo.
+  // Em cada dia, os locais vêm na ordem em que aparecem na tabela (pelo menor nº
+  // de cada local naquele dia, contado em TODOS os jogos, não só nos filtrados),
+  // e os jogos de cada local em ordem de nº. Jogo sem nº vai para o fim do local,
+  // pelo horário. Vale para todas as abas, a busca e os filtros; o local da mesa
+  // não sobe para o topo.
+  const ordemDoLocal = new Map();
+  for (const j of jogos) {
+    if (j.numero_tabela == null) continue;
+    const chave = `${j.data || SEM_DATA}|${j.local?.id ?? ''}`;
+    if (!ordemDoLocal.has(chave) || j.numero_tabela < ordemDoLocal.get(chave)) ordemDoLocal.set(chave, j.numero_tabela);
+  }
+  const posicaoDoLocal = (j) => ordemDoLocal.get(`${j.data || SEM_DATA}|${j.local?.id ?? ''}`) ?? Infinity;
+  const naOrdemDaTabela = [...filtrados].sort((a, b) => {
+    const diaA = a.data || SEM_DATA;
+    const diaB = b.data || SEM_DATA;
+    if (diaA !== diaB) return diaA === SEM_DATA ? 1 : diaB === SEM_DATA ? -1 : diaA.localeCompare(diaB);
+    const localA = posicaoDoLocal(a);
+    const localB = posicaoDoLocal(b);
+    if (localA !== localB) return localA - localB;
+    const nA = a.numero_tabela ?? Infinity;
+    const nB = b.numero_tabela ?? Infinity;
+    if (nA !== nB) return nA - nB;
+    return (a.hora || '99:99').localeCompare(b.hora || '99:99') || a.id - b.id;
+  });
+
   const porDia = [];
-  for (const jogo of filtrados) {
+  for (const jogo of naOrdemDaTabela) {
     const dia = jogo.data || SEM_DATA;
     let grupoDia = porDia.find((g) => g.dia === dia);
     if (!grupoDia) { grupoDia = { dia, locais: [] }; porDia.push(grupoDia); }
@@ -165,8 +190,6 @@ function Agenda() {
     }
     grupoLocal.jogos.push(jogo);
   }
-  // O local da mesa primeiro em cada dia (a ordem dos outros não muda)
-  porDia.forEach((g) => g.locais.sort((a, b) => Number(b.daMesa) - Number(a.daMesa)));
   const soOMeuLocal = idDaMesa !== null && filtro.local === idDaMesa;
 
   const query = parametros.toString();
@@ -232,13 +255,13 @@ function Agenda() {
               {grupoLocal.jogos.map((jogo) => (
                 <li key={jogo.id}>
                   <Link className="agenda-jogo" to={`/agenda/${jogo.id}${query ? `?${query}` : ''}`}>
-                    <span className="agenda-hora">{jogo.hora || '--:--'}</span>
+                    <span className="agenda-hora">
+                      {jogo.numero_tabela && <span className="agenda-numero">Nº{' '}{jogo.numero_tabela}</span>}
+                      {jogo.hora || '--:--'}
+                    </span>
                     <span className="agenda-corpo">
                       <span className="agenda-competicao">
                         {nomeDaCompeticao(jogo.competicao)} · {nomeDaFase(jogo)} · Jogo{'\u00a0'}{jogo.numero_jogo}
-                        {jogo.numero_tabela && (
-                          <span className="agenda-numero-tabela"> · Tabela nº{'\u00a0'}{jogo.numero_tabela}</span>
-                        )}
                       </span>
                       <span className="agenda-confronto">
                         <span className={vagaEmAberto(jogo.equipe_1) ? 'agenda-a-definir' : undefined}>{nomeDaVaga(jogo.equipe_1)}</span>
@@ -272,7 +295,7 @@ function Agenda() {
 
         {localDaMesa && (
           <div className="alert alert-aviso mb-lg">
-            Sua mesa é do local <b>{localDaMesa.nome}</b>: {soOMeuLocal ? 'você vê só os jogos dele' : 'os jogos dele vêm primeiro em cada dia, marcados como "sua mesa"'}.
+            Sua mesa é do local <b>{localDaMesa.nome}</b>: {soOMeuLocal ? 'você vê só os jogos dele' : 'os jogos dele estão marcados como "sua mesa", na ordem da tabela'}.
             Você só inicia e lança súmula de jogo deste local; os outros locais são só para consulta.{' '}
             <button type="button" className="btn btn-outline btn-sm"
               onClick={() => mudar('local', soOMeuLocal ? TODOS : idDaMesa)}>

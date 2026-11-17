@@ -1260,13 +1260,19 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .agenda-local-titulo { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--sge-accent); }
 .agenda-jogos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .agenda-jogo {
-  display: grid; grid-template-columns: 52px 1fr; grid-template-areas: "hora corpo" "hora status";
+  display: grid; grid-template-columns: 60px 1fr; grid-template-areas: "hora corpo" "hora status";
   gap: 4px 12px; align-items: start; padding: 12px; min-height: 44px;
   background: var(--sge-surface); border: 1px solid var(--sge-border); border-radius: var(--sge-radius);
   color: var(--sge-text); text-decoration: none;
 }
 .agenda-jogo:hover, .agenda-jogo:focus-visible { border-color: var(--sge-accent); outline: none; }
-.agenda-hora { grid-area: hora; font-size: 18px; font-weight: 800; color: var(--sge-text-strong); }
+.agenda-hora { grid-area: hora; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; font-size: 18px; font-weight: 800; color: var(--sge-text-strong); }
+/* Nº do jogo na tabela do chefe: a Agenda segue essa ordem, então ele fica bem à vista */
+.agenda-numero {
+  display: inline-block; padding: 2px 6px; border-radius: 6px; white-space: nowrap;
+  font-size: 13px; font-weight: 800; line-height: 1.3;
+  background: var(--sge-accent); color: var(--sge-primary);
+}
 .agenda-corpo { grid-area: corpo; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .agenda-competicao { font-size: 12px; color: var(--sge-text-muted); }
 .agenda-confronto { font-size: 15px; font-weight: 700; color: var(--sge-text-strong); overflow-wrap: anywhere; }
@@ -1320,7 +1326,7 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 
 @media (min-width: 700px) {
   .agenda-campos { grid-template-columns: 2fr 1fr 1fr; }
-  .agenda-jogo { grid-template-columns: 64px 1fr auto; grid-template-areas: "hora corpo status"; align-items: center; }
+  .agenda-jogo { grid-template-columns: 72px 1fr auto; grid-template-areas: "hora corpo status"; align-items: center; }
   .agenda-status { justify-self: end; }
   .agenda-elencos { grid-template-columns: 1fr 1fr; }
   .agenda-info { grid-template-columns: repeat(3, 1fr); }
@@ -1394,7 +1400,8 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .lote-selecao { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .lote-marca { display: flex; align-items: flex-start; justify-content: center; min-width: 44px; min-height: 44px; margin: -8px 0 -8px -8px; cursor: pointer; }
 .lote-marca input { width: 20px; height: 20px; margin-top: 12px; }
-.lote-hora { min-width: 48px; font-weight: 700; }
+.lote-hora { min-width: 60px; font-weight: 700; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.lote-local { margin: 16px 0 0; }
 .lote-jogo { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .lote-alerta { color: #b03a2e; font-size: 13px; }
 /* Fora da tela, mas na página: é daqui que a impressão lê as folhas */
@@ -1405,6 +1412,30 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .lote-fora-da-tela { position: static; width: auto; }
 }
 .agenda-imprimir { margin-left: 8px; }
+
+/* Papel para imprimir (abertura de cada local e lista de suspensos; 17/11/2026):
+   sempre branco e preto, nos dois temas, porque vai para a impressora */
+.papel-moldura { overflow-x: auto; margin-bottom: 24px; }
+.papel {
+  background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.35;
+  padding: 12mm; max-width: 210mm; box-sizing: border-box;
+}
+.papel-titulo { margin: 0 0 4px; font-size: 18pt; color: #111; }
+.papel-sub { margin: 0 0 8px; color: #444; font-size: 10pt; }
+.papel-secao { margin-top: 14px; break-inside: avoid-page; }
+.papel-secao h3, .papel-secao-titulo { margin: 14px 0 6px; font-size: 13pt; color: #111; }
+.papel-tabela { width: 100%; border-collapse: collapse; font-size: 10pt; }
+.papel-tabela th, .papel-tabela td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; color: #111; }
+.papel-tabela th { background: #eee; font-weight: 700; }
+.papel-tabela tr { break-inside: avoid; }
+.papel-num { white-space: nowrap; font-weight: 700; }
+.papel-vazio { margin: 4px 0; font-style: italic; color: #333; }
+.papel-aviso { margin-top: 12px; font-size: 8.5pt; color: #333; border-top: 1px solid #999; padding-top: 6px; }
+@media print {
+  .papel-moldura { overflow: visible; margin: 0; }
+  .papel { padding: 0; max-width: none; }
+}
+.lote-folha .papel { padding: 12mm; }
 
 /* Painel das inscrições do atleta (Listar Atletas): por cima da lista, fecha por X, Esc ou fora */
 .painel-fundo {

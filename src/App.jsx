@@ -9,6 +9,7 @@ import ListaAtletas from './pages/ListaAtletas';
 import PreencherSumula from './pages/PreencherSumula';
 import DetalhesSumula from './pages/DetalhesSumula';
 import ImprimirSumulas from './pages/ImprimirSumulas';
+import ImprimirSuspensos from './pages/ImprimirSuspensos';
 import Artilharia from './pages/Artilharia';
 import TabelaGeral from './pages/TabelaGeral';
 import Usuarios from './pages/Usuarios';
@@ -42,6 +43,7 @@ function App() {
           {/* Documento "Atletas (PDF)" da escola: só ADMIN */}
           <Route path="/escola/:id/atletas" element={<RotaPrivada perfis={['ADMIN']}><EscolaAtletasPdf /></RotaPrivada>} />
           <Route path="/imprimir-sumulas" element={<RotaPrivada perfis={['ADMIN', 'PLACAR']}><ImprimirSumulas /></RotaPrivada>} />
+          <Route path="/imprimir-suspensos" element={<RotaPrivada perfis={['ADMIN']}><ImprimirSuspensos /></RotaPrivada>} />
           <Route path="/artilharia" element={<Artilharia />} />
           <Route path="/tabela-geral" element={<TabelaGeral />} />
           <Route path="/usuarios" element={<RotaPrivada perfis={['ADMIN']}><Usuarios /></RotaPrivada>} />

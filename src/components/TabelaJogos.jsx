@@ -55,7 +55,10 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
 
   const chave = `${competicao.id}:${recarga}:${versao}`;
   const pronto = resultado?.chave === chave;
-  const jogos = pronto ? resultado.jogos : [];
+  // Ordem da tabela do chefe (numero_tabela); jogo sem nº vai para o fim, pelo nº da competição
+  const jogos = pronto
+    ? [...resultado.jogos].sort((a, b) => (a.numero_tabela ?? Infinity) - (b.numero_tabela ?? Infinity) || a.numero_jogo - b.numero_jogo)
+    : [];
   const erro = pronto ? resultado.erro : '';
 
   useEffect(() => {
@@ -288,7 +291,8 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
             <table className="table-sge compact">
               <thead>
                 <tr>
-                  <th>Nº</th>
+                  <th title="Nº do jogo na tabela do chefe">Nº</th>
+                  <th title="Nº do jogo dentro da competição">Jogo</th>
                   <th className="text-left">Quando</th>
                   <th className="text-left">Confronto</th>
                   <th>Grupo</th>
@@ -301,7 +305,8 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
               <tbody>
                 {jogosVisiveis.map((jogo) => (
                   <tr key={jogo.id}>
-                    <td className="strong">{jogo.numero_jogo}</td>
+                    <td className="strong">{jogo.numero_tabela ?? '–'}</td>
+                    <td>{jogo.numero_jogo}</td>
                     <td className="text-left">{formatarQuando(jogo.data_hora)}</td>
                     <td className="text-left">
                       <span className={jogo.equipe_1_nome ? undefined : 'agenda-a-definir'}>{equipeOuOrigem(jogo, 1)}</span>

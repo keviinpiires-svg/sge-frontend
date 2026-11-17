@@ -48,7 +48,7 @@ function CabecalhoOficial({ jogo, folha, emBranco, placar }) {
           <td>
             <div className="oficial-linha">
               <span><b>CATEGORIA:</b> {categoria}</span>
-              <span className="centro"><b>Nº DO JOGO (</b> {jogo.numero_jogo} <b>)</b></span>
+              <span className="centro"><b>Nº DO JOGO (</b> {jogo.numero_tabela ?? jogo.numero_jogo} <b>)</b></span>
               <span>
                 <b>DATA:</b> <span className="slot">{dia}</span><b>/</b>
                 <span className="slot">{mes}</span><b>/</b><span className="slot">{ano}</span>
