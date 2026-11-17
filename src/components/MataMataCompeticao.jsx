@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { chaveDaCompeticao, gerarProximaFase, desfazerFase, recalcularVagas } from '../services/matamata';
+import { chaveDaCompeticao, gerarProximaFase, desfazerFase, recalcularVagas, definirColocacao } from '../services/matamata';
 import { dataEHora } from '../services/datas';
 import FormAgendaJogo from './FormAgendaJogo';
 
@@ -47,6 +47,8 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
   const [aviso, setAviso] = useState(null);
   // Jogo cujo formulário de horário e local está aberto, dentro do card
   const [agendaAberta, setAgendaAberta] = useState(null);
+  // Posição de pódio empatada até o sorteio: a equipe que o ADMIN está escolhendo, por posição
+  const [escolhaDoSorteio, setEscolhaDoSorteio] = useState({});
 
   const chaveDaBusca = `${competicao.id}:${recarga}:${versao}`;
   const pronto = resultado?.chave === chaveDaBusca;
@@ -118,6 +120,7 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
   }
 
   const { formato, fase_de_grupos: grupos, chave, colocacoes, pode_gerar: podeGerar } = dados;
+  const pendentes = dados.colocacoes_pendentes || [];
   const comparacao = dados.comparacao_entre_grupos;
 
   // Um confronto já gerado: tem jogo, placar e link para a súmula
@@ -397,10 +400,57 @@ function MataMataCompeticao({ competicao, versao = 0, aoMudarJogos }) {
                   {colocacao.como}
                   {colocacao.provisoria && ' · regra provisória'}
                 </span>
+                {isAdmin && colocacao.escolhida_pelo_admin && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    disabled={trabalhando}
+                    onClick={() => window.confirm(`Desfazer a escolha do ${colocacao.posicao}º lugar (${colocacao.escola_nome})?`)
+                      && executar(() => definirColocacao(competicao.id, colocacao.posicao, null), 'Escolha desfeita.')}
+                  >
+                    Desfazer escolha
+                  </button>
+                )}
               </div>
             ))}
           </div>
         )}
+
+        {pendentes.map((pendente) => (
+          <div key={pendente.posicao} className="alert alert-aviso" style={{ marginTop: '16px' }}>
+            <p className="alert-titulo">⚠️ {pendente.posicao}º lugar empatado até o sorteio</p>
+            <p className="alert-texto">
+              {pendente.motivo.charAt(0).toUpperCase() + pendente.motivo.slice(1)}. Enquanto ninguém for escolhido, esta posição não pontua na tabela geral.
+            </p>
+            {isAdmin && (
+              <div className="btn-row" style={{ justifyContent: 'flex-start', marginTop: '10px' }}>
+                <select
+                  className="form-control"
+                  style={{ maxWidth: '280px' }}
+                  aria-label={`Equipe sorteada para o ${pendente.posicao}º lugar`}
+                  value={escolhaDoSorteio[pendente.posicao] || ''}
+                  onChange={(e) => setEscolhaDoSorteio((atual) => ({ ...atual, [pendente.posicao]: e.target.value }))}
+                >
+                  <option value="">Equipe sorteada…</option>
+                  {pendente.candidatas.map((c) => (
+                    <option key={c.equipe_id} value={c.equipe_id}>{c.escola_nome} (grupo {c.grupo_nome})</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={trabalhando || !escolhaDoSorteio[pendente.posicao]}
+                  onClick={() => executar(
+                    () => definirColocacao(competicao.id, pendente.posicao, Number(escolhaDoSorteio[pendente.posicao])),
+                    'Colocação definida.'
+                  )}
+                >
+                  Definir {pendente.posicao}º lugar
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );

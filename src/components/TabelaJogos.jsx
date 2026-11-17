@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { listarJogos, agendarJogo, excluirJogo, iniciarJogo, declararWO, trocarVagaDoJogo } from '../services/jogos';
+import { textoDosAvisosDoMataMata } from '../services/matamata';
 import { listarLocais } from '../services/locais';
 import { dataEHora } from '../services/datas';
 import FormAgendaJogo from './FormAgendaJogo';
@@ -210,13 +211,18 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
 
   const confirmarWO = async () => {
     try {
-      await declararWO(wo.jogo.id, {
+      const resposta = await declararWO(wo.jogo.id, {
         vencedor_equipe_id: Number(wo.vencedor_equipe_id),
         placar_1: Number(wo.placar_1),
         placar_2: Number(wo.placar_2),
         motivo: wo.motivo
       });
-      setAviso({ tipo: 'success', texto: `W.O. registrado no jogo nº ${wo.jogo.numero_jogo}.` });
+      const avisosDoMataMata = textoDosAvisosDoMataMata(resposta?.avisos_mata_mata);
+      setAviso({
+        tipo: avisosDoMataMata ? 'aviso' : 'success',
+        texto: `W.O. registrado no jogo nº ${wo.jogo.numero_jogo}.`
+          + (avisosDoMataMata ? ` Atenção ao mata-mata (não foi trocado sozinho): ${avisosDoMataMata}` : '')
+      });
       setWo(null);
       recarregar();
     } catch (falha) {

@@ -132,7 +132,8 @@ function CompeticaoDetalhe() {
 
       <MataMataCompeticao competicao={competicao} versao={versaoJogos} aoMudarJogos={jogosMudaram} />
 
-      <ArtilhariaCompeticao competicao={competicao} />
+      {/* Artilharia só de gols (futsal, society e handebol): basquete, vôlei e baleado não têm (16/11/2026) */}
+      {competicao.tipo_placar === 'GOLS' && <ArtilhariaCompeticao competicao={competicao} />}
 
       <Suspensoes competicao={competicao} />
 

@@ -7,6 +7,7 @@ import { retirarAtletaPelaMesa } from '../services/mesaAtletas';
 import { useAuth } from '../context/useAuth';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
 import { iniciarJogo } from '../services/jogos';
+import { textoDosAvisosDoMataMata } from '../services/matamata';
 import { suspensosNoJogo } from '../services/suspensoes';
 import { salvarCamisas } from '../services/equipes';
 import { protegerSessao } from '../services/token';
@@ -375,10 +376,19 @@ function PreencherSumula() {
       inicial.current = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro, camisas: {} }));
       setSessaoVencida(false);
 
+      // A correção mexeria num jogo do mata-mata já iniciado ou encerrado: o sistema não troca a
+      // equipe sozinho, e o ADMIN precisa saber AGORA (antes de sair desta tela)
+      const avisosDoMataMata = textoDosAvisosDoMataMata(resposta.avisos_mata_mata);
+      if (avisosDoMataMata) {
+        window.alert('Atenção: esta súmula muda o mata-mata, mas estes jogos já começaram ou terminaram e NÃO foram trocados:\n\n'
+          + `${avisosDoMataMata}\n\nPara trocar: tabela de jogos da competição, botão Equipes.`);
+      }
+
       if (!silencioso) {
         setAviso({
-          tipo: 'success',
+          tipo: avisosDoMataMata ? 'aviso' : 'success',
           texto: `${resposta.mensagem} Placar ${resposta.placar_1} x ${resposta.placar_2}.`
+            + (avisosDoMataMata ? ` Atenção ao mata-mata: ${avisosDoMataMata}` : '')
         });
       }
 

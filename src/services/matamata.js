@@ -16,6 +16,17 @@ export const gerarProximaFase = (competicaoId) =>
 export const desfazerFase = (competicaoId, fase) =>
   api.delete(`/matamata/competicao/${encodeURIComponent(competicaoId)}/${fase}`).then((r) => r.data);
 
+// PUT /api/matamata/competicao/:id/colocacao (ADMIN)
+// Posição de pódio empatada até o sorteio: grava a equipe escolhida (equipe_id null desfaz).
+export const definirColocacao = (competicaoId, posicao, equipeId) =>
+  api.put(`/matamata/competicao/${encodeURIComponent(competicaoId)}/colocacao`, { posicao, equipe_id: equipeId }).then((r) => r.data);
+
+// Avisos que a súmula ou o W.O. devolvem quando deveriam mudar um jogo do mata-mata já iniciado ou
+// encerrado (o sistema não troca sozinho): uma frase por jogo, para mostrar na hora ao ADMIN.
+export const textoDosAvisosDoMataMata = (avisos) => (avisos || [])
+  .map((a) => `Jogo nº ${a.numero_tabela ?? a.jogo_id}${a.origem ? ` (${a.origem})` : ''}: ${a.motivo}`)
+  .join('\n');
+
 // POST /api/matamata/competicao/:id/recalcular-vagas (ADMIN)
 // Preenche de novo as vagas dos jogos de mata-mata cadastrados (vagas escolhidas à mão ficam).
 export const recalcularVagas = (competicaoId) =>

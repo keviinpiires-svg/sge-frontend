@@ -420,10 +420,22 @@ function TabelaGeral() {
           </section>
         )}
 
+        {(competicoes.pendentes_de_sorteio || []).length > 0 && (
+          <div className="alert alert-aviso">
+            <p className="alert-titulo">⚠️ Pódio esperando o sorteio</p>
+            {competicoes.pendentes_de_sorteio.map((p) => (
+              <p key={`${p.competicao_id}-${p.posicao}`} className="alert-texto">
+                {p.modalidade_nome} {p.categoria_nome} {p.genero === 'MASCULINO' ? 'Masculino' : p.genero === 'FEMININO' ? 'Feminino' : 'Misto'}:
+                {' '}{p.posicao}º lugar ainda não pontua ({p.motivo}).
+              </p>
+            ))}
+          </div>
+        )}
+
         {competicoes.sem_pontuar.length > 0 && (
           <p className="legenda-desempate">
             <b>Fora da conta ({competicoes.sem_pontuar.length}):</b> competições que ainda não têm campeão
-            definido, ou com menos de duas equipes inscritas, ou de modalidade individual.
+            definido, ou com menos de duas equipes com jogos, ou de modalidade individual.
           </p>
         )}
       </div>
