@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { obterEstatisticas } from '../services/dashboard';
 import { resetarCampeonato, CONFIRMACAO_RESET } from '../services/campeonato';
 import { buscarSaude } from '../services/auth';
 import { listarEscolas } from '../services/escolas';
+import { listarAgenda } from '../services/agenda';
+import { nomeDaCompeticao, nomeDaFase, nomeDaVaga, vagaEmAberto, ROTULO_STATUS, CLASSE_STATUS } from '../components/agendaTextos';
 import Artilheiros from '../components/Artilheiros';
 import { dataPorExtenso, soAHora } from '../services/datas';
 
@@ -26,7 +28,7 @@ const formatarHora = (dataStr) => soAHora(dataStr);
 
 function Inicio() {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isPlacar, localDaMesa } = useAuth();
   const [reiniciando, setReiniciando] = useState(false);
   const [dashboard, setDashboard] = useState(null);
   const [carregando, setCarregando] = useState(true);
@@ -40,6 +42,26 @@ function Inicio() {
 
   // Incrementar este valor dispara uma nova busca (botão "Tentar novamente")
   const [tentativa, setTentativa] = useState(0);
+
+  // Mesa (PLACAR): os próximos 3 jogos AINDA NÃO FINALIZADOS do local dela, da agenda pública.
+  // Fica null enquanto carrega; { erro } se falhar.
+  const idDoLocalDaMesa = isPlacar && localDaMesa ? localDaMesa.id : null;
+  const [proximosDaMesa, setProximosDaMesa] = useState(null);
+  useEffect(() => {
+    if (!idDoLocalDaMesa) return undefined;
+    let ativo = true;
+    listarAgenda()
+      .then((r) => {
+        if (!ativo) return;
+        const lista = (Array.isArray(r) ? r : [])
+          .filter((j) => j.local?.id === idDoLocalDaMesa && (j.status === 'AGENDADO' || j.status === 'EM_ANDAMENTO') && j.data)
+          .sort((a, b) => `${a.data} ${a.hora || ''}`.localeCompare(`${b.data} ${b.hora || ''}`) || a.numero_jogo - b.numero_jogo)
+          .slice(0, 3);
+        setProximosDaMesa({ lista });
+      })
+      .catch((error) => { if (ativo) setProximosDaMesa({ erro: error.mensagem }); });
+    return () => { ativo = false; };
+  }, [idDoLocalDaMesa, tentativa]);
 
   // O servidor permite reiniciar? Na dúvida (sem resposta), não mostra
   const [reiniciarPermitido, setReiniciarPermitido] = useState(false);
@@ -158,14 +180,16 @@ function Inicio() {
       );
     }
 
-    const estatisticas = [
-      {
-        icone: '🏫',
-        titulo: 'Escolas Inscritas',
-        valor: dashboard.total_escolas,
-        detalhe: escolasAbertas ? 'Clique para fechar' : 'Clique para ver a lista',
-        aoClicar: alternarEscolas
-      },
+    const cartaoEscolas = {
+      icone: '🏫',
+      titulo: 'Escolas Inscritas',
+      valor: dashboard.total_escolas,
+      detalhe: escolasAbertas ? 'Clique para fechar' : 'Clique para ver a lista',
+      aoClicar: alternarEscolas
+    };
+    // A mesa vê só "Escolas Inscritas"; os outros números do painel são do administrador e do público.
+    const estatisticas = isPlacar ? [cartaoEscolas] : [
+      cartaoEscolas,
       { icone: '🏃', titulo: 'Atletas Cadastrados', valor: dashboard.total_atletas },
       {
         icone: '🏅',
@@ -277,7 +301,7 @@ function Inicio() {
           </section>
         )}
 
-        {campeoes.length > 0 && (
+        {!isPlacar && campeoes.length > 0 && (
           <section className="card stat-card-wide">
             <div className="card-body">
               <h3 className="card-title">🏆 Campeões</h3>
@@ -305,6 +329,58 @@ function Inicio() {
           </section>
         )}
 
+        {isPlacar ? (
+          <div className="card stat-card stat-card-wide">
+            <div className="stat-head">
+              <span className="stat-label">
+                Próximos jogos{localDaMesa ? ` — ${localDaMesa.nome}` : ''}
+              </span>
+            </div>
+            {!localDaMesa ? (
+              <div className="state state-compact">
+                <p className="state-text">Mesa sem local definido. Fale com o administrador.</p>
+              </div>
+            ) : !proximosDaMesa ? (
+              <div className="state state-compact">
+                <div className="spinner" />
+                <p className="state-text">Carregando os jogos do local...</p>
+              </div>
+            ) : proximosDaMesa.erro ? (
+              <div className="state state-compact">
+                <p className="state-text">{proximosDaMesa.erro}</p>
+                <button className="btn btn-outline btn-sm" onClick={tentarNovamente}>Tentar novamente</button>
+              </div>
+            ) : proximosDaMesa.lista.length === 0 ? (
+              <div className="state state-compact">
+                <p className="state-text">Nenhum jogo pendente neste local.</p>
+              </div>
+            ) : (
+              <ul className="agenda-jogos proximos-da-mesa">
+                {proximosDaMesa.lista.map((jogo) => (
+                  <li key={jogo.id}>
+                    <Link className="agenda-jogo" to={`/agenda/${jogo.id}`}>
+                      <span className="agenda-hora">{jogo.hora || '--:--'}</span>
+                      <span className="agenda-corpo">
+                        <span className="agenda-competicao proximo-dia">{formatarData(jogo.data)}</span>
+                        <span className="agenda-competicao">
+                          {nomeDaCompeticao(jogo.competicao)} · {nomeDaFase(jogo)} · Jogo{' '}{jogo.numero_jogo}
+                        </span>
+                        <span className="agenda-confronto">
+                          <span className={vagaEmAberto(jogo.equipe_1) ? 'agenda-a-definir' : undefined}>{nomeDaVaga(jogo.equipe_1)}</span>
+                          <span className="agenda-x"> x </span>
+                          <span className={vagaEmAberto(jogo.equipe_2) ? 'agenda-a-definir' : undefined}>{nomeDaVaga(jogo.equipe_2)}</span>
+                        </span>
+                      </span>
+                      <span className={`agenda-status ${CLASSE_STATUS[jogo.status] || ''}`}>
+                        {ROTULO_STATUS[jogo.status] || jogo.status}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : (
         <div className="card stat-card stat-card-wide">
           <div className="stat-head">
             <span className="stat-label">
@@ -336,8 +412,9 @@ function Inicio() {
             </div>
           )}
         </div>
+        )}
 
-        <Artilheiros />
+        {!isPlacar && <Artilheiros />}
       </div>
     );
   };

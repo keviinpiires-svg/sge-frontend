@@ -376,6 +376,9 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   padding-top: 18px; border-top: 1px solid var(--sge-border); color: var(--sge-text-soft); font-size: 15px;
 }
 .next-match-date { text-transform: capitalize; }
+.proximos-da-mesa { margin-top: 14px; }
+.proximo-dia { font-weight: 700; }
+.proximo-dia::first-letter { text-transform: uppercase; }
 .next-match-time { color: var(--sge-accent); font-weight: 800; }
 
 /* Destaque do campeão: substitui o "Próximo Jogo" quando a final termina */
