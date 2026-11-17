@@ -60,7 +60,7 @@ function AtletasDasMesas() {
             )}
             {pronto && !erro && linhas.length > 0 && (
               <div className="table-wrap">
-                <table className="table-sge compact">
+                <table className="table-sge compact tabela-sumula tabela-mesas">
                   <thead>
                     <tr>
                       <th className="text-left">Quando</th>
@@ -73,14 +73,14 @@ function AtletasDasMesas() {
                   <tbody>
                     {linhas.map((l) => (
                       <tr key={l.inscricao_id}>
-                        <td className="text-left">{quando(l.criado_em)}</td>
-                        <td className="text-left">
+                        <td className="text-left" data-rotulo="Quando">{quando(l.criado_em)}</td>
+                        <td className="text-left" data-rotulo="Mesa">
                           {l.mesa}
                           {l.local_da_mesa && <span className="form-hint" style={{ display: 'block' }}>{l.local_da_mesa}</span>}
                         </td>
-                        <td className="text-left">{l.escola}</td>
-                        <td className="text-left">{l.modalidade} · {l.categoria} · {ROTULO_GENERO[l.genero] || l.genero}</td>
-                        <td className="text-left">
+                        <td className="text-left" data-rotulo="Escola">{l.escola}</td>
+                        <td className="text-left" data-rotulo="Equipe">{l.modalidade} · {l.categoria} · {ROTULO_GENERO[l.genero] || l.genero}</td>
+                        <td className="text-left" data-rotulo="Atleta">
                           {l.atleta}
                           {l.atleta_novo && <span className="badge badge-accent" style={{ marginLeft: 8 }}>novo</span>}
                         </td>

@@ -4,14 +4,15 @@ import { useAuth } from '../context/useAuth';
 
 // admin: true → link só aparece para quem está logado como administrador
 // mesa: true → aparece para o administrador e para a mesa (perfil de placar)
+// semMesa: true → some do menu da mesa (PLACAR); visitante e administrador continuam vendo. A página segue pública.
 const links = [
   { to: '/', label: 'Início', end: true },
   { to: '/agenda', label: 'Agenda' },
   { to: '/modalidades/futsal', label: 'Modalidades' },
   // Fora do menu por enquanto; a página e a rota /cadastro continuam
   // { to: '/cadastro', label: 'Cadastrar Time', admin: true },
-  { to: '/artilharia', label: 'Artilharia' },
-  { to: '/tabela-geral', label: 'Tabela Geral' },
+  { to: '/artilharia', label: 'Artilharia', semMesa: true },
+  { to: '/tabela-geral', label: 'Tabela Geral', semMesa: true },
   { to: '/cadastro-atleta', label: 'Cadastrar Atleta', admin: true },
   { to: '/lista-atletas', label: 'Listar Atletas', mesa: true },
   { to: '/importar-atletas', label: 'Importar Atletas', admin: true },
@@ -29,7 +30,7 @@ const links = [
 // acima disso, e o menu volta a ser a faixa horizontal de sempre)
 function Navbar() {
   const navigate = useNavigate();
-  const { isAdmin, podeLancar, perfil, usuario, localDaMesa, logout } = useAuth();
+  const { isAdmin, isPlacar, podeLancar, perfil, usuario, localDaMesa, logout } = useAuth();
   const [aberto, setAberto] = useState(false);
   const barraRef = useRef(null);
 
@@ -84,7 +85,7 @@ function Navbar() {
         {/* NavLink aplica a classe "active" automaticamente na rota atual */}
         <div className="navbar-links">
           {links
-            .filter(({ admin, mesa }) => (!admin || isAdmin) && (!mesa || podeLancar))
+            .filter(({ admin, mesa, semMesa }) => (!admin || isAdmin) && (!mesa || podeLancar) && !(semMesa && isPlacar))
             .map(({ to, label, end }) => (
               <NavLink key={to} to={to} end={end} className="nav-link" onClick={fechar}>
                 {label}

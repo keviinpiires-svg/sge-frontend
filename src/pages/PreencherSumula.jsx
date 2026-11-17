@@ -6,11 +6,12 @@ import AdicionarAtletaMesa from '../components/AdicionarAtletaMesa';
 import { retirarAtletaPelaMesa } from '../services/mesaAtletas';
 import { useAuth } from '../context/useAuth';
 import { buscarSumulaPorJogo, registrarSumula } from '../services/sumulas';
+import { iniciarJogo } from '../services/jogos';
 import { suspensosNoJogo } from '../services/suspensoes';
 import { salvarCamisas } from '../services/equipes';
 import { protegerSessao } from '../services/token';
 import { FUSO_DO_EVENTO } from '../services/datas';
-import { fotografarSumula, lerRascunho, gravarRascunho, apagarRascunho } from '../services/rascunhoSumula';
+import { fotografarSumula, lerRascunho, gravarRascunho, apagarRascunho, lerSegundoTempo, gravarSegundoTempo, limparSegundoTempo } from '../services/rascunhoSumula';
 
 const TEXTO_DO_PLACAR = {
   Gols: 'a soma dos gols lançados',
@@ -33,7 +34,7 @@ const camisasAlteradas = (atuais, salvas) => Object.fromEntries(
 function PreencherSumula() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { podeLancarNoLocal, localDaMesa, isPlacar } = useAuth();
+  const { podeLancarNoLocal, localDaMesa, isPlacar, isAdmin } = useAuth();
 
   const [carga, setCarga] = useState(null);      // { id, dados, erro }
   const [equipes, setEquipes] = useState(null);  // cópia editável da folha
@@ -44,6 +45,11 @@ function PreencherSumula() {
   const [baleouPrimeiro, setBaleouPrimeiro] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState(null);
+  // Duas etapas (pré-jogo e partida): "iniciada" vale desde o clique em Iniciar partida, sem recarregar
+  // a súmula (nada do que foi digitado se perde); "preenchendo" abre a tabela de atletas no pré-jogo
+  const [iniciada, setIniciada] = useState(false);
+  const [preenchendo, setPreenchendo] = useState(false);
+  const [iniciando, setIniciando] = useState(false);
   const [suspensao, setSuspensao] = useState(null);
   // A sessão (o token) venceu com a súmula aberta: a tela avisa e mantém o que foi digitado
   const [sessaoVencida, setSessaoVencida] = useState(false);
@@ -59,6 +65,10 @@ function PreencherSumula() {
   const [camisasSalvas, setCamisasSalvas] = useState({}); // atleta_id -> texto que está gravado
   const [msgCamisa, setMsgCamisa] = useState({});         // equipe_id -> { tipo, texto }
   const [salvandoCamisa, setSalvandoCamisa] = useState(null);
+  // Futsal e society: até a mesa clicar em "Iniciar 2º tempo", toda falta de atleta conta no 1º tempo; depois, no 2º
+  const [segundoTempo, setSegundoTempo] = useState(false);
+  const tempoDasFaltas = segundoTempo ? 2 : 1;
+  const [editandoCamisas, setEditandoCamisas] = useState({}); // equipe_id -> true quando "Editar camisas" destravou a equipe
   const campos = useRef({});                              // "equipe:posição" -> campo, para o Enter
 
   const pronto = carga?.id === id;
@@ -72,7 +82,18 @@ function PreencherSumula() {
       .then((dados) => {
         if (!ativo) return;
         setCarga({ id, dados, erro: '' });
-        setEquipes(dados.equipes);
+        // o 2º tempo já começou? (guardado no navegador, ou deduzido de faltas do 2º tempo já gravadas)
+        // (jogo ainda agendado = jogo novo: qualquer marca de 2º tempo que tenha sobrado no navegador é descartada)
+        if (dados.jogo.status === 'AGENDADO') limparSegundoTempo(id);
+        setSegundoTempo(dados.jogo.status !== 'AGENDADO' && (lerSegundoTempo(id) || dados.equipes.some((e) => Number(e.faltas_2t || 0) > 0)));
+        // vermelho_auto: o vermelho que acompanha 2 amarelos é o do 2º amarelo (some se voltar para 1)
+        setEquipes(dados.equipes.map((equipe) => ({
+          ...equipe,
+          atletas: equipe.atletas.map((atleta) => ({
+            ...atleta,
+            vermelho_auto: dados.folha.maxAmarelos >= 2 && Number(atleta.amarelos) >= 2 && Boolean(atleta.vermelho)
+          }))
+        })));
         setSets(dados.sets);
         setPenaltis({
           penaltis_1: dados.jogo.penaltis_1 ?? 0,
@@ -96,9 +117,27 @@ function PreencherSumula() {
         }));
         const guardado = lerRascunho(id);
         // Rascunho antigo, sem o campo das camisas, é lido como "nenhuma camisa digitada"
+        // (rascunho antigo, de quando a tela tinha o campo Técnico, é lido sem o técnico)
         const igualAoBanco = guardado
-          && JSON.stringify({ ...guardado.dados, camisas: guardado.dados.camisas || {} }) === inicial.current;
+          && JSON.stringify({
+            ...guardado.dados,
+            equipes: (guardado.dados.equipes || []).map(({ tecnico_nome, ...equipe }) => equipe), // eslint-disable-line no-unused-vars
+            camisas: guardado.dados.camisas || {}
+          }) === inicial.current;
         setRascunho(guardado && !igualAoBanco ? guardado : null);
+        // Número de camisa é cadastro da equipe, não lançamento do jogo: o que foi digitado e não salvo volta
+        // sozinho para os campos (continua "por salvar" e é gravado ao iniciar a partida ou ao salvar)
+        const idsDaTela = new Set(dados.equipes.flatMap((e) => e.atletas.map((a) => String(a.atleta_id))));
+        const digitadas = Object.fromEntries(
+          Object.entries(guardado?.dados?.camisas || {}).filter(([atleta]) => idsDaTela.has(String(atleta)))
+        );
+        if (Object.keys(digitadas).length > 0) {
+          setCamisas({ ...camisasDoBanco, ...digitadas });
+          setAviso({
+            tipo: 'aviso',
+            texto: 'Números de camisa que você digitou e não salvou voltaram para os campos. Eles são gravados ao iniciar a partida ou ao salvar.'
+          });
+        }
       })
       .catch((falha) => {
         if (ativo) setCarga({ id, dados: null, erro: falha.mensagem });
@@ -157,13 +196,17 @@ function PreencherSumula() {
     setEquipes((atual) => atual.map((equipe) => {
       const salva = guardado.equipes.find((e) => e.equipe_id === equipe.equipe_id);
       if (!salva) return equipe;
-      const { atletas: atletasSalvos, ...resto } = salva;
+      const { atletas: atletasSalvos, tecnico_nome, ...resto } = salva; // eslint-disable-line no-unused-vars
       return {
         ...equipe,
         ...resto,
         atletas: equipe.atletas.map((atleta) => {
           const daMesa = atletasSalvos.find((a) => a.atleta_id === atleta.atleta_id);
-          return daMesa ? { ...atleta, ...daMesa } : atleta;
+          if (!daMesa) return atleta;
+          const restaurado = { ...atleta, ...daMesa };
+          // o vermelho que acompanha 2 amarelos é o do 2º amarelo (some se a mesa voltar para 1)
+          restaurado.vermelho_auto = sumula.folha.maxAmarelos >= 2 && Number(restaurado.amarelos) >= 2 && Boolean(restaurado.vermelho);
+          return restaurado;
         })
       };
     }));
@@ -178,6 +221,7 @@ function PreencherSumula() {
 
   const descartarRascunho = () => {
     apagarRascunho(id);
+    setCamisas(camisasSalvas);
     setRascunho(null);
   };
 
@@ -221,13 +265,40 @@ function PreencherSumula() {
     }
   };
 
+  // Futsal e society: a falta lançada no atleta conta no tempo selecionado (1º ou 2º) e soma no total da equipe
+  // por tempo (faltas_1t / faltas_2t, que a impressão lê). O "−" só desconta do tempo selecionado.
+  const mudarFaltaDoAtleta = (indiceEquipe, atletaId, novo) => {
+    const campo = `faltas_${tempoDasFaltas}t`;
+    setEquipes((atual) => atual.map((equipe, i) => {
+      if (i !== indiceEquipe) return equipe;
+      const alvo = equipe.atletas.find((a) => a.atleta_id === atletaId);
+      const delta = novo - Number(alvo?.faltas || 0);
+      if (delta === 0) return equipe;
+      return {
+        ...equipe,
+        [campo]: Math.max(0, Number(equipe[campo] || 0) + delta),
+        atletas: equipe.atletas.map((a) => (a.atleta_id === atletaId ? { ...a, faltas: novo } : a))
+      };
+    }));
+  };
+
   const mudarAtleta = (indiceEquipe, atletaId, campo, valor) => {
     setEquipes((atual) => atual.map((equipe, i) => (
       i !== indiceEquipe ? equipe : {
         ...equipe,
-        atletas: equipe.atletas.map((atleta) => (
-          atleta.atleta_id === atletaId ? { ...atleta, [campo]: valor } : atleta
-        ))
+        atletas: equipe.atletas.map((atleta) => {
+          if (atleta.atleta_id !== atletaId) return atleta;
+          const novo = { ...atleta, [campo]: valor };
+          // Futsal e society (2 caixas de amarelo): o 2º amarelo é expulsão e marca o vermelho sozinho; se a mesa
+          // voltar para 1, só sai o vermelho que foi marcado automaticamente (o direto, marcado à mão, fica)
+          if (campo === 'amarelos' && sumula.folha.maxAmarelos >= 2) {
+            if (valor >= 2 && !atleta.vermelho) { novo.vermelho = true; novo.vermelho_auto = true; }
+            if (valor < 2 && atleta.vermelho_auto) { novo.vermelho = false; novo.vermelho_auto = false; }
+          }
+          // mexer à mão no vermelho torna o vermelho "da mesa": não é mais o automático
+          if (campo === 'vermelho') novo.vermelho_auto = false;
+          return novo;
+        })
       }
     )));
   };
@@ -260,14 +331,15 @@ function PreencherSumula() {
     )));
   };
 
-  const enviar = async (finalizar) => {
-    setAviso(null);
+  // silencioso: quem chama (o "Iniciar partida") mostra o próprio aviso; devolve { ok, texto? }
+  const enviar = async (finalizar, { silencioso = false } = {}) => {
+    if (!silencioso) setAviso(null);
     setSalvando(true);
 
     // Camisas digitadas e ainda não salvas vão ANTES da súmula; com erro, a súmula não é salva
     if (!(await salvarCamisasPendentes())) {
       setSalvando(false);
-      return;
+      return { ok: false };
     }
 
     try {
@@ -281,15 +353,17 @@ function PreencherSumula() {
         sets,
         equipes: equipes.map((equipe) => ({
           equipe_id: equipe.equipe_id,
+          // O técnico não é mais digitado na tela (a folha impressa tem a linha em branco para escrever à mão);
+          // o que já estava gravado segue como está
           tecnico_nome: equipe.tecnico_nome,
           faltas_1t: equipe.faltas_1t,
           faltas_2t: equipe.faltas_2t,
           tempo_tecnico_1t: equipe.tempo_tecnico_1t,
           tempo_tecnico_2t: equipe.tempo_tecnico_2t,
-          baleados: equipe.baleados || 0,
+          baleados: sumula.folha.eliminacoesPorAtleta ? eliminadasPor(equipe) : (equipe.baleados || 0),
           // Folha sem coluna por atleta (baleado, vôlei): nada vai na coluna,
           // nem o que uma súmula antiga tenha gravado nela
-          atletas: sumula.folha.rotuloEstatistica
+          atletas: sumula.folha.rotuloEstatistica || sumula.folha.eliminacoesPorAtleta
             ? equipe.atletas
             : equipe.atletas.map((atleta) => ({ ...atleta, gols: 0 }))
         }))
@@ -301,19 +375,21 @@ function PreencherSumula() {
       inicial.current = JSON.stringify(fotografarSumula({ equipes, penaltis, sets, prorrogacao, baleouPrimeiro, camisas: {} }));
       setSessaoVencida(false);
 
-      setAviso({
-        tipo: 'success',
-        texto: `${resposta.mensagem} Placar ${resposta.placar_1} x ${resposta.placar_2}.`
-      });
+      if (!silencioso) {
+        setAviso({
+          tipo: 'success',
+          texto: `${resposta.mensagem} Placar ${resposta.placar_1} x ${resposta.placar_2}.`
+        });
+      }
 
       if (finalizar) navigate(`/detalhes-sumula/${id}`);
+      return { ok: true };
     } catch (falha) {
-      setAviso({
-        tipo: 'error',
-        texto: falha.response?.status === 401
-          ? 'Sua sessão expirou, entre de novo. Nada foi salvo: o que você digitou continua na tela.'
-          : falha.mensagem
-      });
+      const texto = falha.response?.status === 401
+        ? 'Sua sessão expirou, entre de novo. Nada foi salvo: o que você digitou continua na tela.'
+        : falha.mensagem;
+      if (!silencioso) setAviso({ tipo: 'error', texto });
+      return { ok: false, texto };
     } finally {
       setSalvando(false);
     }
@@ -327,7 +403,11 @@ function PreencherSumula() {
 
   // Enter vai para o próximo atleta; no último, para o botão "Salvar camisas"
   const proximoCampo = (equipeId, posicao) => {
-    const proximo = campos.current[`${equipeId}:${posicao + 1}`] || campos.current[`${equipeId}:salvar`];
+    // pula os campos travados (camisa já salva): o Enter vai para o próximo campo editável
+    let k = posicao + 1;
+    let proximo = campos.current[`${equipeId}:${k}`];
+    while (proximo && proximo.disabled) { k += 1; proximo = campos.current[`${equipeId}:${k}`]; }
+    if (!proximo) proximo = campos.current[`${equipeId}:salvar`];
     if (proximo) {
       proximo.focus();
       if (proximo.select) proximo.select();
@@ -376,6 +456,7 @@ function PreencherSumula() {
       const gravados = Object.fromEntries(alterados.map((a) => [a.atleta_id, normalizarCamisa(camisas[a.atleta_id])]));
       setCamisasSalvas((atual) => ({ ...atual, ...gravados }));
       setCamisas((atual) => ({ ...atual, ...gravados }));
+      setEditandoCamisas((atual) => ({ ...atual, [equipe.equipe_id]: false })); // salvou: trava de novo
       setMsgCamisa((atual) => ({ ...atual, [equipe.equipe_id]: { tipo: 'success', texto: 'Camisas salvas.' } }));
       return true;
     } catch (falha) {
@@ -395,7 +476,7 @@ function PreencherSumula() {
   };
 
   // Salvar a súmula (parcial ou final) grava antes as camisas pendentes das duas equipes
-  const salvarCamisasPendentes = async () => {
+  const salvarCamisasPendentes = async (acao = 'A súmula NÃO foi salva') => {
     for (const equipe of equipes) {
       if (equipe.a_definir) continue;
       const { alterados, marcados } = conferirCamisas(equipe);
@@ -403,7 +484,7 @@ function PreencherSumula() {
       if (!(await salvarCamisasDaEquipe(equipe))) {
         setAviso({
           tipo: 'error',
-          texto: `A súmula NÃO foi salva: o número da camisa de ${equipe.escola_nome} deu erro (veja o aviso na equipe). Corrija e salve de novo.`
+          texto: `${acao}: o número da camisa de ${equipe.escola_nome} deu erro (veja o aviso na equipe). Corrija e tente de novo.`
         });
         // Leva o foco ao campo com problema (ou ao primeiro alterado)
         let posicao = equipe.atletas.findIndex((a) => marcados.has(a.atleta_id));
@@ -414,6 +495,89 @@ function PreencherSumula() {
       }
     }
     return true;
+  };
+
+  // "Editar camisas" destrava os números já salvos da equipe; "Cancelar" devolve tudo ao que está salvo e trava
+  const editarCamisas = (equipeId) => {
+    setEditandoCamisas((atual) => ({ ...atual, [equipeId]: true }));
+    setMsgCamisa((atual) => ({ ...atual, [equipeId]: null }));
+  };
+  const cancelarEdicaoCamisas = (equipe) => {
+    setCamisas((atual) => ({
+      ...atual,
+      ...Object.fromEntries(equipe.atletas.map((a) => [a.atleta_id, camisasSalvas[a.atleta_id] ?? '']))
+    }));
+    setEditandoCamisas((atual) => ({ ...atual, [equipe.equipe_id]: false }));
+    setMsgCamisa((atual) => ({ ...atual, [equipe.equipe_id]: null }));
+  };
+
+  // Futsal e society: depois do clique, as faltas passam a contar no 2º tempo (não volta)
+  const iniciarSegundoTempo = () => {
+    if (!window.confirm('Iniciar o 2º tempo?')) return;
+    gravarSegundoTempo(id);
+    setSegundoTempo(true);
+    setAviso({ tipo: 'success', texto: '2º tempo iniciado. As próximas faltas contam no 2º tempo.' });
+  };
+
+  // Iniciar partida: a rota de sempre (PUT /jogos/:id/iniciar, com a trava de local). Depois dela o
+  // placar é liberado; a súmula não é recarregada, então camisas e rascunho digitados continuam na tela
+  const iniciarPartida = async () => {
+    if (!window.confirm('Iniciar a partida agora?')) return;
+    setAviso(null);
+    setIniciando(true);
+    try {
+      // Camisas digitadas e ainda não salvas são gravadas ANTES (mesmo PUT /equipes/:id/camisas do
+      // "Salvar camisas"); se alguma der erro, a partida não é iniciada
+      const tinhaCamisa = Object.keys(camisasAlteradas(camisas, camisasSalvas)).length > 0;
+      if (!(await salvarCamisasPendentes('A partida NÃO foi iniciada'))) return;
+      await iniciarJogo(id);
+      limparSegundoTempo(id); // partida nova começa no 1º tempo
+      setSegundoTempo(false);
+      setIniciada(true);
+      // Logo depois de iniciar, grava a súmula parcial (presença, capitão e camisas): a presença não depende
+      // mais de um "Salvar parcial" e não se perde se a página for recarregada
+      const gravou = await enviar(false, { silencioso: true });
+      setAviso(gravou.ok
+        ? {
+          tipo: 'success',
+          texto: tinhaCamisa
+            ? 'Partida iniciada. As camisas, a presença e o capitão foram salvos e o placar está liberado.'
+            : 'Partida iniciada. A presença e o capitão foram salvos e o placar está liberado.'
+        }
+        : {
+          tipo: 'error',
+          texto: `Partida iniciada, mas a súmula parcial (presença e capitão) NÃO foi salva${gravou.texto ? `: ${gravou.texto}` : ''}. Toque em "Salvar parcial".`
+        });
+    } catch (falha) {
+      setAviso({
+        tipo: 'error',
+        texto: falha.response?.status === 401
+          ? 'Sua sessão expirou, entre de novo. A partida não foi iniciada e o que você digitou continua na tela.'
+          : falha.mensagem
+      });
+    } finally {
+      setIniciando(false);
+    }
+  };
+
+  // "Salvar parcial" antes da partida: grava só as camisas (no servidor) — o resto (técnico, presença,
+  // capitão) fica no rascunho deste navegador até a partida iniciar. Não chama POST /sumulas, que
+  // iniciaria o jogo sozinho.
+  const salvarPreJogo = async () => {
+    setAviso(null);
+    setSalvando(true);
+    try {
+      const tinhaCamisa = Object.keys(camisasAlteradas(camisas, camisasSalvas)).length > 0;
+      if (!(await salvarCamisasPendentes())) return;
+      setAviso({
+        tipo: 'success',
+        texto: tinhaCamisa
+          ? 'Camisas salvas. O que mais você preencheu fica guardado como rascunho neste navegador até iniciar a partida.'
+          : 'Nada de camisa por salvar. O que você preencheu fica guardado como rascunho neste navegador até iniciar a partida.'
+      });
+    } finally {
+      setSalvando(false);
+    }
   };
 
   if (!pronto || (!erro && !equipes)) {
@@ -440,8 +604,19 @@ function PreencherSumula() {
   }
 
   const { jogo, folha } = sumula;
+  // Fase da súmula: AGENDADO = pré-jogo (placar bloqueado), EM_ANDAMENTO = partida (iniciada agora ou antes)
+  const statusAtual = iniciada && jogo.status === 'AGENDADO' ? 'EM_ANDAMENTO' : jogo.status;
+  const agendado = statusAtual === 'AGENDADO';
+  const encerrado = ['FINALIZADO', 'WO'].includes(statusAtual);
+  const somenteLeitura = encerrado && !isAdmin;       // a mesa só consulta um jogo encerrado
+  const semPlacar = agendado || somenteLeitura;       // gols, cartões, faltas, sets, eliminadas, cobranças
+  const tabelaAberta = !agendado || preenchendo;      // no pré-jogo a tabela abre em "Preencher súmula"
+  const mostraPlacar = !agendado;                     // colunas e campos de placar: só depois de iniciar (escondidos antes)
+  // A coluna Presente só existe no pré-jogo; depois de iniciar a tabela mostra só os atletas presentes
+  const atletasDaTabela = (equipe) => (agendado ? equipe.atletas : equipe.atletas.filter((a) => a.presente));
   // "Adicionar atleta" e "Remover": só a mesa do local do jogo, com o jogo agendado ou em andamento
-  const mesaMexeNoElenco = isPlacar && podeLancarNoLocal(jogo.local_id) && ['AGENDADO', 'EM_ANDAMENTO'].includes(jogo.status);
+  // (16/11/2026: só no pré-jogo; depois de "Iniciar partida" o elenco e as camisas ficam só leitura)
+  const mesaMexeNoElenco = isPlacar && podeLancarNoLocal(jogo.local_id) && agendado;
   // Mesa de outro local (ou sem local): a tela não abre. O backend também barra (403)
   if (!podeLancarNoLocal(jogo.local_id)) {
     return (
@@ -451,7 +626,16 @@ function PreencherSumula() {
     );
   }
   // Jogo encerrado (finalizado ou W.O.): o número da camisa é só leitura
-  const editaCamisas = !['FINALIZADO', 'WO'].includes(jogo.status);
+  const editaCamisas = !encerrado;
+  // Camisa já salva fica travada (só leitura). Continuam editáveis: campo vazio, número digitado e ainda
+  // não salvo (diferente do salvo) e qualquer campo da equipe depois de "Editar camisas".
+  const camisaTravada = (equipe, atleta) => {
+    const salva = camisasSalvas[atleta.atleta_id] ?? '';
+    // depois de iniciar a partida todos os números ficam só leitura
+    if (!agendado) return true;
+    return editaCamisas && !editandoCamisas[equipe.equipe_id] && salva !== ''
+      && normalizarCamisa(camisas[atleta.atleta_id] ?? '') === normalizarCamisa(salva);
+  };
   const listaSuspensos = suspensao?.id === id && suspensao.dados ? suspensao.dados.suspensos : [];
   const avisosSuspensao = suspensao?.id === id && suspensao.dados ? suspensao.dados.avisos : [];
   const suspensoPorAtleta = new Map(listaSuspensos.map((s) => [s.atleta_id, s]));
@@ -465,7 +649,18 @@ function PreencherSumula() {
 
   // No baleado cada equipe marca as ADVERSÁRIAS que eliminou, e o placar dela
   // é o próprio contador (chefe, 12/10/2026).
-  const eliminadasPor = (equipe) => Number(equipe.baleados || 0);
+  // 16/11/2026: cada atleta tem o seu contador (guardado em sumula_atletas.gols) e o total da equipe é a SOMA.
+  // Súmula antiga, gravada só com o total da equipe (nenhum atleta com contador), segue valendo com esse total.
+  const eliminacoesDosAtletas = (equipe) => equipe.atletas.reduce((total, a) => total + Number(a.gols || 0), 0);
+  const totalLegado = (equipe) => {
+    const original = sumula.equipes.find((e) => e.equipe_id === equipe.equipe_id);
+    return original && Number(original.baleados || 0) > 0 && original.atletas.every((a) => Number(a.gols || 0) === 0)
+      ? Number(original.baleados) : 0;
+  };
+  const eliminadasPor = (equipe) => {
+    const soma = eliminacoesDosAtletas(equipe);
+    return soma > 0 ? soma : totalLegado(equipe);
+  };
   let placar1 = golsDe(equipes[0]);
   let placar2 = golsDe(equipes[1]);
   if (folha.sets) {
@@ -478,8 +673,10 @@ function PreencherSumula() {
 
   // Nº, atleta, capitão e presente são fixos; a coluna de estatística, as
   // faltas e os cartões dependem da folha da modalidade.
-  const colunasDaTabela = 4 + (folha.rotuloEstatistica ? 1 : 0)
-    + (folha.faltasIndividuais > 0 ? 1 : 0) + (folha.cartoes ? 2 : 0);
+  const colunasDaTabela = 3 + (agendado ? 1 : 0) + (mostraPlacar
+    ? (folha.rotuloEstatistica ? 1 : 0) + (folha.eliminacoesPorAtleta ? 1 : 0)
+      + (folha.faltasIndividuais > 0 || folha.faltasPorAtleta ? 1 : 0) + (folha.cartoes ? 2 : 0)
+    : 0);
   // A regra de desempate vem do backend (src/config/regrasProvisorias.js):
   // a tela não guarda cópia de qual modalidade joga prorrogação. Sem regra,
   // não há cobrança genérica: o empate fica pendente com a organização.
@@ -518,8 +715,8 @@ function PreencherSumula() {
           <p className="page-subtitle">
             {folha.sets && `O placar do jogo são os sets: vence quem ganhar ${folha.setsParaVencer} sets `
               + `de ${folha.pontosPorSet} pontos, com 2 de vantagem.`}
-            {folha.baleadosPorEquipe && 'Em cada equipe, marque as adversárias que ELA eliminou (baleou): '
-              + 'o placar de cada equipe é o próprio contador.'}
+            {folha.baleadosPorEquipe && 'Lance as eliminações de cada atleta (as adversárias que ELE baleou): '
+              + 'o placar de cada equipe é a soma, de 0 a 10.'}
             {!folha.sets && !folha.baleadosPorEquipe
               && `O placar é ${TEXTO_DO_PLACAR[folha.rotuloEstatistica]}: não existe campo de placar para digitar.`}
           </p>
@@ -583,6 +780,57 @@ function PreencherSumula() {
           </div>
         )}
 
+        {!encerrado && (
+          <div className="card mb-lg">
+            <div className="card-body">
+              {agendado ? (
+                <>
+                  <div className="acoes etapas-sumula">
+                    <button
+                      type="button"
+                      className={`btn ${preenchendo ? 'btn-secondary' : 'btn-outline'}`}
+                      aria-pressed={preenchendo}
+                      disabled={equipes.some((e) => e.a_definir)}
+                      onClick={() => setPreenchendo((aberto) => !aberto)}
+                    >
+                      📝 Preencher súmula
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={iniciando || equipes.some((e) => e.a_definir)}
+                      onClick={iniciarPartida}
+                    >
+                      {iniciando ? 'Iniciando...' : '▶ Iniciar partida'}
+                    </button>
+                  </div>
+                  <p className="form-hint">
+                    Antes do jogo: preencha as camisas, a presença e o capitão. O placar (gols, cartões, faltas, sets) só
+                    abre depois de iniciar a partida.
+                  </p>
+                </>
+              ) : (
+                <div className="acoes" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                  <span className="badge badge-accent">
+                    {folha.faltasPorAtleta && segundoTempo ? '▶ 2º tempo' : '▶ Partida em andamento'}
+                  </span>
+                  {folha.faltasPorAtleta && !segundoTempo && (
+                    <button type="button" className="btn btn-outline btn-sm" onClick={iniciarSegundoTempo}>
+                      Iniciar 2º tempo
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {somenteLeitura && (
+          <div className="alert alert-aviso mb-lg">
+            Este jogo já terminou: a súmula é só de consulta. Para ver ou imprimir, use o botão no fim da página.
+          </div>
+        )}
+
         <div className="card mb-lg">
           <div className="card-body placar-ao-vivo">
             <div>
@@ -597,7 +845,7 @@ function PreencherSumula() {
           </div>
         </div>
 
-        {folha.sets && sets && (
+        {mostraPlacar && folha.sets && sets && (
           <section className="card mb-lg">
             <div className="card-body">
               <h2 className="card-title">Controle dos sets</h2>
@@ -608,7 +856,7 @@ function PreencherSumula() {
               </p>
 
               <div className="table-wrap">
-                <table className="table-sge compact">
+                <table className="table-sge compact tabela-sumula tabela-sets">
                   <thead>
                     <tr>
                       <th>Set</th>
@@ -626,22 +874,24 @@ function PreencherSumula() {
 
                       return (
                         <tr key={set.numero_set}>
-                          <td className="strong">{set.numero_set}º</td>
-                          <td>
+                          <td className="strong" data-rotulo="Set">{set.numero_set}º</td>
+                          <td data-rotulo={equipes[0].escola_nome}>
                             <Contador
                               valor={um}
                               rotulo={`pontos de ${equipes[0].escola_nome} no ${set.numero_set}º set`}
+                              desabilitado={semPlacar}
                               aoMudar={(v) => mudarSet(set.numero_set, 'pontos_1', v)}
                             />
                           </td>
-                          <td>
+                          <td data-rotulo={equipes[1].escola_nome}>
                             <Contador
                               valor={dois}
                               rotulo={`pontos de ${equipes[1].escola_nome} no ${set.numero_set}º set`}
+                              desabilitado={semPlacar}
                               aoMudar={(v) => mudarSet(set.numero_set, 'pontos_2', v)}
                             />
                           </td>
-                          <td>
+                          <td data-rotulo="Vencedor do set">
                             {um === 0 && dois === 0 ? '—'
                               : fechado ? (um > dois ? equipes[0].escola_nome : equipes[1].escola_nome)
                                 : 'set em andamento'}
@@ -656,7 +906,7 @@ function PreencherSumula() {
           </section>
         )}
 
-        {equipes.map((equipe, indice) => {
+        {tabelaAberta && equipes.map((equipe, indice) => {
           const conferencia = conferirCamisas(equipe);
           const msg = msgCamisa[equipe.equipe_id];
           return (
@@ -665,26 +915,27 @@ function PreencherSumula() {
               <h2 className="card-title">{equipe.escola_nome}</h2>
 
               <div className="table-wrap">
-                <table className="table-sge compact">
+                <table className="table-sge compact tabela-sumula">
                   <thead>
                     <tr>
                       <th>Nº</th>
                       <th className="text-left">Atleta</th>
-                      {folha.rotuloEstatistica && <th>{folha.rotuloEstatistica}</th>}
-                      {folha.faltasIndividuais > 0 && <th>Faltas</th>}
-                      {folha.cartoes && <th>Amarelos</th>}
-                      {folha.cartoes && <th>🟥</th>}
+                      {mostraPlacar && folha.rotuloEstatistica && <th>{folha.rotuloEstatistica}</th>}
+                      {mostraPlacar && folha.eliminacoesPorAtleta && <th>Eliminou</th>}
+                      {mostraPlacar && (folha.faltasIndividuais > 0 || folha.faltasPorAtleta) && <th>Faltas</th>}
+                      {mostraPlacar && folha.cartoes && <th>Amarelos</th>}
+                      {mostraPlacar && folha.cartoes && <th>🟥</th>}
                       <th>Cap.</th>
-                      <th>Presente</th>
+                      {agendado && <th>Presente</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    {equipe.atletas.map((atleta, posicao) => (
+                    {atletasDaTabela(equipe).map((atleta, posicao) => (
                       <tr
                         key={atleta.atleta_id}
                         className={suspensoPorAtleta.has(atleta.atleta_id) ? 'row-suspenso' : ''}
                       >
-                        <td className="strong">
+                        <td className="strong" data-rotulo="Nº">
                           {editaCamisas && !equipe.a_definir ? (
                             <input
                               ref={(el) => { campos.current[`${equipe.equipe_id}:${posicao}`] = el; }}
@@ -695,6 +946,7 @@ function PreencherSumula() {
                               maxLength={2}
                               autoComplete="off"
                               value={camisas[atleta.atleta_id] ?? ''}
+                              disabled={camisaTravada(equipe, atleta)}
                               aria-label={`Camisa de ${atleta.nome}`}
                               aria-invalid={conferencia.marcados.has(atleta.atleta_id)}
                               onChange={(e) => mudarCamisa(equipe.equipe_id, atleta.atleta_id, e.target.value)}
@@ -704,7 +956,7 @@ function PreencherSumula() {
                             />
                           ) : (atleta.numero_camisa ?? '—')}
                         </td>
-                        <td className="text-left">
+                        <td className="text-left" data-rotulo="Atleta">
                           {atleta.nome}
                           {atleta.adicionado_pela_mesa && (
                             <span className="badge badge-accent" style={{ marginLeft: 8 }}>adicionado pela mesa</span>
@@ -724,71 +976,105 @@ function PreencherSumula() {
                             </span>
                           )}
                         </td>
-                        {folha.rotuloEstatistica && (
-                          <td>
+                        {mostraPlacar && folha.rotuloEstatistica && (
+                          <td data-rotulo={folha.rotuloEstatistica}>
                             <Contador
                               valor={Number(atleta.gols)}
                               rotulo={`${folha.rotuloEstatistica.toLowerCase()} de ${atleta.nome}`}
+                              desabilitado={semPlacar}
                               aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'gols', v)}
                             />
                           </td>
                         )}
 
-                        {folha.faltasIndividuais > 0 && (
-                          <td>
+                        {mostraPlacar && folha.eliminacoesPorAtleta && (
+                          <td data-rotulo="Eliminou">
+                            <Contador
+                              valor={Number(atleta.gols)}
+                              max={Math.min(folha.baleadosPorEquipe, Number(atleta.gols) + (folha.baleadosPorEquipe - eliminacoesDosAtletas(equipe)))}
+                              rotulo={`eliminações de ${atleta.nome}`}
+                              desabilitado={semPlacar}
+                              aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'gols', v)}
+                            />
+                          </td>
+                        )}
+
+                        {mostraPlacar && folha.faltasPorAtleta && (
+                          <td data-rotulo="Faltas">
+                            <Contador
+                              valor={Number(atleta.faltas || 0)}
+                              max={folha.maxFaltasPorAtleta}
+                              minimo={Number(equipe[`faltas_${tempoDasFaltas}t`] || 0) === 0 ? Number(atleta.faltas || 0) : 0}
+                              rotulo={`faltas de ${atleta.nome} no ${tempoDasFaltas}º tempo`}
+                              desabilitado={semPlacar}
+                              aoMudar={(v) => mudarFaltaDoAtleta(indice, atleta.atleta_id, v)}
+                            />
+                          </td>
+                        )}
+
+                        {mostraPlacar && folha.faltasIndividuais > 0 && (
+                          <td data-rotulo="Faltas">
                             <Contador
                               valor={Number(atleta.faltas || 0)}
                               max={folha.faltasIndividuais}
                               rotulo={`faltas de ${atleta.nome}`}
+                              desabilitado={semPlacar}
                               aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'faltas', v)}
                             />
                           </td>
                         )}
 
-                        {folha.cartoes && (
-                          <td>
+                        {mostraPlacar && folha.cartoes && (
+                          <td data-rotulo="Amarelos">
                             <Contador
                               valor={Number(atleta.amarelos)}
                               max={folha.maxAmarelos}
                               rotulo={`amarelos de ${atleta.nome}`}
+                              desabilitado={semPlacar}
                               aoMudar={(v) => mudarAtleta(indice, atleta.atleta_id, 'amarelos', v)}
                             />
                           </td>
                         )}
 
-                        {folha.cartoes && (
-                          <td>
+                        {mostraPlacar && folha.cartoes && (
+                          <td data-rotulo="Vermelho">
                             <input
                               type="checkbox"
                               checked={atleta.vermelho}
+                              disabled={semPlacar || (folha.maxAmarelos >= 2 && Number(atleta.amarelos) >= 2)}
+                              title={folha.maxAmarelos >= 2 && Number(atleta.amarelos) >= 2 ? '2º amarelo = expulsão' : undefined}
                               onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'vermelho', e.target.checked)}
                               aria-label={`Cartão vermelho para ${atleta.nome}`}
                             />
                           </td>
                         )}
-                        <td>
+                        <td data-rotulo="Capitão">
                           <input
                             type="checkbox"
                             checked={atleta.capitao}
+                            disabled={somenteLeitura}
                             onChange={() => marcarCapitao(indice, atleta.atleta_id)}
                             aria-label={`Capitão: ${atleta.nome}`}
                           />
                         </td>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={atleta.presente}
-                            onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'presente', e.target.checked)}
-                            aria-label={`Presente: ${atleta.nome}`}
-                          />
-                        </td>
+                        {agendado && (
+                          <td data-rotulo="Presente">
+                            <input
+                              type="checkbox"
+                              checked={atleta.presente}
+                              disabled={somenteLeitura}
+                              onChange={(e) => mudarAtleta(indice, atleta.atleta_id, 'presente', e.target.checked)}
+                              aria-label={`Presente: ${atleta.nome}`}
+                            />
+                          </td>
+                        )}
                       </tr>
                     ))}
 
-                    {equipe.atletas.length === 0 && (
+                    {atletasDaTabela(equipe).length === 0 && (
                       <tr>
                         <td colSpan={colunasDaTabela} className="text-left">
-                          Nenhum atleta inscrito nesta equipe.
+                          {equipe.atletas.length === 0 ? 'Nenhum atleta inscrito nesta equipe.' : 'Nenhum atleta presente nesta equipe.'}
                         </td>
                       </tr>
                     )}
@@ -796,11 +1082,24 @@ function PreencherSumula() {
                 </table>
               </div>
 
+              {mostraPlacar && folha.faltasPorAtleta && (
+                <div className="mb-lg">
+                  <p className="form-label" style={{ marginBottom: 4 }}>
+                    Faltas da equipe: 1º T <strong>{Number(equipe.faltas_1t || 0)}</strong> · 2º T <strong>{Number(equipe.faltas_2t || 0)}</strong>
+                  </p>
+                  {[1, 2].filter((tempo) => Number(equipe[`faltas_${tempo}t`] || 0) >= 5).map((tempo) => (
+                    <p key={tempo} className="alert alert-aviso" role="status" style={{ margin: '4px 0' }}>
+                      {equipe.escola_nome}, {tempo}º tempo: {Number(equipe[`faltas_${tempo}t`])} faltas. Próxima falta: tiro livre.
+                    </p>
+                  ))}
+                </div>
+              )}
+
               {mesaMexeNoElenco && !equipe.a_definir && (
                 <AdicionarAtletaMesa jogoId={id} equipe={equipe} aoAdicionar={adicionouAtleta} />
               )}
 
-              {editaCamisas && !equipe.a_definir && equipe.atletas.length > 0 && (
+              {agendado && editaCamisas && !equipe.a_definir && equipe.atletas.length > 0 && (
                 <div className="camisas-acoes">
                   <button
                     type="button"
@@ -812,6 +1111,16 @@ function PreencherSumula() {
                   >
                     {salvandoCamisa === equipe.equipe_id ? 'Salvando...' : 'Salvar camisas'}
                   </button>
+                  {!editandoCamisas[equipe.equipe_id] && equipe.atletas.some((a) => camisaTravada(equipe, a)) && (
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => editarCamisas(equipe.equipe_id)}>
+                      ✏️ Editar camisas
+                    </button>
+                  )}
+                  {editandoCamisas[equipe.equipe_id] && (
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => cancelarEdicaoCamisas(equipe)}>
+                      Cancelar
+                    </button>
+                  )}
                   {msg && <span className={`camisa-msg camisa-msg-${msg.tipo}`} role="status">{msg.tipo === 'success' ? '✓ ' : ''}{msg.texto}</span>}
                   {conferencia.repetidos.map(([numero, lista]) => (
                     <span key={numero} className="camisa-msg camisa-msg-error" role="alert">
@@ -821,44 +1130,37 @@ function PreencherSumula() {
                   {conferencia.invalidos.size > 0 && (
                     <span className="camisa-msg camisa-msg-error" role="alert">O número vai de 1 a 99.</span>
                   )}
-                  <span className="form-hint">Campo vazio = sem número. Vale para os próximos jogos da equipe.</span>
+                  <span className="form-hint">Campo vazio = sem número. Números salvos ficam travados: use "Editar camisas" para corrigir. Vale para os próximos jogos da equipe.</span>
                 </div>
               )}
 
-              {folha.faltasIndividuais > 0 && (
+              {mostraPlacar && folha.faltasIndividuais > 0 && (
                 <p className="form-hint">
                   Falta individual vai de 0 a {folha.faltasIndividuais}: com {folha.faltasIndividuais} o
                   atleta está excluído. As faltas acumulativas da equipe vão até {folha.faltasAcumuladas} por tempo.
                 </p>
               )}
 
+              {mostraPlacar && (folha.baleadosPorEquipe > 0 || (folha.faltasAcumuladas > 0 && !folha.faltasPorAtleta) || folha.lancaTempoTecnico) && (
               <div className="rodape-equipe">
-                <div className="form-group">
-                  <label className="form-label" htmlFor={`tecnico-${indice}`}>Técnico</label>
-                  <input
-                    id={`tecnico-${indice}`}
-                    className="form-control"
-                    type="text"
-                    value={equipe.tecnico_nome || ''}
-                    onChange={(e) => mudarEquipe(indice, 'tecnico_nome', e.target.value)}
-                  />
-                </div>
-
                 {folha.baleadosPorEquipe > 0 && (
                   <div className="form-group">
                     <span className="form-label">
-                      Adversárias eliminadas por esta equipe <small>(0 a {folha.baleadosPorEquipe})</small>
+                      Adversárias eliminadas por esta equipe <small>(soma dos atletas, de 0 a {folha.baleadosPorEquipe})</small>
                     </span>
-                    <Contador
-                      valor={Number(equipe.baleados || 0)}
-                      max={folha.baleadosPorEquipe}
-                      rotulo={`adversárias eliminadas por ${equipe.escola_nome}`}
-                      aoMudar={(v) => mudarEquipe(indice, 'baleados', v)}
-                    />
+                    <strong className="total-eliminadas" aria-label={`total de eliminações de ${equipe.escola_nome}`}>
+                      {eliminadasPor(equipe)} de {folha.baleadosPorEquipe}
+                    </strong>
+                    {eliminacoesDosAtletas(equipe) === 0 && totalLegado(equipe) > 0 && (
+                      <span className="form-hint">
+                        Súmula gravada só com o total da equipe ({totalLegado(equipe)}). Se você lançar eliminações por
+                        atleta, o total passa a ser a soma.
+                      </span>
+                    )}
                   </div>
                 )}
 
-                {folha.faltasAcumuladas > 0 && (
+                {folha.faltasAcumuladas > 0 && !folha.faltasPorAtleta && (
                   <div className="form-group">
                     <span className="form-label">
                       Faltas 1º tempo <small>(até {folha.faltasAcumuladas})</small>
@@ -867,12 +1169,13 @@ function PreencherSumula() {
                       valor={Number(equipe.faltas_1t)}
                       max={folha.faltasAcumuladas}
                       rotulo="faltas do primeiro tempo"
+                      desabilitado={semPlacar}
                       aoMudar={(v) => mudarEquipe(indice, 'faltas_1t', v)}
                     />
                   </div>
                 )}
 
-                {folha.faltasAcumuladas > 0 && (
+                {folha.faltasAcumuladas > 0 && !folha.faltasPorAtleta && (
                   <div className="form-group">
                     <span className="form-label">
                       Faltas 2º tempo <small>(até {folha.faltasAcumuladas})</small>
@@ -881,12 +1184,13 @@ function PreencherSumula() {
                       valor={Number(equipe.faltas_2t)}
                       max={folha.faltasAcumuladas}
                       rotulo="faltas do segundo tempo"
+                      desabilitado={semPlacar}
                       aoMudar={(v) => mudarEquipe(indice, 'faltas_2t', v)}
                     />
                   </div>
                 )}
 
-                {folha.tempoTecnico && (
+                {folha.lancaTempoTecnico && (
                   <div className="form-group">
                     <span className="form-label">Tempo técnico</span>
                     <div className="linha-checks">
@@ -894,6 +1198,7 @@ function PreencherSumula() {
                         <input
                           type="checkbox"
                           checked={equipe.tempo_tecnico_1t}
+                          disabled={semPlacar}
                           onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_1t', e.target.checked)}
                         /> 1º T
                       </label>
@@ -901,6 +1206,7 @@ function PreencherSumula() {
                         <input
                           type="checkbox"
                           checked={equipe.tempo_tecnico_2t}
+                          disabled={semPlacar}
                           onChange={(e) => mudarEquipe(indice, 'tempo_tecnico_2t', e.target.checked)}
                         /> 2º T
                       </label>
@@ -908,12 +1214,13 @@ function PreencherSumula() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           </section>
           );
         })}
 
-        {empatado && exigeProrrogacao && (
+        {!agendado && empatado && exigeProrrogacao && (
           <div className="card mb-lg">
             <div className="card-body">
               <h2 className="card-title">Prorrogação</h2>
@@ -926,6 +1233,7 @@ function PreencherSumula() {
                 <input
                   type="checkbox"
                   checked={prorrogacao}
+                  disabled={somenteLeitura}
                   onChange={(e) => setProrrogacao(e.target.checked)}
                 />{' '}
                 Houve prorrogação e o empate continuou
@@ -934,7 +1242,7 @@ function PreencherSumula() {
           </div>
         )}
 
-        {comAcrescimo && (
+        {!agendado && comAcrescimo && (
           <div className="card mb-lg">
             <div className="card-body">
               <h2 className="card-title">Acréscimo de {desempate.acrescimo.minutosDeAcrescimo} minutos</h2>
@@ -946,6 +1254,7 @@ function PreencherSumula() {
                       type="radio"
                       name="baleou-primeiro"
                       checked={baleouPrimeiro === equipe.equipe_id}
+                      disabled={somenteLeitura}
                       onChange={() => setBaleouPrimeiro(equipe.equipe_id)}
                     />{' '}
                     {equipe.escola_nome}
@@ -956,7 +1265,7 @@ function PreencherSumula() {
           </div>
         )}
 
-        {empatePendente && (
+        {!agendado && empatePendente && (
           <div className="alert alert-aviso mb-lg">
             <p className="alert-titulo">⚠️ {somaEmpatada ? (jogoUnico ? 'Jogo empatado' : 'Soma dos dois jogos empatada') : 'Empate no mata-mata'}: regra pendente</p>
             <p className="alert-texto">
@@ -967,7 +1276,7 @@ function PreencherSumula() {
           </div>
         )}
 
-        {precisaPenaltis && (
+        {!agendado && precisaPenaltis && (
           <div className="card mb-lg">
             <div className="card-body">
               <h2 className="card-title" style={{ textTransform: 'capitalize' }}>
@@ -984,6 +1293,7 @@ function PreencherSumula() {
                   <Contador
                     valor={penaltis.penaltis_1}
                     rotulo={`${desempate.nomeCobranca} da primeira equipe`}
+                    desabilitado={somenteLeitura}
                     aoMudar={(v) => setPenaltis((p) => ({ ...p, penaltis_1: v }))}
                   />
                 </div>
@@ -992,6 +1302,7 @@ function PreencherSumula() {
                   <Contador
                     valor={penaltis.penaltis_2}
                     rotulo={`${desempate.nomeCobranca} da segunda equipe`}
+                    desabilitado={somenteLeitura}
                     aoMudar={(v) => setPenaltis((p) => ({ ...p, penaltis_2: v }))}
                   />
                 </div>
@@ -1000,14 +1311,23 @@ function PreencherSumula() {
           </div>
         )}
 
-        <div className="page-toolbar">
+        <div className="page-toolbar barra-sumula">
           <div className="acoes">
-            <button type="button" className="btn btn-outline" onClick={() => enviar(false)} disabled={salvando}>
-              {salvando ? 'Salvando...' : 'Salvar parcial'}
-            </button>
-            <button type="button" className="btn btn-primary" onClick={() => enviar(true)} disabled={salvando}>
-              Finalizar súmula
-            </button>
+            {agendado && (
+              <button type="button" className="btn btn-outline" onClick={salvarPreJogo} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Salvar parcial'}
+              </button>
+            )}
+            {!agendado && !somenteLeitura && (
+              <>
+                <button type="button" className="btn btn-outline" onClick={() => enviar(false)} disabled={salvando}>
+                  {salvando ? 'Salvando...' : 'Salvar parcial'}
+                </button>
+                <button type="button" className="btn btn-primary" onClick={() => enviar(true)} disabled={salvando}>
+                  Finalizar súmula
+                </button>
+              </>
+            )}
           </div>
 
           <Link className="btn btn-outline btn-sm" to={`/detalhes-sumula/${id}`}>

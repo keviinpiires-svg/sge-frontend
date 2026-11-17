@@ -1495,3 +1495,57 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .relatorio-equipe-titulo { background: #e6e0f0 !important; }
   .relatorio-escola.folha-sumula { padding-top: 0; padding-bottom: 0; }
 }
+
+/* ---------- Súmula no celular (16/11/2026) ----------
+   No celular a linha de cada atleta vira um cartão: o Nº e o nome em cima e, embaixo, os contadores e as
+   caixas com o rótulo em cima (o cabeçalho da tabela some). Assim nada fica escondido atrás de uma rolagem
+   lateral, e os botões ficam do tamanho do dedo. A tabela de sets do vôlei segue o mesmo desenho. */
+@media (max-width: 640px) {
+  .tabela-sumula, .tabela-sumula tbody { display: block; width: 100%; }
+  .tabela-sumula thead { display: none; }
+  .tabela-sumula tbody tr {
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px 8px;
+    padding: 12px 6px; border-bottom: 1px solid var(--sge-border); align-items: end;
+  }
+  .tabela-sumula tbody tr:last-child { border-bottom: none; }
+  .tabela-sumula.compact tbody td {
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
+    gap: 4px; padding: 0; border: 0; text-align: left; font-size: 15px; grid-column: span 6;
+  }
+  .tabela-sumula tbody td::before {
+    content: attr(data-rotulo); font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--sge-text-muted);
+  }
+  /* Nº e atleta ocupam a primeira linha do cartão */
+  .tabela-sumula tbody td[data-rotulo="Nº"] { grid-column: span 4; }
+  .tabela-sumula tbody td[data-rotulo="Atleta"] { grid-column: span 8; justify-content: center; font-weight: 600; color: var(--sge-text-strong); }
+  .tabela-sumula tbody td[data-rotulo="Atleta"]::before { display: none; }
+  /* só a linha de aviso ("nenhum atleta...") não tem rótulo */
+  /* as caixas (vermelho, capitão) ficam lado a lado com os contadores; no pré-jogo, Cap. e Presente dividem a linha */
+  .tabela-sumula tbody td[data-rotulo="Vermelho"], .tabela-sumula tbody td[data-rotulo="Capitão"] { grid-column: span 3; }
+  .tabela-sumula tbody td[data-rotulo="Capitão"]:nth-last-child(2) { grid-column: span 6; }
+  .tabela-sumula tbody td[data-rotulo="Presente"] { grid-column: span 6; }
+  .tabela-sumula tbody td[colspan] { grid-column: 1 / -1; display: block; }
+  .tabela-sumula tbody td[colspan]::before { display: none; }
+  .tabela-sumula .contador { gap: 6px; }
+  .tabela-sumula .contador-btn { width: 40px; height: 40px; font-size: 20px; }
+  .tabela-sumula .contador-valor { width: 52px; height: 40px; font-size: 16px; }
+  .tabela-sumula .camisa-campo { width: 64px; min-width: 64px; height: 40px; font-size: 16px; }
+  .tabela-sumula input[type="checkbox"] { width: 26px; height: 26px; }
+  /* conferência das mesas (ADMIN): um campo por linha, todos com rótulo */
+  .tabela-mesas tbody td { grid-column: 1 / -1; }
+  .tabela-mesas tbody td[data-rotulo="Mesa"], .tabela-mesas tbody td[data-rotulo="Escola"] { grid-column: span 6; }
+  .tabela-mesas tbody td[data-rotulo="Atleta"] { font-weight: 600; }
+  .tabela-mesas tbody td[data-rotulo="Atleta"]::before { display: block; }
+  /* a tabela de sets: as duas equipes lado a lado e o vencedor embaixo */
+  .tabela-sets tbody td[data-rotulo="Set"] { grid-column: 1 / -1; font-size: 16px; }
+  .tabela-sets tbody td[data-rotulo="Set"]::before { display: none; }
+  .tabela-sets tbody td[data-rotulo="Vencedor do set"] { grid-column: 1 / -1; }
+  /* barra de etapas, resumo de faltas e botões do rodapé da súmula */
+  .etapas-sumula { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .etapas-sumula .btn { width: 100%; min-height: 48px; }
+  .camisas-acoes .btn, .barra-sumula .btn { min-height: 44px; }
+  .barra-sumula { flex-direction: column; align-items: stretch; gap: 10px; }
+  .barra-sumula .acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .barra-sumula > .btn, .barra-sumula > a.btn { text-align: center; }
+}
