@@ -751,7 +751,9 @@ function PreencherSumula() {
 
         {aviso && <p className={`alert alert-${aviso.tipo}`}>{aviso.texto}</p>}
 
-        {avisosSuspensao.map((item) => (
+        {/* O aviso amarelo de regra de suspensão ("sem regra definida") é para o administrador; a mesa não o vê.
+            O vermelho "Atleta suspenso nesta partida" continua para todos. */}
+        {!isPlacar && avisosSuspensao.map((item) => (
           <div key={item.titulo} className="alert alert-aviso mb-lg">
             <p className="alert-titulo">⚠️ {item.titulo}</p>
             <p className="alert-texto">{item.texto}</p>
