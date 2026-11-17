@@ -82,8 +82,8 @@ function Suspensoes({ competicao }) {
 
           {dados.regra_definida && (
             <p className="legenda-desempate" style={{ padding: '0 24px 18px' }}>
-              <b>Regra:</b> 2 amarelos = 1 jogo de suspensão, amarelos zerados na 2ª fase,
-              expulsão = 1 jogo automático mais julgamento. A suspensão é cumprida no primeiro
+              <b>Regra:</b> {dados.regra?.descricao || '2 amarelos = 1 jogo de suspensão, amarelos zerados na 2ª fase, '
+                + 'expulsão = 1 jogo automático mais julgamento.'} A suspensão é cumprida no primeiro
               jogo seguinte em que o atleta não entra na súmula.
             </p>
           )}
