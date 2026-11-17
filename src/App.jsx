@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Rodape from './components/Rodape';
 import RotaPrivada from './components/RotaPrivada';
 import { AuthProvider } from './context/AuthContext';
 import Inicio from './pages/Inicio';
@@ -31,7 +32,9 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <div className="layout">
         <Navbar />
+        <main className="layout-conteudo">
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/cadastro" element={<RotaPrivada perfis={['ADMIN']}><Cadastro /></RotaPrivada>} />
@@ -62,6 +65,9 @@ function App() {
           <Route path="/agenda/:id" element={<AgendaJogo />} />
           <Route path="/login" element={<Login />} />
         </Routes>
+        </main>
+        <Rodape />
+        </div>
       </BrowserRouter>
     </AuthProvider>
   );

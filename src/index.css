@@ -1583,3 +1583,39 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .barra-sumula .acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .barra-sumula > .btn, .barra-sumula > a.btn { text-align: center; }
 }
+
+/* ===== Rodapé (Núcleo de TI) — todas as telas, fora da impressão ===== */
+/* A página ocupa a altura toda e o rodapé fica embaixo mesmo em tela curta */
+.layout { min-height: 100vh; display: flex; flex-direction: column; }
+.layout-conteudo { flex: 1 0 auto; }
+.rodape {
+  flex-shrink: 0;
+  border-top: 1px solid var(--sge-border);
+  background: rgba(13, 19, 27, 0.55);
+  padding: 14px 16px;
+}
+.rodape-conteudo {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.rodape-logo {
+  height: 32px; width: auto; flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.rodape-logo:hover { opacity: 1; filter: drop-shadow(0 0 6px rgba(52, 152, 219, 0.55)); }
+.rodape-texto {
+  margin: 0; display: flex; flex-direction: column; gap: 2px;
+  font-size: 12.5px; line-height: 1.4; color: var(--sge-text-muted); text-align: left;
+}
+@media (max-width: 640px) {
+  .rodape-conteudo { flex-direction: column; gap: 8px; }
+  .rodape-logo { height: 28px; }
+  .rodape-texto { text-align: center; font-size: 12px; }
+  .rodape-texto span { text-wrap: balance; }
+}
+@media (prefers-reduced-motion: reduce) { .rodape-logo { transition: none; } }
+@media print {
+  .rodape { display: none !important; }
+  .layout { min-height: 0; display: block; }
+}
