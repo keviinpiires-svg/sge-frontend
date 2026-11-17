@@ -69,6 +69,8 @@ function PreencherSumula() {
   // Futsal e society: até a mesa clicar em "Iniciar 2º tempo", toda falta de atleta conta no 1º tempo; depois, no 2º
   const [segundoTempo, setSegundoTempo] = useState(false);
   const tempoDasFaltas = segundoTempo ? 2 : 1;
+  // ADMIN lançando do papel (17/11/2026): escolhe livremente, por equipe, em que tempo cai cada falta
+  const [tempoDoAdmin, setTempoDoAdmin] = useState({}); // equipe_id -> 1 | 2
   const [editandoCamisas, setEditandoCamisas] = useState({}); // equipe_id -> true quando "Editar camisas" destravou a equipe
   const campos = useRef({});                              // "equipe:posição" -> campo, para o Enter
 
@@ -244,14 +246,16 @@ function PreencherSumula() {
           faltas: 0,
           vermelho: false,
           desqualificado: false,
-          adicionado_pela_mesa: true,
+          adicionado_pela_mesa: dados.adicionado_pela_mesa !== false,
+          adicionado_na_sumula: true,
           adicionado_por_mim: true
         }]
       }
     )));
   };
 
-  // Só o que esta mesa colocou pode sair (o backend confere: ficha e atleta de outra mesa dão 403)
+  // Só o que esta mesa colocou pode sair (o backend confere: ficha e atleta de outra mesa dão 403);
+  // o ADMIN retira o que foi adicionado pela súmula (por qualquer um)
   const retirarAtleta = async (atleta) => {
     if (!window.confirm(`Retirar ${atleta.nome} desta equipe?`)) return;
     try {
@@ -268,8 +272,8 @@ function PreencherSumula() {
 
   // Futsal e society: a falta lançada no atleta conta no tempo selecionado (1º ou 2º) e soma no total da equipe
   // por tempo (faltas_1t / faltas_2t, que a impressão lê). O "−" só desconta do tempo selecionado.
-  const mudarFaltaDoAtleta = (indiceEquipe, atletaId, novo) => {
-    const campo = `faltas_${tempoDasFaltas}t`;
+  const mudarFaltaDoAtleta = (indiceEquipe, atletaId, novo, tempo = tempoDasFaltas) => {
+    const campo = `faltas_${tempo}t`;
     setEquipes((atual) => atual.map((equipe, i) => {
       if (i !== indiceEquipe) return equipe;
       const alvo = equipe.atletas.find((a) => a.atleta_id === atletaId);
@@ -616,17 +620,26 @@ function PreencherSumula() {
   const { jogo, folha } = sumula;
   // Fase da súmula: AGENDADO = pré-jogo (placar bloqueado), EM_ANDAMENTO = partida (iniciada agora ou antes)
   const statusAtual = iniciada && jogo.status === 'AGENDADO' ? 'EM_ANDAMENTO' : jogo.status;
-  const agendado = statusAtual === 'AGENDADO';
+  // ADMIN (17/11/2026, locais sem internet): lança a súmula do papel sem etapas. Para ele não existe
+  // pré-jogo: tudo abre de uma vez (camisas, presença, placar, cartões, faltas, sets, desempate) e
+  // "Finalizar" leva o jogo de AGENDADO direto a FINALIZADO. A mesa segue com as etapas.
+  const modoPapel = isAdmin;
+  const agendado = statusAtual === 'AGENDADO' && !modoPapel;
   const encerrado = ['FINALIZADO', 'WO'].includes(statusAtual);
   const somenteLeitura = encerrado && !isAdmin;       // a mesa só consulta um jogo encerrado
   const semPlacar = agendado || somenteLeitura;       // gols, cartões, faltas, sets, eliminadas, cobranças
   const tabelaAberta = !agendado || preenchendo;      // no pré-jogo a tabela abre em "Preencher súmula"
   const mostraPlacar = !agendado;                     // colunas e campos de placar: só depois de iniciar (escondidos antes)
   // A coluna Presente só existe no pré-jogo; depois de iniciar a tabela mostra só os atletas presentes
-  const atletasDaTabela = (equipe) => (agendado ? equipe.atletas : equipe.atletas.filter((a) => a.presente));
+  // (o ADMIN vê sempre todos, com a coluna Presente: marca no sistema quem estava no papel)
+  const mostraPresenca = agendado || modoPapel;
+  const atletasDaTabela = (equipe) => (mostraPresenca ? equipe.atletas : equipe.atletas.filter((a) => a.presente));
   // "Adicionar atleta" e "Remover": só a mesa do local do jogo, com o jogo agendado ou em andamento
   // (16/11/2026: só no pré-jogo; depois de "Iniciar partida" o elenco e as camisas ficam só leitura)
   const mesaMexeNoElenco = isPlacar && podeLancarNoLocal(jogo.local_id) && agendado;
+  // O ADMIN adiciona e retira atleta também em jogo em andamento ou finalizado (correção); W.O. não tem elenco
+  const adminMexeNoElenco = modoPapel && statusAtual !== 'WO';
+  const mexeNoElenco = mesaMexeNoElenco || adminMexeNoElenco;
   // Mesa de outro local (ou sem local): a tela não abre. O backend também barra (403)
   if (!podeLancarNoLocal(jogo.local_id)) {
     return (
@@ -641,8 +654,8 @@ function PreencherSumula() {
   // não salvo (diferente do salvo) e qualquer campo da equipe depois de "Editar camisas".
   const camisaTravada = (equipe, atleta) => {
     const salva = camisasSalvas[atleta.atleta_id] ?? '';
-    // depois de iniciar a partida todos os números ficam só leitura
-    if (!agendado) return true;
+    // depois de iniciar a partida todos os números ficam só leitura (o ADMIN segue editando)
+    if (!agendado && !modoPapel) return true;
     return editaCamisas && !editandoCamisas[equipe.equipe_id] && salva !== ''
       && normalizarCamisa(camisas[atleta.atleta_id] ?? '') === normalizarCamisa(salva);
   };
@@ -683,7 +696,7 @@ function PreencherSumula() {
 
   // Nº, atleta, capitão e presente são fixos; a coluna de estatística, as
   // faltas e os cartões dependem da folha da modalidade.
-  const colunasDaTabela = 3 + (agendado ? 1 : 0) + (mostraPlacar
+  const colunasDaTabela = 3 + (mostraPresenca ? 1 : 0) + (mostraPlacar
     ? (folha.rotuloEstatistica ? 1 : 0) + (folha.eliminacoesPorAtleta ? 1 : 0)
       + (folha.faltasIndividuais > 0 || folha.faltasPorAtleta ? 1 : 0) + (folha.cartoes ? 2 : 0)
     : 0);
@@ -719,7 +732,7 @@ function PreencherSumula() {
       <div className="container-lg">
         <header className="page-header">
           <p className="eyebrow">
-            {jogo.modalidade_nome} · {jogo.categoria_nome} · Jogo nº {jogo.numero_jogo}
+            {jogo.numero_tabela ? `Nº ${jogo.numero_tabela} · ` : ''}{jogo.modalidade_nome} · {jogo.categoria_nome} · Jogo {jogo.numero_jogo} da competição
           </p>
           <h1 className="page-title">Preencher Súmula</h1>
           <p className="page-subtitle">
@@ -792,7 +805,17 @@ function PreencherSumula() {
           </div>
         )}
 
-        {!encerrado && (
+        {modoPapel && !encerrado && (
+          <div className="alert alert-aviso mb-lg">
+            <p className="alert-titulo">📄 Lançamento a partir da súmula de papel</p>
+            <p className="alert-texto">
+              Tudo está liberado de uma vez: camisas, presença, capitão, placar, cartões, faltas e desempate.
+              "Salvar parcial" guarda sem mudar a situação do jogo{jogo.status === 'AGENDADO' ? ' (continua agendado)' : ''}; "Finalizar súmula" encerra o jogo.
+            </p>
+          </div>
+        )}
+
+        {!encerrado && !modoPapel && (
           <div className="card mb-lg">
             <div className="card-body">
               {agendado ? (
@@ -938,7 +961,7 @@ function PreencherSumula() {
                       {mostraPlacar && folha.cartoes && <th>Amarelos</th>}
                       {mostraPlacar && folha.cartoes && <th>🟥</th>}
                       <th>Cap.</th>
-                      {agendado && <th>Presente</th>}
+                      {mostraPresenca && <th>Presente</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -973,7 +996,7 @@ function PreencherSumula() {
                           {atleta.adicionado_pela_mesa && (
                             <span className="badge badge-accent" style={{ marginLeft: 8 }}>adicionado pela mesa</span>
                           )}
-                          {mesaMexeNoElenco && atleta.adicionado_por_mim && (
+                          {((mesaMexeNoElenco && atleta.adicionado_por_mim) || (adminMexeNoElenco && atleta.adicionado_na_sumula)) && (
                             <button type="button" className="btn btn-outline btn-sm" style={{ marginLeft: 8 }}
                               onClick={() => retirarAtleta(atleta)}>
                               Remover
@@ -1016,10 +1039,10 @@ function PreencherSumula() {
                             <Contador
                               valor={Number(atleta.faltas || 0)}
                               max={folha.maxFaltasPorAtleta}
-                              minimo={Number(equipe[`faltas_${tempoDasFaltas}t`] || 0) === 0 ? Number(atleta.faltas || 0) : 0}
-                              rotulo={`faltas de ${atleta.nome} no ${tempoDasFaltas}º tempo`}
+                              minimo={modoPapel ? 0 : (Number(equipe[`faltas_${tempoDasFaltas}t`] || 0) === 0 ? Number(atleta.faltas || 0) : 0)}
+                              rotulo={`faltas de ${atleta.nome} no ${modoPapel ? (tempoDoAdmin[equipe.equipe_id] || 1) : tempoDasFaltas}º tempo`}
                               desabilitado={semPlacar}
-                              aoMudar={(v) => mudarFaltaDoAtleta(indice, atleta.atleta_id, v)}
+                              aoMudar={(v) => mudarFaltaDoAtleta(indice, atleta.atleta_id, v, modoPapel ? (tempoDoAdmin[equipe.equipe_id] || 1) : tempoDasFaltas)}
                             />
                           </td>
                         )}
@@ -1069,7 +1092,7 @@ function PreencherSumula() {
                             aria-label={`Capitão: ${atleta.nome}`}
                           />
                         </td>
-                        {agendado && (
+                        {mostraPresenca && (
                           <td data-rotulo="Presente">
                             <input
                               type="checkbox"
@@ -1094,7 +1117,44 @@ function PreencherSumula() {
                 </table>
               </div>
 
-              {mostraPlacar && folha.faltasPorAtleta && (
+              {mostraPlacar && folha.faltasPorAtleta && modoPapel && !somenteLeitura && (
+                <div className="rodape-equipe faltas-papel mb-lg">
+                  <div className="form-group">
+                    <span className="form-label">As faltas lançadas nos atletas contam no</span>
+                    <div className="linha-checks" role="radiogroup" aria-label={`Tempo das faltas de ${equipe.escola_nome}`}>
+                      {[1, 2].map((tempo) => (
+                        <label key={tempo}>
+                          <input
+                            type="radio"
+                            name={`tempo-faltas-${equipe.equipe_id}`}
+                            checked={(tempoDoAdmin[equipe.equipe_id] || 1) === tempo}
+                            onChange={() => setTempoDoAdmin((atual) => ({ ...atual, [equipe.equipe_id]: tempo }))}
+                          />{' '}{tempo}º tempo
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  {[1, 2].map((tempo) => (
+                    <div key={tempo} className="form-group">
+                      <span className="form-label">Faltas da equipe no {tempo}º tempo <small>(o total do papel)</small></span>
+                      <Contador
+                        valor={Number(equipe[`faltas_${tempo}t`] || 0)}
+                        max={99}
+                        rotulo={`faltas de ${equipe.escola_nome} no ${tempo}º tempo`}
+                        aoMudar={(v) => mudarEquipe(indice, `faltas_${tempo}t`, v)}
+                      />
+                    </div>
+                  ))}
+                  {Number(equipe.faltas_1t || 0) + Number(equipe.faltas_2t || 0) < equipe.atletas.reduce((t, a) => t + Number(a.faltas || 0), 0) && (
+                    <p className="alert alert-aviso" role="status" style={{ margin: '4px 0' }}>
+                      O total da equipe ({Number(equipe.faltas_1t || 0) + Number(equipe.faltas_2t || 0)}) está abaixo da soma das faltas dos atletas
+                      ({equipe.atletas.reduce((t, a) => t + Number(a.faltas || 0), 0)}). Confira com o papel.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {mostraPlacar && folha.faltasPorAtleta && !(modoPapel && !somenteLeitura) && (
                 <div className="mb-lg">
                   <p className="form-label" style={{ marginBottom: 4 }}>
                     Faltas da equipe: 1º T <strong>{Number(equipe.faltas_1t || 0)}</strong> · 2º T <strong>{Number(equipe.faltas_2t || 0)}</strong>
@@ -1107,11 +1167,11 @@ function PreencherSumula() {
                 </div>
               )}
 
-              {mesaMexeNoElenco && !equipe.a_definir && (
-                <AdicionarAtletaMesa jogoId={id} equipe={equipe} aoAdicionar={adicionouAtleta} />
+              {mexeNoElenco && !equipe.a_definir && (
+                <AdicionarAtletaMesa jogoId={id} equipe={equipe} aoAdicionar={adicionouAtleta} admin={adminMexeNoElenco} />
               )}
 
-              {agendado && editaCamisas && !equipe.a_definir && equipe.atletas.length > 0 && (
+              {(agendado || modoPapel) && editaCamisas && !equipe.a_definir && equipe.atletas.length > 0 && (
                 <div className="camisas-acoes">
                   <button
                     type="button"

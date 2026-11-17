@@ -7,25 +7,29 @@ const FORM_VAZIO = { nome: '', data_nascimento: '', sexo: '', documento: '' };
 
 const rotuloDaEquipe = (e) => `${e.modalidade} ${e.categoria} ${ROTULO_GENERO[e.genero] || e.genero}`;
 
-// Texto de um erro da API. Regra que barra (403 com "detalhe") vira
-// "Precisa de autorização do administrador." + o motivo curto.
+// Texto de um erro da API. Para a mesa, regra que barra (403 com "detalhe") vira
+// "Precisa de autorização do administrador." + o motivo curto. Para o ADMIN vem o
+// motivo direto e, se a "Exceção autorizada" resolveria, `pode_excecao`.
 const dizerErro = (falha) => ({
   texto: falha.mensagem,
-  detalhe: falha.response?.data?.detalhe || ''
+  detalhe: falha.response?.data?.detalhe || '',
+  podeExcecao: Boolean(falha.response?.data?.pode_excecao)
 });
 
-// Botão "Adicionar atleta" de uma equipe, na tela da súmula, só para a mesa do local do jogo
-// e só com o jogo agendado ou em andamento. Busca atleta já cadastrado na mesma escola (só
+// Botão "Adicionar atleta" de uma equipe, na tela da súmula: a mesa do local do jogo (jogo agendado),
+// e desde 17/11/2026 o ADMIN, que lança a súmula do papel (também em jogo em andamento ou finalizado)
+// e tem a caixa "Exceção autorizada" (a regra da importação: dispensa só a idade e o limite de 2 coletivas). Busca atleta já cadastrado na mesma escola (só
 // nome e as equipes em que ele já está) ou cadastra um novo. As regras são do backend; a mesa
 // não abre exceção.
-function AdicionarAtletaMesa({ jogoId, equipe, aoAdicionar }) {
+function AdicionarAtletaMesa({ jogoId, equipe, aoAdicionar, admin = false }) {
   const [aberto, setAberto] = useState(false);
   const [busca, setBusca] = useState('');
   const [resultado, setResultado] = useState(null); // { busca, atletas, erro }
   const [novo, setNovo] = useState(false);
   const [form, setForm] = useState(FORM_VAZIO);
   const [enviando, setEnviando] = useState(false);
-  const [msg, setMsg] = useState(null); // { tipo, texto, detalhe }
+  const [msg, setMsg] = useState(null); // { tipo, texto, detalhe, podeExcecao }
+  const [excecao, setExcecao] = useState(false); // só o ADMIN
 
   const termo = busca.trim();
   const buscando = aberto && termo.length >= MIN_LETRAS && resultado?.busca !== termo;
@@ -42,19 +46,23 @@ function AdicionarAtletaMesa({ jogoId, equipe, aoAdicionar }) {
   }, [aberto, termo, jogoId, equipe.equipe_id]);
 
   const fechar = () => {
-    setAberto(false); setBusca(''); setResultado(null); setNovo(false); setForm(FORM_VAZIO); setMsg(null);
+    setAberto(false); setBusca(''); setResultado(null); setNovo(false); setForm(FORM_VAZIO); setMsg(null); setExcecao(false);
   };
 
   const adicionar = async (corpo) => {
     setEnviando(true);
     setMsg(null);
     try {
-      const dados = await adicionarAtletaPelaMesa(jogoId, equipe.equipe_id, corpo);
+      const dados = await adicionarAtletaPelaMesa(jogoId, equipe.equipe_id, admin && excecao ? { ...corpo, excecao: true } : corpo);
       aoAdicionar(equipe.equipe_id, dados);
       setMsg({
         tipo: 'success',
-        texto: `${dados.atleta.nome} entrou na equipe.${dados.sem_documento ? ' Cadastrado sem documento: o administrador completa depois.' : ''}${dados.aviso ? ` ${dados.aviso}` : ''}`
+        texto: `${dados.atleta.nome} entrou na equipe.`
+          + (dados.excecao_dispensou?.length ? ` Exceção autorizada: dispensou ${dados.excecao_dispensou.join(' e ')}.` : '')
+          + (dados.sem_documento ? (admin ? ' Cadastrado sem documento: complete o RG em Listar Atletas.' : ' Cadastrado sem documento: o administrador completa depois.') : '')
+          + (dados.aviso ? ` ${dados.aviso}` : '')
       });
+      setExcecao(false);
       setBusca('');
       setResultado(null);
       setForm(FORM_VAZIO);
@@ -92,8 +100,17 @@ function AdicionarAtletaMesa({ jogoId, equipe, aoAdicionar }) {
         <h3 className="card-title">Adicionar atleta — {equipe.escola_nome}</h3>
         <p className="form-hint">
           Procure pelo nome o atleta que já está cadastrado na escola. Se não existir, cadastre um novo.
-          Valem as mesmas regras do cadastro normal; se alguma barrar, só o administrador autoriza.
+          {admin
+            ? 'Valem as regras do cadastro normal. Se a idade ou o limite de 2 competições coletivas barrar, marque "Exceção autorizada".'
+            : 'Valem as mesmas regras do cadastro normal; se alguma barrar, só o administrador autoriza.'}
         </p>
+
+        {admin && (
+          <label className="lote-check" style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 44 }}>
+            <input type="checkbox" checked={excecao} onChange={(e) => setExcecao(e.target.checked)} />
+            <span><strong>Exceção autorizada</strong> (dispensa só a idade da categoria e o limite de 2 competições coletivas; fica registrada no log)</span>
+          </label>
+        )}
 
         {msg && (
           <div className={`alert alert-${msg.tipo === 'success' ? 'success' : 'error'}`} role="status">
@@ -101,6 +118,9 @@ function AdicionarAtletaMesa({ jogoId, equipe, aoAdicionar }) {
               <>
                 <p className="alert-titulo">{msg.texto}</p>
                 {msg.detalhe && <p className="alert-texto">{msg.detalhe}</p>}
+                {admin && msg.podeExcecao && !excecao && (
+                  <p className="alert-texto">Se a organização autorizou, marque "Exceção autorizada" acima e tente de novo.</p>
+                )}
               </>
             )}
           </div>

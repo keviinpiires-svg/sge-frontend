@@ -75,7 +75,7 @@ function AtletasDasMesas() {
                       <tr key={l.inscricao_id}>
                         <td className="text-left" data-rotulo="Quando">{quando(l.criado_em)}</td>
                         <td className="text-left" data-rotulo="Mesa">
-                          {l.mesa}
+                          {l.mesa}{l.perfil === 'ADMIN' && <span className="badge badge-accent" style={{ marginLeft: 6 }}>ADMIN</span>}
                           {l.local_da_mesa && <span className="form-hint" style={{ display: 'block' }}>{l.local_da_mesa}</span>}
                         </td>
                         <td className="text-left" data-rotulo="Escola">{l.escola}</td>
