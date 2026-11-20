@@ -1,4 +1,5 @@
 import { partesDaData } from './comum';
+import { nomeDaFaseDaSumula } from '../agendaTextos';
 
 // Cabeçalho das folhas oficiais de 2026 (handebol e baleado), linha a linha
 // como no papel (docs/referencias/SUMULA_HANDEBOL.pdf e SUMULA_BALEADO.pdf):
@@ -56,7 +57,15 @@ function CabecalhoOficial({ jogo, folha, emBranco, placar }) {
             </div>
           </td>
         </tr>
-        <tr><td><b>ÁRBITRO 1:</b></td></tr>
+        {/* Fase do jogo à direita da linha do árbitro 1: não muda a altura da folha */}
+        <tr>
+          <td>
+            <div className="oficial-linha">
+              <span><b>ÁRBITRO 1:</b></span>
+              <span className="largura-2"><b>FASE:</b> {nomeDaFaseDaSumula(jogo)}</span>
+            </div>
+          </td>
+        </tr>
         <tr><td><b>ÁRBITRO 2:</b></td></tr>
         <tr><td><b>ANOTADOR:</b></td></tr>
         <tr className="linha-equipes">

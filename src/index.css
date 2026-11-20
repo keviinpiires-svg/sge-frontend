@@ -1619,3 +1619,12 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
   .rodape { display: none !important; }
   .layout { min-height: 0; display: block; }
 }
+
+/* ---------- Selo da fase (tabela de jogos e Agenda) ---------- */
+.selo-fase {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.03em; white-space: nowrap;
+  line-height: 1.4; vertical-align: baseline;
+}
+.selo-fase-semifinal { background: rgba(52, 152, 219, 0.18); color: #5dade2; border: 1px solid rgba(52, 152, 219, 0.45); }
+.selo-fase-final { background: rgba(241, 196, 15, 0.18); color: var(--sge-accent); border: 1px solid rgba(241, 196, 15, 0.55); }

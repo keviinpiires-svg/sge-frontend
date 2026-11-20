@@ -6,6 +6,7 @@ import { textoDosAvisosDoMataMata } from '../services/matamata';
 import { listarLocais } from '../services/locais';
 import { dataEHora } from '../services/datas';
 import FormAgendaJogo from './FormAgendaJogo';
+import { nomeDaFase, classeDaFase, ordemNasCompeticoes } from './agendaTextos';
 
 const ROTULO_STATUS = {
   AGENDADO: 'Agendado',
@@ -60,6 +61,17 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
     ? [...resultado.jogos].sort((a, b) => (a.numero_tabela ?? Infinity) - (b.numero_tabela ?? Infinity) || a.numero_jogo - b.numero_jogo)
     : [];
   const erro = pronto ? resultado.erro : '';
+
+  // Fase de cada jogo: GRUPOS mostra a letra do grupo; o mata-mata, um selo. O "melhor de dois
+  // jogos" (ida e volta sem mata-mata) é a final, e a ordem por data diz qual é o jogo 1 e o 2.
+  const melhorDeDois = competicao.turno === 'IDA_E_VOLTA' && competicao.proxima_fase === 'NENHUMA';
+  const ordem = ordemNasCompeticoes(jogos, () => competicao.id, (j) => j.data_hora);
+  const faseDoJogo = (jogo) => {
+    const dados = { fase: jogo.fase, numero_jogo: jogo.numero_jogo, melhor_de_dois: melhorDeDois && jogo.fase === 'GRUPOS' };
+    const classe = classeDaFase(dados);
+    if (!classe) return jogo.grupo_nome || '—';
+    return <span className={classe}>{nomeDaFase(dados, ordem.get(jogo.id))}</span>;
+  };
 
   useEffect(() => {
     let ativo = true;
@@ -295,7 +307,7 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                   <th title="Nº do jogo dentro da competição">Jogo</th>
                   <th className="text-left">Quando</th>
                   <th className="text-left">Confronto</th>
-                  <th>Grupo</th>
+                  <th>Fase</th>
                   <th className="text-left">Local</th>
                   <th>Placar</th>
                   <th>Situação</th>
@@ -313,7 +325,7 @@ function TabelaJogos({ competicao, versao = 0, aoMudarJogos }) {
                       {' '}<span className="versus">x</span>{' '}
                       <span className={jogo.equipe_2_nome ? undefined : 'agenda-a-definir'}>{equipeOuOrigem(jogo, 2)}</span>
                     </td>
-                    <td>{jogo.grupo_nome || '—'}</td>
+                    <td>{faseDoJogo(jogo)}</td>
                     <td className="text-left">{jogo.local_nome || A_DEFINIR}</td>
                     <td className="strong">
                       {jogo.placar_1 === null ? '—' : `${jogo.placar_1} x ${jogo.placar_2}`}

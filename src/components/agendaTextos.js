@@ -20,13 +20,54 @@ export const CLASSE_STATUS = {
 export const nomeDaCompeticao = (c) =>
   `${c.modalidade} ${c.categoria} ${ROTULO_GENERO[c.genero] || c.genero}`;
 
-// "Grupo A", "Melhor de dois jogos", "Semifinal", "Final"
-export const nomeDaFase = (jogo) => {
-  if (jogo.melhor_de_dois) return 'Melhor de dois jogos';
+// "Grupo A", "Semifinal", "Final", "Final – jogo 1"
+// O "melhor de dois jogos" (2 escolas, ida e volta, sem mata-mata) é a final da competição:
+// "Final – jogo 1" e "Final – jogo 2". `posicao` ({ ordem, total }) vem de ordemNasCompeticoes
+// quando a tela tem a lista dos jogos; sem ela, vale o nº do jogo na competição (numerado por
+// data e hora).
+export const nomeDaFase = (jogo, posicao) => {
+  if (jogo.melhor_de_dois) {
+    if (posicao && posicao.total === 1) return 'Final';
+    const ordem = posicao?.ordem ?? jogo.numero_jogo;
+    return ordem ? `Final – jogo ${ordem}` : 'Final';
+  }
   if (jogo.fase === 'SEMIFINAL') return 'Semifinal';
   if (jogo.fase === 'FINAL') return 'Final';
   return jogo.grupo ? `Grupo ${jogo.grupo}` : 'Fase de grupos';
 };
+
+// Classe do selo da fase: final (inclusive o melhor de dois) em dourado, semifinal em
+// destaque discreto; grupos sem selo
+export const classeDaFase = (jogo) => {
+  if (jogo.melhor_de_dois || jogo.fase === 'FINAL') return 'selo-fase selo-fase-final';
+  if (jogo.fase === 'SEMIFINAL') return 'selo-fase selo-fase-semifinal';
+  return '';
+};
+
+// id do jogo -> { ordem, total } dentro da competição, por data e hora (e nº do jogo)
+export const ordemNasCompeticoes = (jogos, competicaoDe, quandoDe) => {
+  const porCompeticao = new Map();
+  for (const jogo of jogos) {
+    const chave = competicaoDe(jogo);
+    if (!porCompeticao.has(chave)) porCompeticao.set(chave, []);
+    porCompeticao.get(chave).push(jogo);
+  }
+  const mapa = new Map();
+  for (const lista of porCompeticao.values()) {
+    const ordenada = [...lista].sort((a, b) => String(quandoDe(a) || '~').localeCompare(String(quandoDe(b) || '~'))
+      || (a.numero_jogo ?? 0) - (b.numero_jogo ?? 0));
+    ordenada.forEach((jogo, i) => mapa.set(jogo.id, { ordem: i + 1, total: ordenada.length }));
+  }
+  return mapa;
+};
+
+// Fase do jogo de GET /api/sumulas/:id (cabeçalho das folhas impressas)
+export const nomeDaFaseDaSumula = (jogo) => nomeDaFase({
+  fase: jogo.fase,
+  grupo: jogo.grupo_nome,
+  numero_jogo: jogo.numero_jogo,
+  melhor_de_dois: jogo.fase === 'GRUPOS' && jogo.turno === 'IDA_E_VOLTA' && jogo.proxima_fase === 'NENHUMA'
+});
 
 // "ACM venceu", "ACM venceu nas cobranças (4 × 3)", "Empate"
 export const textoDoResultado = (jogo) => {

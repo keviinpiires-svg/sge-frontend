@@ -4,7 +4,7 @@ import { listarAgenda } from '../services/agenda';
 import { useAuth } from '../context/useAuth';
 import { dataPorExtenso, hojeNoEvento } from '../services/datas';
 import {
-  CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaCompeticao, nomeDaFase, normalizar, nomeDaVaga, vagaEmAberto
+  CLASSE_STATUS, ROTULO_GENERO, ROTULO_STATUS, nomeDaCompeticao, nomeDaFase, classeDaFase, ordemNasCompeticoes, normalizar, nomeDaVaga, vagaEmAberto
 } from '../components/agendaTextos';
 
 // Agenda de Jogos — pública e só de leitura, pensada para o celular.
@@ -78,6 +78,12 @@ function Agenda() {
 
   const pronto = resultado?.tentativa === tentativa;
   const jogos = useMemo(() => (pronto ? resultado.jogos : []), [pronto, resultado]);
+  // Ordem de cada jogo na competição ("Final – jogo 1" e "jogo 2" no melhor de dois jogos),
+  // sobre a lista inteira, não a filtrada
+  const ordemDosJogos = useMemo(
+    () => ordemNasCompeticoes(jogos, (j) => j.competicao.id, (j) => (j.data ? `${j.data} ${j.hora || ''}` : null)),
+    [jogos]
+  );
   const erro = pronto ? resultado.erro : '';
 
   // Opções dos filtros, tiradas dos próprios jogos
@@ -261,7 +267,9 @@ function Agenda() {
                     </span>
                     <span className="agenda-corpo">
                       <span className="agenda-competicao">
-                        {nomeDaCompeticao(jogo.competicao)} · {nomeDaFase(jogo)} · Jogo{'\u00a0'}{jogo.numero_jogo}
+                        {nomeDaCompeticao(jogo.competicao)} · {classeDaFase(jogo)
+                          ? <span className={classeDaFase(jogo)}>{nomeDaFase(jogo, ordemDosJogos.get(jogo.id))}</span>
+                          : nomeDaFase(jogo)} · Jogo{'\u00a0'}{jogo.numero_jogo}
                       </span>
                       <span className="agenda-confronto">
                         <span className={vagaEmAberto(jogo.equipe_1) ? 'agenda-a-definir' : undefined}>{nomeDaVaga(jogo.equipe_1)}</span>

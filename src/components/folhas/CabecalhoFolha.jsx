@@ -1,4 +1,5 @@
 import { partesDaData } from './comum';
+import { nomeDaFaseDaSumula } from '../agendaTextos';
 
 // Cabeçalho comum a todas as folhas (docs/referencias/sumulas_modelos.md):
 // campeonato, local, nº do jogo, cidade, categoria, data, árbitros, anotador e
@@ -38,7 +39,8 @@ function CabecalhoFolha({ evento, jogo, equipes, folha, emBranco, placar }) {
         </tr>
         <tr>
           <td colSpan={2}>Árbitro 1: {jogo.arbitro_1 || ''}</td>
-          <td colSpan={2} />
+          {/* Fase do jogo (Grupo A, Semifinal, Final): na célula vazia, sem mudar a altura da folha */}
+          <td colSpan={2}>Fase: <b>{nomeDaFaseDaSumula(jogo)}</b></td>
         </tr>
         <tr>
           <td colSpan={2}>Árbitro 2: {jogo.arbitro_2 || ''}</td>
