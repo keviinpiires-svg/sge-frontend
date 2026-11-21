@@ -11,3 +11,9 @@ export const cadastrarEscola = (escola) =>
 // PUT /api/escolas/:id (protegida)
 export const atualizarEscola = (id, escola) =>
   api.put(`/escolas/${encodeURIComponent(id)}`, escola).then((r) => r.data);
+
+// GET /api/escolas/:id/atletas-por-equipe — só logados (ADMIN e PLACAR): as equipes
+// da escola em modalidade coletiva, com nome, nascimento e camisa dos inscritos
+// (sem RG). Alimenta o documento "Atletas (PDF)".
+export const buscarAtletasDaEscola = (id) =>
+  api.get(`/escolas/${encodeURIComponent(id)}/atletas-por-equipe`).then((r) => r.data);

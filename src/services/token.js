@@ -45,9 +45,22 @@ export function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// Uma tela com trabalho ainda não salvo (a súmula, por exemplo) registra aqui uma função que
+// cuida do aviso. Enquanto ela existir, o 401 NÃO limpa a sessão nem recarrega a página: ir
+// para /login apagaria o que a mesa digitou. A função devolve true quando tratou o caso.
+let guardaDeSessao = null;
+
+export function protegerSessao(guarda) {
+  guardaDeSessao = guarda;
+  return () => {
+    if (guardaDeSessao === guarda) guardaDeSessao = null;
+  };
+}
+
 // Chamada quando o backend responde 401: token expirado ou inválido.
 // A ida para /login recarrega a página, e o AuthProvider renasce deslogado.
 export function sessaoExpirada() {
+  if (guardaDeSessao && guardaDeSessao()) return;
   limparSessao();
   if (window.location.pathname !== '/login') {
     window.location.assign('/login');
