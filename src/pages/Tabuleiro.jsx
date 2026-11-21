@@ -13,7 +13,14 @@ import { listarEscolas } from '../services/escolas';
 
 const MEDALHA = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-const linhasVazias = (colocacoes) => colocacoes.map((colocacao) => ({ colocacao, escola_id: '', atleta_nome: '' }));
+// Cada linha tem uma chave própria: com empate (db/51, 21/11/2026) a mesma colocação
+// pode aparecer em mais de uma linha. As linhas `extra` são as colocações empatadas.
+const linhasVazias = (colocacoes) => colocacoes.map((colocacao) => ({ chave: `c${colocacao}`, colocacao, escola_id: '', atleta_nome: '' }));
+let proximaChave = 0;
+const linhaDeEmpate = (colocacao = 1, escola_id = '') => {
+  proximaChave += 1;
+  return { chave: `e${proximaChave}`, colocacao, escola_id, atleta_nome: '', extra: true };
+};
 const chaveDoPodio = (r) => `${r.jogo}|${r.categoria_id}`;
 
 function Tabuleiro() {
@@ -71,10 +78,14 @@ function Tabuleiro() {
     setForm((atual) => ({ ...atual, linhas: linhasVazias(configuracao?.colocacoes || [1, 2, 3, 4, 5]) }));
   };
 
-  const mudarLinha = (colocacao, campo, valor) => setForm((atual) => ({
+  const mudarLinha = (chave, campo, valor) => setForm((atual) => ({
     ...atual,
-    linhas: atual.linhas.map((l) => (l.colocacao === colocacao ? { ...l, [campo]: valor } : l))
+    linhas: atual.linhas.map((l) => (l.chave === chave ? { ...l, [campo]: valor } : l))
   }));
+
+  // Empate: mais uma escola numa colocação que já tem escola
+  const adicionarEmpate = () => setForm((atual) => ({ ...atual, linhas: [...atual.linhas, linhaDeEmpate()] }));
+  const tirarEmpate = (chave) => setForm((atual) => ({ ...atual, linhas: atual.linhas.filter((l) => l.chave !== chave) }));
 
   const editar = (podio) => {
     const [primeiro] = podio;
@@ -82,10 +93,15 @@ function Tabuleiro() {
     setForm({
       jogo: primeiro.jogo,
       categoria_id: String(primeiro.categoria_id),
-      linhas: (configuracao?.colocacoes || [1, 2, 3, 4, 5]).map((colocacao) => {
-        const gravada = podio.find((r) => r.colocacao === colocacao);
-        return { colocacao, escola_id: gravada ? String(gravada.escola_id) : '', atleta_nome: gravada?.atleta_nome || '' };
-      })
+      linhas: [
+        ...(configuracao?.colocacoes || [1, 2, 3, 4, 5]).map((colocacao) => {
+          const gravada = podio.find((r) => r.colocacao === colocacao);
+          return { chave: `c${colocacao}`, colocacao, escola_id: gravada ? String(gravada.escola_id) : '', atleta_nome: '' };
+        }),
+        // As empatadas: da 2ª escola em diante na mesma colocação
+        ...podio.filter((r, i) => podio.findIndex((o) => o.colocacao === r.colocacao) !== i)
+          .map((r) => linhaDeEmpate(r.colocacao, String(r.escola_id)))
+      ]
     });
     setAviso(null);
     document.getElementById('tab-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -204,24 +220,49 @@ function Tabuleiro() {
                 </div>
 
                 {form.linhas.map((linha) => (
-                  <div className="atletismo-linha so-escola" key={linha.colocacao}>
-                    <span className="atletismo-posicao" aria-hidden="true">{MEDALHA[linha.colocacao] || '🏅'} {linha.colocacao}º</span>
-                    <div className="form-group">
-                      <label className="form-label" htmlFor={`tab-escola-${linha.colocacao}`}>Escola do {linha.colocacao}º lugar</label>
+                  <div className={`atletismo-linha so-escola${linha.extra ? ' linha-empate' : ''}`} key={linha.chave}>
+                    {linha.extra ? (
                       <select
-                        id={`tab-escola-${linha.colocacao}`} className="form-control"
-                        value={linha.escola_id} onChange={(e) => mudarLinha(linha.colocacao, 'escola_id', e.target.value)}
+                        className="form-control atletismo-posicao-escolha" aria-label="Colocação empatada"
+                        value={linha.colocacao} onChange={(e) => mudarLinha(linha.chave, 'colocacao', Number(e.target.value))}
                       >
-                        <option value="">{editando ? 'Sem resultado (apaga)' : 'Selecione a escola'}</option>
-                        {escolas.map((escola) => {
-                          // Uma escola só por categoria: a de outra linha fica indisponível
-                          const usada = form.linhas.some((l) => l.colocacao !== linha.colocacao && l.escola_id === String(escola.id));
-                          return <option key={escola.id} value={escola.id} disabled={usada}>{escola.nome}</option>;
-                        })}
+                        {(configuracao.colocacoes || [1, 2, 3, 4, 5]).map((c) => <option key={c} value={c}>{c}º</option>)}
                       </select>
+                    ) : (
+                      <span className="atletismo-posicao" aria-hidden="true">{MEDALHA[linha.colocacao] || '🏅'} {linha.colocacao}º</span>
+                    )}
+                    <div className="form-group">
+                      <label className="form-label" htmlFor={`tab-escola-${linha.chave}`}>
+                        {linha.extra ? `Escola empatada no ${linha.colocacao}º lugar` : `Escola do ${linha.colocacao}º lugar`}
+                      </label>
+                      <div className="linha-empate-campos">
+                        <select
+                          id={`tab-escola-${linha.chave}`} className="form-control"
+                          value={linha.escola_id} onChange={(e) => mudarLinha(linha.chave, 'escola_id', e.target.value)}
+                        >
+                          <option value="">{editando ? 'Sem resultado (apaga)' : 'Selecione a escola'}</option>
+                          {escolas.map((escola) => {
+                            // Uma escola só por categoria: a de outra linha fica indisponível
+                            const usada = form.linhas.some((l) => l.chave !== linha.chave && l.escola_id === String(escola.id));
+                            return <option key={escola.id} value={escola.id} disabled={usada}>{escola.nome}</option>;
+                          })}
+                        </select>
+                        {linha.extra && (
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => tirarEmpate(linha.chave)}>Tirar</button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
+
+                <div>
+                  <button type="button" className="btn btn-outline btn-sm" disabled={salvando} onClick={adicionarEmpate}>
+                    + Adicionar colocação (empate)
+                  </button>
+                  <p className="form-hint" style={{ marginTop: 6 }}>
+                    Empate: escolha a colocação e a escola. As escolas empatadas levam os pontos inteiros da colocação.
+                  </p>
+                </div>
 
                 <div className="atletismo-acoes">
                   <button type="submit" className="btn btn-primary" disabled={salvando}>
@@ -263,6 +304,7 @@ function Tabuleiro() {
                             <span className={`atletismo-medalha${MEDALHA[r.colocacao] ? '' : ' numero'}`} aria-label={`${r.colocacao}º lugar`}>{MEDALHA[r.colocacao] || `${r.colocacao}º`}</span>
                             <span className="atletismo-quem">
                               <strong>{r.escola_nome}</strong>
+                              {podio.filter((o) => o.colocacao === r.colocacao).length > 1 && <span className="text-soft">empate</span>}
                               {r.atleta_nome && <span className="text-soft">{r.atleta_nome}</span>}
                             </span>
                             <span className="atletismo-pontos">+{pontosDe[r.colocacao]}</span>

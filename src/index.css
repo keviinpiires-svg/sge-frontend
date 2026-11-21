@@ -1468,6 +1468,10 @@ select.form-control option { background: #16202d; color: var(--sge-text); }
 .atletismo-linha { display: grid; grid-template-columns: 64px minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; align-items: end; }
 /* Tabuleiro (21/11/2026): só a escola, sem o nome do atleta */
 .atletismo-linha.so-escola { grid-template-columns: 64px minmax(0, 1fr); }
+/* Tabuleiro: linha de colocação empatada (escolhe a colocação) e o botão Tirar ao lado da escola */
+.atletismo-posicao-escolha { padding-left: 6px; padding-right: 2px; }
+.linha-empate-campos { display: flex; gap: 8px; align-items: center; }
+.linha-empate-campos .form-control { flex: 1; min-width: 0; }
 .atletismo-posicao { align-self: end; padding-bottom: 12px; font-weight: 800; color: var(--sge-text-strong); white-space: nowrap; }
 .atletismo-acoes { display: flex; gap: 10px; flex-wrap: wrap; }
 .atletismo-podios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
