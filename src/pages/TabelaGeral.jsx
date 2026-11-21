@@ -252,8 +252,8 @@ function TabelaGeral() {
             {regras.pontos_lancados && !regras.pontos_lancados.conta_no_desempate
               && !regras.tabuleiro
               && 'Xadrez, dama e dominó somam os pontos lançados pela mesa, sem entrar no desempate. '}
-            {regras.atletismo && !regras.tabuleiro && 'No atletismo, o 1º, o 2º e o 3º de cada prova valem a mesma pontuação e contam medalha. '}
-            {regras.tabuleiro && 'No atletismo e no tabuleiro (xadrez, dama e dominó), o 1º, o 2º e o 3º valem a mesma pontuação e contam medalha. '}
+            {regras.atletismo && !regras.tabuleiro && 'No atletismo, do 1º ao 5º de cada prova valem a mesma pontuação; o 1º, o 2º e o 3º contam medalha. '}
+            {regras.tabuleiro && 'No atletismo e no tabuleiro (xadrez, dama e dominó), do 1º ao 5º valem a mesma pontuação; o 1º, o 2º e o 3º contam medalha. '}
             Clique numa escola para ver de onde vieram os pontos.
           </p>
         </header>

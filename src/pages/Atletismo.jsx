@@ -8,7 +8,7 @@ import { listarEscolas } from '../services/escolas';
 // e as três linhas: 1º, 2º e 3º, cada uma com a escola e o nome do atleta).
 // Cada colocação vale, na Tabela Geral, a pontuação das modalidades coletivas.
 
-const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino' };
+const ROTULO_GENERO = { MASCULINO: 'Masculino', FEMININO: 'Feminino', MISTO: 'Misto' };
 const MEDALHA = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 const linhasVazias = (colocacoes) => colocacoes.map((colocacao) => ({ colocacao, escola_id: '', atleta_nome: '' }));
@@ -24,7 +24,7 @@ function Atletismo() {
   const [salvando, setSalvando] = useState(false);
   // editando: a chave do pódio aberto para correção (prova, categoria e gênero ficam travados)
   const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState({ prova: '', categoria_id: '', genero: 'MASCULINO', linhas: linhasVazias([1, 2, 3]) });
+  const [form, setForm] = useState({ prova: '', categoria_id: '', genero: 'MASCULINO', linhas: linhasVazias([1, 2, 3, 4, 5]) });
 
   useEffect(() => {
     let ativo = true;
@@ -43,6 +43,9 @@ function Atletismo() {
   }, [isAdmin]);
 
   const configuracao = dados?.configuracao;
+  // Colocação final por categoria (21/11/2026): sem prova, gênero e atleta no formulário
+  const provaUnica = configuracao?.prova_unica || '';
+  const generoUnico = configuracao?.generos?.length === 1 ? configuracao.generos[0] : '';
   const resultados = useMemo(() => dados?.resultados || [], [dados]);
   const pontosDe = useMemo(
     () => Object.fromEntries((configuracao?.pontuacao || []).map((p) => [p.posicao, p.pontos])),
@@ -72,7 +75,7 @@ function Atletismo() {
 
   const limpar = () => {
     setEditando(null);
-    setForm((atual) => ({ ...atual, prova: '', linhas: linhasVazias(configuracao?.colocacoes || [1, 2, 3]) }));
+    setForm((atual) => ({ ...atual, prova: '', linhas: linhasVazias(configuracao?.colocacoes || [1, 2, 3, 4, 5]) }));
   };
 
   const mudarLinha = (colocacao, campo, valor) => setForm((atual) => ({
@@ -87,7 +90,7 @@ function Atletismo() {
       prova: primeiro.prova,
       categoria_id: String(primeiro.categoria_id),
       genero: primeiro.genero,
-      linhas: (configuracao?.colocacoes || [1, 2, 3]).map((colocacao) => {
+      linhas: (configuracao?.colocacoes || [1, 2, 3, 4, 5]).map((colocacao) => {
         const gravada = podio.find((r) => r.colocacao === colocacao);
         return { colocacao, escola_id: gravada ? String(gravada.escola_id) : '', atleta_nome: gravada?.atleta_nome || '' };
       })
@@ -98,10 +101,12 @@ function Atletismo() {
 
   const salvar = async (evento) => {
     evento.preventDefault();
+    const prova = provaUnica || form.prova;
+    const genero = generoUnico || form.genero;
     const linhas = form.linhas
       .filter((l) => l.escola_id)
-      .map((l) => ({ colocacao: l.colocacao, escola_id: Number(l.escola_id), atleta_nome: l.atleta_nome }));
-    const semEscola = form.linhas.find((l) => !l.escola_id && l.atleta_nome.trim());
+      .map((l) => ({ colocacao: l.colocacao, escola_id: Number(l.escola_id), atleta_nome: provaUnica ? '' : l.atleta_nome }));
+    const semEscola = !provaUnica && form.linhas.find((l) => !l.escola_id && l.atleta_nome.trim());
     if (semEscola) {
       setAviso({ tipo: 'error', texto: `Escolha a escola do ${semEscola.colocacao}º lugar.` });
       return;
@@ -112,9 +117,9 @@ function Atletismo() {
     }
     // Lançamento novo não pode cair em cima de um pódio que já existe sem o ADMIN ver
     if (!editando) {
-      const chave = `${form.prova.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR')}|${form.categoria_id}|${form.genero}`;
+      const chave = `${prova.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR')}|${form.categoria_id}|${genero}`;
       if (resultados.some((r) => chaveDoPodio(r) === chave)) {
-        setAviso({ tipo: 'error', texto: 'Essa prova, categoria e gênero já tem resultado lançado: use "Editar" no pódio dela.' });
+        setAviso({ tipo: 'error', texto: provaUnica ? 'Essa categoria já tem resultado lançado: use "Editar" nela.' : 'Essa prova, categoria e gênero já tem resultado lançado: use "Editar" no pódio dela.' });
         return;
       }
     }
@@ -122,7 +127,7 @@ function Atletismo() {
     setSalvando(true);
     try {
       const resposta = await salvarPodio({
-        prova: form.prova, categoria_id: Number(form.categoria_id), genero: form.genero, linhas
+        prova, categoria_id: Number(form.categoria_id), genero, linhas
       });
       setAviso({ tipo: 'success', texto: resposta.mensagem });
       limpar();
@@ -136,7 +141,7 @@ function Atletismo() {
 
   const apagarPodio = async (podio) => {
     const [primeiro] = podio;
-    const rotulo = `${primeiro.prova} ${primeiro.categoria_nome} ${ROTULO_GENERO[primeiro.genero]}`;
+    const rotulo = provaUnica ? `Atletismo ${primeiro.categoria_nome}` : `${primeiro.prova} ${primeiro.categoria_nome} ${ROTULO_GENERO[primeiro.genero]}`;
     if (!window.confirm(`Apagar o resultado de ${rotulo}? Os pontos saem da Tabela Geral.`)) return;
     setSalvando(true);
     try {
@@ -181,7 +186,7 @@ function Atletismo() {
           <p className="eyebrow">Resultados</p>
           <h1 className="page-title">Atletismo</h1>
           <p className="page-subtitle">
-            O 1º, o 2º e o 3º lugar de cada prova valem {configuracao.colocacoes.map((c) => pontosDe[c]).join(', ').replace(/, ([^,]*)$/, ' e $1')} pontos
+            Colocação final das escolas no atletismo, por categoria. Do 1º ao 5º lugar, as escolas valem {configuracao.colocacoes.map((c) => pontosDe[c]).join(', ').replace(/, ([^,]*)$/, ' e $1')} pontos
             para a escola na Tabela Geral, como nas modalidades coletivas.
           </p>
         </header>
@@ -204,6 +209,7 @@ function Atletismo() {
                       {configuracao.categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                     </select>
                   </div>
+                  {!provaUnica && <>
                   <div className="form-group">
                     <label className="form-label" htmlFor="atl-genero">Gênero</label>
                     <select
@@ -224,11 +230,12 @@ function Atletismo() {
                       {sugestoes.map((s) => <option key={s} value={s} />)}
                     </datalist>
                   </div>
+                  </>}
                 </div>
 
                 {form.linhas.map((linha) => (
-                  <div className="atletismo-linha" key={linha.colocacao}>
-                    <span className="atletismo-posicao" aria-hidden="true">{MEDALHA[linha.colocacao]} {linha.colocacao}º</span>
+                  <div className={`atletismo-linha${provaUnica ? ' so-escola' : ''}`} key={linha.colocacao}>
+                    <span className="atletismo-posicao" aria-hidden="true">{MEDALHA[linha.colocacao] || '🏅'} {linha.colocacao}º</span>
                     <div className="form-group">
                       <label className="form-label" htmlFor={`atl-escola-${linha.colocacao}`}>Escola do {linha.colocacao}º lugar</label>
                       <select
@@ -243,14 +250,14 @@ function Atletismo() {
                         })}
                       </select>
                     </div>
-                    <div className="form-group">
+                    {!provaUnica && <div className="form-group">
                       <label className="form-label" htmlFor={`atl-atleta-${linha.colocacao}`}>Atleta <span className="form-hint">(opcional)</span></label>
                       <input
                         id={`atl-atleta-${linha.colocacao}`} className="form-control" type="text" maxLength={150}
                         placeholder="Nome do atleta" autoComplete="off"
                         value={linha.atleta_nome} onChange={(e) => mudarLinha(linha.colocacao, 'atleta_nome', e.target.value)}
                       />
-                    </div>
+                    </div>}
                   </div>
                 ))}
 
@@ -275,7 +282,7 @@ function Atletismo() {
           grupos.map((grupo) => (
             <section className="card mb-lg" key={grupo.chave}>
               <div className="card-body">
-                <h2 className="card-title">{grupo.prova} · {grupo.categoria_nome}</h2>
+                <h2 className="card-title">{provaUnica && grupo.prova === provaUnica ? grupo.categoria_nome : `${grupo.prova} · ${grupo.categoria_nome}`}</h2>
                 <div className="atletismo-podios">
                   {[...grupo.podios.entries()].map(([genero, podio]) => (
                     <div className="atletismo-podio" key={genero}>
@@ -291,7 +298,7 @@ function Atletismo() {
                       <ol className="atletismo-lista">
                         {podio.map((r) => (
                           <li key={r.id}>
-                            <span className="atletismo-medalha" aria-label={`${r.colocacao}º lugar`}>{MEDALHA[r.colocacao]}</span>
+                            <span className={`atletismo-medalha${MEDALHA[r.colocacao] ? '' : ' numero'}`} aria-label={`${r.colocacao}º lugar`}>{MEDALHA[r.colocacao] || `${r.colocacao}º`}</span>
                             <span className="atletismo-quem">
                               <strong>{r.escola_nome}</strong>
                               {r.atleta_nome && <span className="text-soft">{r.atleta_nome}</span>}

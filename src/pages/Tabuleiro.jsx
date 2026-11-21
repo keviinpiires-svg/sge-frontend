@@ -26,7 +26,7 @@ function Tabuleiro() {
   const [salvando, setSalvando] = useState(false);
   // editando: a chave do pódio aberto para correção (jogo e categoria ficam travados)
   const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState({ jogo: '', categoria_id: '', linhas: linhasVazias([1, 2, 3]) });
+  const [form, setForm] = useState({ jogo: '', categoria_id: '', linhas: linhasVazias([1, 2, 3, 4, 5]) });
 
   useEffect(() => {
     let ativo = true;
@@ -45,6 +45,8 @@ function Tabuleiro() {
   }, [isAdmin]);
 
   const configuracao = dados?.configuracao;
+  // Tabuleiro numa colocação só (db/48): com um jogo, o campo Jogo some e ele vai sozinho
+  const jogoUnico = configuracao?.jogos?.length === 1 ? configuracao.jogos[0].slug : '';
   const resultados = useMemo(() => dados?.resultados || [], [dados]);
   const pontosDe = useMemo(
     () => Object.fromEntries((configuracao?.pontuacao || []).map((p) => [p.posicao, p.pontos])),
@@ -66,7 +68,7 @@ function Tabuleiro() {
 
   const limpar = () => {
     setEditando(null);
-    setForm((atual) => ({ ...atual, linhas: linhasVazias(configuracao?.colocacoes || [1, 2, 3]) }));
+    setForm((atual) => ({ ...atual, linhas: linhasVazias(configuracao?.colocacoes || [1, 2, 3, 4, 5]) }));
   };
 
   const mudarLinha = (colocacao, campo, valor) => setForm((atual) => ({
@@ -80,7 +82,7 @@ function Tabuleiro() {
     setForm({
       jogo: primeiro.jogo,
       categoria_id: String(primeiro.categoria_id),
-      linhas: (configuracao?.colocacoes || [1, 2, 3]).map((colocacao) => {
+      linhas: (configuracao?.colocacoes || [1, 2, 3, 4, 5]).map((colocacao) => {
         const gravada = podio.find((r) => r.colocacao === colocacao);
         return { colocacao, escola_id: gravada ? String(gravada.escola_id) : '', atleta_nome: gravada?.atleta_nome || '' };
       })
@@ -91,27 +93,23 @@ function Tabuleiro() {
 
   const salvar = async (evento) => {
     evento.preventDefault();
+    const jogo = form.jogo || jogoUnico;
     const linhas = form.linhas
       .filter((l) => l.escola_id)
-      .map((l) => ({ colocacao: l.colocacao, escola_id: Number(l.escola_id), atleta_nome: l.atleta_nome }));
-    const semEscola = form.linhas.find((l) => !l.escola_id && l.atleta_nome.trim());
-    if (semEscola) {
-      setAviso({ tipo: 'error', texto: `Escolha a escola do ${semEscola.colocacao}º lugar.` });
-      return;
-    }
+      .map((l) => ({ colocacao: l.colocacao, escola_id: Number(l.escola_id) }));
     if (linhas.length === 0) {
       setAviso({ tipo: 'error', texto: 'Escolha a escola de pelo menos uma colocação.' });
       return;
     }
     // Lançamento novo não pode cair em cima de um pódio que já existe sem o ADMIN ver
-    if (!editando && resultados.some((r) => chaveDoPodio(r) === `${form.jogo}|${form.categoria_id}`)) {
-      setAviso({ tipo: 'error', texto: 'Esse jogo e categoria já têm resultado lançado: use "Editar" no pódio dele.' });
+    if (!editando && resultados.some((r) => chaveDoPodio(r) === `${jogo}|${form.categoria_id}`)) {
+      setAviso({ tipo: 'error', texto: 'Essa categoria já tem resultado lançado: use "Editar" nela.' });
       return;
     }
 
     setSalvando(true);
     try {
-      const resposta = await salvarPodioTabuleiro({ jogo: form.jogo, categoria_id: Number(form.categoria_id), linhas });
+      const resposta = await salvarPodioTabuleiro({ jogo, categoria_id: Number(form.categoria_id), linhas });
       setAviso({ tipo: 'success', texto: resposta.mensagem });
       limpar();
       setRecarga((n) => n + 1);
@@ -169,8 +167,8 @@ function Tabuleiro() {
           <p className="eyebrow">Resultados</p>
           <h1 className="page-title">Tabuleiro</h1>
           <p className="page-subtitle">
-            Xadrez, dama e dominó, disputas mistas e individuais. O 1º, o 2º e o 3º lugar de cada jogo
-            valem {configuracao.colocacoes.map((c) => pontosDe[c]).join(', ').replace(/, ([^,]*)$/, ' e $1')} pontos
+            Colocação final das escolas nos jogos de tabuleiro (xadrez, dama e dominó juntos), por categoria. Do 1º ao 5º lugar,
+            as escolas valem {configuracao.colocacoes.map((c) => pontosDe[c]).join(', ').replace(/, ([^,]*)$/, ' e $1')} pontos
             para a escola na Tabela Geral, como nas modalidades coletivas.
           </p>
         </header>
@@ -183,7 +181,7 @@ function Tabuleiro() {
               <h2 className="card-title">{editando ? 'Corrigir resultado' : 'Lançar resultado'}</h2>
               <form onSubmit={salvar} className="form">
                 <div className="form-row">
-                  <div className="form-group">
+                  {!jogoUnico && <div className="form-group">
                     <label className="form-label" htmlFor="tab-jogo">Jogo</label>
                     <select
                       id="tab-jogo" className="form-control" required disabled={Boolean(editando)}
@@ -192,7 +190,7 @@ function Tabuleiro() {
                       <option value="">Selecione</option>
                       {configuracao.jogos.map((j) => <option key={j.slug} value={j.slug}>{j.nome}</option>)}
                     </select>
-                  </div>
+                  </div>}
                   <div className="form-group">
                     <label className="form-label" htmlFor="tab-categoria">Categoria</label>
                     <select
@@ -206,8 +204,8 @@ function Tabuleiro() {
                 </div>
 
                 {form.linhas.map((linha) => (
-                  <div className="atletismo-linha" key={linha.colocacao}>
-                    <span className="atletismo-posicao" aria-hidden="true">{MEDALHA[linha.colocacao]} {linha.colocacao}º</span>
+                  <div className="atletismo-linha so-escola" key={linha.colocacao}>
+                    <span className="atletismo-posicao" aria-hidden="true">{MEDALHA[linha.colocacao] || '🏅'} {linha.colocacao}º</span>
                     <div className="form-group">
                       <label className="form-label" htmlFor={`tab-escola-${linha.colocacao}`}>Escola do {linha.colocacao}º lugar</label>
                       <select
@@ -216,19 +214,11 @@ function Tabuleiro() {
                       >
                         <option value="">{editando ? 'Sem resultado (apaga)' : 'Selecione a escola'}</option>
                         {escolas.map((escola) => {
-                          // Uma escola só por jogo + categoria: a de outra linha fica indisponível
+                          // Uma escola só por categoria: a de outra linha fica indisponível
                           const usada = form.linhas.some((l) => l.colocacao !== linha.colocacao && l.escola_id === String(escola.id));
                           return <option key={escola.id} value={escola.id} disabled={usada}>{escola.nome}</option>;
                         })}
                       </select>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label" htmlFor={`tab-atleta-${linha.colocacao}`}>Atleta <span className="form-hint">(opcional)</span></label>
-                      <input
-                        id={`tab-atleta-${linha.colocacao}`} className="form-control" type="text" maxLength={150}
-                        placeholder="Nome do atleta" autoComplete="off"
-                        value={linha.atleta_nome} onChange={(e) => mudarLinha(linha.colocacao, 'atleta_nome', e.target.value)}
-                      />
                     </div>
                   </div>
                 ))}
@@ -270,7 +260,7 @@ function Tabuleiro() {
                       <ol className="atletismo-lista">
                         {podio.map((r) => (
                           <li key={r.id}>
-                            <span className="atletismo-medalha" aria-label={`${r.colocacao}º lugar`}>{MEDALHA[r.colocacao]}</span>
+                            <span className={`atletismo-medalha${MEDALHA[r.colocacao] ? '' : ' numero'}`} aria-label={`${r.colocacao}º lugar`}>{MEDALHA[r.colocacao] || `${r.colocacao}º`}</span>
                             <span className="atletismo-quem">
                               <strong>{r.escola_nome}</strong>
                               {r.atleta_nome && <span className="text-soft">{r.atleta_nome}</span>}
