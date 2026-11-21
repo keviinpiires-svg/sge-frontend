@@ -139,10 +139,12 @@ function TabelaGeral() {
   // De onde vieram os pontos de uma escola, agrupado para a tela
   const renderAbertura = (escola) => (
     <tr className="linha-abertura">
-      <td colSpan={7}>
+      <td colSpan={9}>
         <div className="abertura">
           {escola.origens.length === 0 ? (
-            <p className="state-text">Sem pontos de competição: só o desconto de punição.</p>
+            <p className="state-text">
+              {escola.ajustes ? 'Sem pontos de competição: só o desconto de punição.' : 'Ainda sem pontos: nenhuma competição desta escola foi encerrada com ela entre as 5 primeiras.'}
+            </p>
           ) : (
             <ul className="abertura-lista">
               {escola.origens.map((origem, i) => (
@@ -194,6 +196,8 @@ function TabelaGeral() {
             <th title="Primeiros lugares">🥇</th>
             <th title="Segundos lugares">🥈</th>
             <th title="Terceiros lugares">🥉</th>
+            <th title="Quartos lugares">4º</th>
+            <th title="Quintos lugares">5º</th>
             <th title="Punições da Comissão">⚖️</th>
           </tr>
         </thead>
@@ -220,6 +224,8 @@ function TabelaGeral() {
                 <td className="text-soft">{escola.primeiros}</td>
                 <td className="text-soft">{escola.segundos}</td>
                 <td className="text-soft">{escola.terceiros}</td>
+                <td className="text-soft">{escola.quartos ?? 0}</td>
+                <td className="text-soft">{escola.quintos ?? 0}</td>
                 <td className={escola.ajustes ? 'text-danger' : 'text-soft'}>
                   {escola.ajustes || '—'}
                 </td>
